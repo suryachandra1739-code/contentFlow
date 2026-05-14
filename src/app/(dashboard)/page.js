@@ -32,13 +32,15 @@ export default function Dashboard() {
 
   // Filter & Paginate logic
   const filteredPosts = posts.filter(post => {
+    const clientName = post.clients?.company_name || '';
+    const projectName = post.projects?.name || '';
     const matchesSearch = searchQuery === '' || 
       post.caption?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.client_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      clientName.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
-    const matchesClient = clientFilter === 'all' || post.client_name === clientFilter;
+    const matchesClient = clientFilter === 'all' || clientName === clientFilter;
     
     return matchesSearch && matchesStatus && matchesClient;
   });
@@ -48,7 +50,7 @@ export default function Dashboard() {
   const paginatedPosts = filteredPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Extract unique clients for filter selector
-  const uniqueClients = Array.from(new Set(posts.map(p => p.client_name).filter(Boolean)));
+  const uniqueClients = Array.from(new Set(posts.map(p => p.clients?.company_name).filter(Boolean)));
 
   return (
     <div className="fade-in">
@@ -92,7 +94,7 @@ export default function Dashboard() {
                     <PlatformBadge platform={post.platform} />
                     <div style={{flex:1,minWidth:0}}>
                       <div className="truncate" style={{fontSize:14,fontWeight:500,color:'var(--text-primary)'}}>{post.caption || 'Untitled post'}</div>
-                      <div style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-muted)',marginTop:2}}>{post.project_name} <span style={{opacity:0.4}}>·</span> {post.client_name}</div>
+                      <div style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-muted)',marginTop:2}}>{post.projects?.name} <span style={{opacity:0.4}}>·</span> {post.clients?.company_name}</div>
                     </div>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   </Link>
@@ -107,15 +109,31 @@ export default function Dashboard() {
             <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:20}}>Recent activity</h2>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {data.recentActivity?.slice(0, 8).map((item, i) => {
-                const details = item.details ? JSON.parse(item.details) : {};
-                const actionLabels = { created: 'Post created', status_change: `Status changed to ${details.status}`, comment: `Comment by ${details.author_name}`, edited: 'Post edited' };
-                const dotColors = { created: 'var(--accent)', status_change: 'var(--amber)', comment: 'var(--cyan)', edited: 'var(--text-muted)' };
+                const actionLabels = {
+                  post_created: 'Post created',
+                  post_approved: 'Post approved',
+                  post_revision: 'Revision requested',
+                  post_rejected: 'Post rejected',
+                  post_updated: 'Post updated',
+                  post_deleted: 'Post deleted',
+                  client_created: 'Client created',
+                  project_created: 'Project created',
+                };
+                const dotColors = {
+                  post_created: 'var(--accent)',
+                  post_approved: 'var(--green)',
+                  post_revision: 'var(--amber)',
+                  post_rejected: 'var(--accent)',
+                  post_updated: 'var(--cyan)',
+                  client_created: 'var(--text-muted)',
+                  project_created: 'var(--text-muted)',
+                };
                 return (
                   <div key={item.id || i} className="interactive-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                       <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColors[item.action] || 'var(--accent)', flexShrink: 0 }}></div>
                       <div className="truncate" style={{ fontSize: '13px', fontFamily: 'var(--sans)', color: 'var(--text-secondary)' }}>
-                        <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.project_name}</strong> <span style={{ opacity: 0.3, margin: '0 4px' }}>/</span> {actionLabels[item.action] || item.action}
+                        <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.user_name || 'System'}</strong> <span style={{ opacity: 0.3, margin: '0 4px' }}>/</span> {actionLabels[item.action] || item.action}
                       </div>
                     </div>
                     <div style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontWeight: 400, flexShrink: 0, marginLeft: '16px' }}>
@@ -215,11 +233,11 @@ export default function Dashboard() {
                     <tr key={post.id} style={{cursor:'pointer'}} onClick={() => window.location.href = `/posts/${post.id}`}>
                       <td><PlatformBadge platform={post.platform} /></td>
                       <td><span className="truncate" style={{maxWidth:240,display:'inline-block',fontFamily:'var(--sans)',fontWeight:400, color:'var(--text-primary)'}}>{post.caption?.substring(0,50) || 'Untitled'}...</span></td>
-                      <td style={{fontFamily:'var(--sans)',fontSize:14,color:'var(--text-secondary)'}}>{post.project_name}</td>
+                      <td style={{fontFamily:'var(--sans)',fontSize:14,color:'var(--text-secondary)'}}>{post.projects?.name}</td>
                       <td>
                         <div className="flex items-center gap-8" style={{fontFamily:'var(--sans)',fontSize:14}}>
-                          <div className="avatar avatar-sm">{post.client_name?.[0]}</div>
-                          {post.client_name}
+                          <div className="avatar avatar-sm">{post.clients?.company_name?.[0]}</div>
+                          {post.clients?.company_name}
                         </div>
                       </td>
                       <td><StatusBadge status={post.status} /></td>

@@ -1,16 +1,41 @@
 import { NextResponse } from 'next/server';
-import { getProject, getProjectPosts, deleteProject } from '@/lib/queries';
+import { createClientServer } from '@/lib/supabase-server';
 
 export async function GET(request, { params }) {
-  const { id } = await params;
-  const project = getProject(id);
-  if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  const posts = getProjectPosts(id);
-  return NextResponse.json({ ...project, posts });
+  try {
+    const { id } = await params;
+    const supabase = await createClientServer();
+
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('*, clients(company_name)')
+      .eq('id', id)
+      .single();
+
+    if (error || !project) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const { data: posts } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('project_id', id)
+      .order('created_at', { ascending: false });
+
+    return NextResponse.json({ ...project, posts: posts || [] });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 export async function DELETE(request, { params }) {
-  const { id } = await params;
-  deleteProject(id);
-  return NextResponse.json({ success: true });
+  try {
+    const { id } = await params;
+    const supabase = await createClientServer();
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

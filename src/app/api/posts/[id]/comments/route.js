@@ -1,15 +1,46 @@
 import { NextResponse } from 'next/server';
-import { getComments, addComment } from '@/lib/queries';
+import { createClientServer } from '@/lib/supabase-server';
 
 export async function GET(request, { params }) {
-  const { id } = await params;
-  return NextResponse.json(getComments(id));
+  try {
+    const { id } = await params;
+    const supabase = await createClientServer();
+
+    const { data: comments, error } = await supabase
+      .from('comments')
+      .select('*, users(name)')
+      .eq('post_id', id)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return NextResponse.json(comments || []);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(request, { params }) {
-  const { id } = await params;
-  const body = await request.json();
-  if (!body.content || !body.author_name) return NextResponse.json({ error: 'content and author_name required' }, { status: 400 });
-  const comment = addComment({ post_id: id, ...body });
-  return NextResponse.json(comment, { status: 201 });
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const supabase = await createClientServer();
+
+    if (!body.content) {
+      return NextResponse.json({ error: 'content is required' }, { status: 400 });
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { data: comment, error } = await supabase.from('comments').insert({
+      post_id: id,
+      user_id: user?.id,
+      content: body.content,
+      is_internal: body.is_internal || false,
+    }).select('*, users(name)').single();
+
+    if (error) throw error;
+    return NextResponse.json(comment, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
