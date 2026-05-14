@@ -67,7 +67,7 @@ export default async function ClientPortalOverview() {
           
           {pendingPosts.length === 0 ? (
             <div className="empty-state" style={{ padding: '40px 0' }}>
-              You're all caught up ✓
+              You&apos;re all caught up ✓
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

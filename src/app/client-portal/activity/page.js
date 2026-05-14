@@ -55,7 +55,7 @@ export default async function ClientPortalActivity() {
                       </div>
                       {activity.metadata?.comment && (
                         <div style={{ marginTop: 8, padding: '12px', background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                          "{activity.metadata.comment}"
+                          &quot;{activity.metadata.comment}&quot;
                         </div>
                       )}
                     </div>

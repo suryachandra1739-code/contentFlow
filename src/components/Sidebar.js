@@ -23,7 +23,7 @@ export default function Sidebar() {
           fontFamily: 'var(--mono)',
           letterSpacing: '-1px',
         }}>
-          //
+          {'//'}
         </div>
         <div>
           <h1>ContentFlow</h1>
