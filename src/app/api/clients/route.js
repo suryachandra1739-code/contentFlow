@@ -1,39 +1,60 @@
+// src/app/api/clients/route.js
 import { createClientServer } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+// GET /api/clients?clientId=...
+export async function GET(request) {
   try {
     const supabase = await createClientServer();
-    const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
+    const { searchParams } = new URL(request.url);
+    const clientId = searchParams.get('clientId');
+
+    let query = supabase
+      .from('clients')
+      .select('*, created_by(id,email,role)')
+      .order('created_at', { ascending: false });
+
+    if (clientId) query = query.eq('id', clientId);
+
+    const { data, error } = await query;
     if (error) throw error;
     return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (e) {
+    console.error('Clients GET error:', e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 
+// POST /api/clients
 export async function POST(request) {
   try {
     const supabase = await createClientServer();
-    const body = await request.json();
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
 
-    const { data, error } = await supabase.from('clients').insert({
-      ...body,
-      created_by: user?.id
-    }).select().single();
+    const {
+      company_name,
+      contact_name,
+      email,
+      avatar_color = '#161616'
+    } = await request.json();
+
+    const { data, error } = await supabase
+      .from('clients')
+      .insert({
+        company_name,
+        contact_name,
+        email,
+        avatar_color,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+
     if (error) throw error;
-
-    await supabase.from('audit_log').insert({
-      user_id: user?.id,
-      action: 'client_created',
-      entity_type: 'client',
-      entity_id: data.id,
-      client_id: data.id
-    });
-
     return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (e) {
+    console.error('Clients POST error:', e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

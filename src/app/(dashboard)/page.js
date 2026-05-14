@@ -21,7 +21,12 @@ export default function Dashboard() {
       fetch('/api/posts').then(r => r.json()),
     ]).then(([analytics, allPosts]) => {
       setData(analytics);
-      setPosts(allPosts);
+      if (allPosts && allPosts.error) {
+        console.error('Error fetching posts:', allPosts.error);
+        setPosts([]);
+      } else {
+        setPosts(Array.isArray(allPosts) ? allPosts : []);
+      }
       setLoading(false);
     });
   }, []);

@@ -8,7 +8,6 @@ export async function middleware(request) {
   if (
     path.startsWith('/review/') ||
     path.startsWith('/api/') ||
-    path === '/login' ||
     path.startsWith('/_next/') ||
     path === '/favicon.ico'
   ) {
@@ -33,7 +32,7 @@ export async function middleware(request) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-            supabaseResponse = NextResponse.next({ request });
+            supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
             cookiesToSet.forEach(({ name, value, options }) =>
               supabaseResponse.cookies.set(name, value, options)
             );
@@ -45,9 +44,16 @@ export async function middleware(request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     // No user and not on login page → redirect to login
-    if (!user) {
+    if (!user && path !== '/login') {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+
+    // User exists and on login page → redirect to home
+    if (user && path === '/login') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
       return NextResponse.redirect(url);
     }
 

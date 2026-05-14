@@ -28,7 +28,7 @@ export default function LoginPage() {
     }
 
     addToast('Logged in successfully', 'success');
-    router.refresh(); // Middleware will handle redirect based on role
+    router.push('/'); // Middleware will handle further routing based on role
   };
 
   const handleResetPassword = async () => {
