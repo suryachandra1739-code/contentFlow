@@ -1,4 +1,4 @@
-import { createClientServer } from '@/lib/supabase';
+import { createClientServer } from '@/lib/supabase-server';
 
 export default async function AuditLogPage({ searchParams }) {
   const supabase = await createClientServer();

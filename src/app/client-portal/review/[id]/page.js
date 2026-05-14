@@ -1,4 +1,4 @@
-import { createClientServer } from '@/lib/supabase';
+import { createClientServer } from '@/lib/supabase-server';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import PostReviewActions from '@/components/PostReviewActions';

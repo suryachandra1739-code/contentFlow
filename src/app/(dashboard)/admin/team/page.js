@@ -1,4 +1,4 @@
-import { createClientServer } from '@/lib/supabase';
+import { createClientServer } from '@/lib/supabase-server';
 import InviteTeamModal from './InviteTeamModal';
 
 export default async function TeamManagementPage() {
