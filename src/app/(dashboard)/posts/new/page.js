@@ -12,7 +12,11 @@ export default function NewPost() {
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', scheduled_date: '' });
 
-  useEffect(() => { fetch('/api/projects').then(r => r.json()).then(setProjects); }, []);
+  useEffect(() => {
+    fetch('/api/projects').then(r => r.json()).then(data => {
+      setProjects(Array.isArray(data) ? data : []);
+    }).catch(() => setProjects([]));
+  }, []);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -56,7 +60,7 @@ export default function NewPost() {
               <label className="form-label">Project</label>
               <select className="form-select" value={form.project_id} onChange={e => setForm({...form, project_id: e.target.value})}>
                 <option value="">Choose a project</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.client_company}</option>)}
+                {projects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.clients?.company_name || 'No client'}</option>)}
               </select>
             </div>
             <div className="form-group">

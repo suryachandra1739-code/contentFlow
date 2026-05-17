@@ -13,7 +13,11 @@ export default function ProjectsPage() {
     Promise.all([
       fetch('/api/projects').then(r => r.json()),
       fetch('/api/clients').then(r => r.json()),
-    ]).then(([p, c]) => { setProjects(p); setClients(c); setLoading(false); });
+    ]).then(([p, c]) => {
+      setProjects(Array.isArray(p) ? p : []);
+      setClients(Array.isArray(c) ? c : []);
+      setLoading(false);
+    }).catch(() => { setProjects([]); setClients([]); setLoading(false); });
   };
   useEffect(load, []);
 
@@ -44,19 +48,15 @@ export default function ProjectsPage() {
           <Link href={`/projects/${project.id}`} key={project.id} className="card interactive-row" style={{display:'block'}}>
             <div className="card-body">
               <div className="flex items-center gap-12 mb-16">
-                <div className="avatar" style={{background: project.avatar_color}}>{project.client_name?.[0]}</div>
+                <div className="avatar" style={{background: project.clients?.avatar_color || '#161616'}}>{project.clients?.company_name?.[0] || '?'}</div>
                 <div>
                   <div style={{fontSize:15,fontWeight:600}}>{project.name}</div>
-                  <div style={{fontSize:13,color:'var(--text-muted)'}}>{project.client_company}</div>
+                  <div style={{fontSize:13,color:'var(--text-muted)'}}>{project.clients?.company_name || 'No client'}</div>
                 </div>
               </div>
               {project.description && <p style={{fontSize:14,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.5}}>{project.description}</p>}
-              <div className="flex items-center justify-between" style={{paddingTop:16,borderTop:'1px solid var(--border)'}}>
-                <span style={{fontSize:13,color:'var(--text-muted)'}}>{project.post_count} posts</span>
-                <div className="flex gap-8">
-                  {project.approved_count > 0 && <span className="badge badge-approved">{project.approved_count}</span>}
-                  {project.pending_count > 0 && <span className="badge badge-pending">{project.pending_count}</span>}
-                </div>
+              <div style={{paddingTop:16,borderTop:'1px solid var(--border)'}}>
+                <span style={{fontSize:13,color:'var(--text-muted)'}}>{project.status || 'active'}</span>
               </div>
             </div>
           </Link>
@@ -82,7 +82,7 @@ export default function ProjectsPage() {
                   <label className="form-label">Client</label>
                   <select className="form-select" value={form.client_id} onChange={e => setForm({...form, client_id: e.target.value})} required>
                     <option value="">Select a client</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.name} — {c.company}</option>)}
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.company_name} — {c.contact_name}</option>)}
                   </select>
                 </div>
                 <div className="form-group">

@@ -11,10 +11,18 @@ export default function PostDetail() {
   const { id } = useParams();
   const addToast = useToast();
   const [post, setPost] = useState(null);
+  const [comments, setComments] = useState([]);
   const [comment, setComment] = useState('');
   const [authorName, setAuthorName] = useState('Creative Team');
 
-  const load = () => fetch(`/api/posts/${id}`).then(r => r.json()).then(setPost);
+  const load = () => {
+    fetch(`/api/posts/${id}`).then(r => r.json()).then(data => {
+      if (data && !data.error) setPost(data);
+    });
+    fetch(`/api/posts/${id}/comments`).then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setComments(data);
+    });
+  };
   useEffect(() => { load(); }, [id]);
 
   const updateStatus = async (status) => {
@@ -42,7 +50,7 @@ export default function PostDetail() {
   return (
     <div className="fade-in">
       <div className="page-header">
-        <Link href={`/projects/${post.project_id}`} style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← {post.project_name}</Link>
+        <Link href={`/projects/${post.project_id}`} style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← {post.projects?.name || 'Project'}</Link>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-12">
             <PlatformBadge platform={post.platform} />
@@ -82,16 +90,15 @@ export default function PostDetail() {
         <div>
           <div className="card" style={{marginBottom:24}}>
             <div className="card-body">
-              <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Comments ({post.comments?.length || 0})</h2>
+              <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Comments ({comments.length})</h2>
               <div className="comment-list">
-                {post.comments?.map(c => (
+                {comments.map(c => (
                   <div className="comment-item" key={c.id} style={{display:'flex',gap:12,marginBottom:16}}>
-                    <div className="comment-avatar avatar" style={{width:28,height:28,fontSize:11,background: c.author_role === 'client' ? 'var(--bg-layer)' : 'var(--bg-input)'}}>{c.author_name?.[0]}</div>
+                    <div className="comment-avatar avatar" style={{width:28,height:28,fontSize:11,background:'var(--bg-input)'}}>{c.users?.name?.[0] || '?'}</div>
                     <div className="comment-bubble" style={{background:'var(--bg-input)',padding:'10px 14px',borderRadius:'var(--radius-sm)',flex:1,border:'1px solid var(--border)'}}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
                         <div>
-                          <span className="comment-author" style={{fontWeight:600,fontSize:13}}>{c.author_name}</span>
-                          <span className="comment-role" style={{fontSize:11,color:'var(--text-muted)',marginLeft:6,textTransform:'capitalize'}}>{c.author_role}</span>
+                          <span className="comment-author" style={{fontWeight:600,fontSize:13}}>{c.users?.name || 'Team'}</span>
                         </div>
                         <div className="comment-time" style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--text-muted)'}}>{new Date(c.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
                       </div>
@@ -99,7 +106,7 @@ export default function PostDetail() {
                     </div>
                   </div>
                 ))}
-                {(!post.comments || post.comments.length === 0) && <p className="empty-state" style={{padding:'20px 0'}}>No comments yet</p>}
+                {comments.length === 0 && <p className="empty-state" style={{padding:'20px 0'}}>No comments yet</p>}
               </div>
               <form onSubmit={addCommentHandler} className="comment-form" style={{marginTop:20,display:'flex',gap:8}}>
                 <input className="form-input" value={comment} onChange={e => setComment(e.target.value)} placeholder="Add a comment..." style={{flex:1}} />

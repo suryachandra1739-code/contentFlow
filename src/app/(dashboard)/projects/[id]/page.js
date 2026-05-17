@@ -16,7 +16,8 @@ export default function ProjectDetail() {
 
   if (!project) return <div style={{padding:60,textAlign:'center',color:'var(--text-muted)'}}>Loading...</div>;
 
-  const filtered = filter === 'all' ? project.posts : project.posts.filter(p => p.status === filter);
+  const posts = project.posts || [];
+  const filtered = filter === 'all' ? posts : posts.filter(p => p.status === filter);
 
   const sendForReview = async (postId) => {
     await fetch(`/api/posts/${postId}/status`, { method: 'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status: 'pending' }) });
@@ -29,10 +30,10 @@ export default function ProjectDetail() {
       <div className="page-header">
         <Link href="/projects" style={{fontSize:13,color:'var(--text-muted)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← Back to Projects</Link>
         <div className="flex items-center gap-16">
-          <div className="avatar avatar-lg" style={{background:project.avatar_color}}>{project.client_name?.[0]}</div>
+          <div className="avatar avatar-lg" style={{background:project.clients?.avatar_color || '#161616'}}>{project.clients?.company_name?.[0] || '?'}</div>
           <div>
             <h1>{project.name}</h1>
-            <p>{project.client_company} · {project.posts?.length || 0} posts</p>
+            <p>{project.clients?.company_name || 'No client'} · {posts.length} posts</p>
           </div>
         </div>
       </div>
@@ -41,7 +42,7 @@ export default function ProjectDetail() {
         {['all','draft','pending','approved','revision','rejected'].map(s => (
           <button key={s} className={`filter-chip ${filter === s ? 'active' : ''}`} onClick={() => setFilter(s)}>
             {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-            {s !== 'all' && ` (${project.posts.filter(p => p.status === s).length})`}
+            {s !== 'all' && ` (${posts.filter(p => p.status === s).length})`}
           </button>
         ))}
       </div>

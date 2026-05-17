@@ -1,4 +1,3 @@
-// src/app/api/clients/route.js
 import { createClientServer } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
 
@@ -11,14 +10,14 @@ export async function GET(request) {
 
     let query = supabase
       .from('clients')
-      .select('*, created_by(id,email,role)')
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (clientId) query = query.eq('id', clientId);
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json(data);
+    return NextResponse.json(data || []);
   } catch (e) {
     console.error('Clients GET error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -32,12 +31,17 @@ export async function POST(request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
 
-    const {
-      company_name,
-      contact_name,
-      email,
-      avatar_color = '#161616'
-    } = await request.json();
+    const body = await request.json();
+
+    // Accept both frontend field names and DB field names
+    const company_name = body.company_name || body.company || body.name || '';
+    const contact_name = body.contact_name || body.name || '';
+    const email = body.email || '';
+    const avatar_color = body.avatar_color || '#161616';
+
+    if (!company_name) {
+      return NextResponse.json({ error: 'Company name is required' }, { status: 400 });
+    }
 
     const { data, error } = await supabase
       .from('clients')
@@ -52,6 +56,16 @@ export async function POST(request) {
       .single();
 
     if (error) throw error;
+
+    // Audit log
+    await supabase.from('audit_log').insert({
+      user_id: user.id,
+      user_name: user.email,
+      action: 'client_created',
+      entity_type: 'client',
+      entity_id: data.id,
+    }).catch(() => {}); // Don't fail if audit log fails
+
     return NextResponse.json(data);
   } catch (e) {
     console.error('Clients POST error:', e);
