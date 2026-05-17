@@ -40,7 +40,7 @@ export default function ClientsPage() {
     setShowModal(false);
     setForm({ company_name: '', contact_name: '', email: '' });
     addToast('Client added!', 'success');
-    load();
+    setClients([result, ...clients]); // instantly update UI
   };
 
   if (loading) return <div className="fade-in empty-state">Loading clients...</div>;

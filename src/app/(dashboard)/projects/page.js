@@ -23,10 +23,13 @@ export default function ProjectsPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+    const res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+    const result = await res.json();
     setShowModal(false);
     setForm({ client_id: '', name: '', description: '' });
-    load();
+    if (!result.error) {
+      setProjects([result, ...projects]); // instantly update UI
+    }
   };
 
   if (loading) return <div className="empty-state">Loading projects...</div>;
