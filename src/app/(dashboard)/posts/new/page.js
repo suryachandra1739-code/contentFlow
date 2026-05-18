@@ -10,6 +10,7 @@ export default function NewPost() {
   const [projects, setProjects] = useState([]);
   const [step, setStep] = useState(1);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', media_key: '', media_size: 0, scheduled_date: '' });
 
   useEffect(() => {
@@ -21,17 +22,59 @@ export default function NewPost() {
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    const MAX_SIZE = 500 * 1024 * 1024;
+    if (file.size > MAX_SIZE) { addToast('File exceeds 500MB limit', 'error'); return; }
+
     setUploading(true);
-    const fd = new FormData();
-    fd.append('file', file);
+    setUploadProgress(0);
+
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (data.error) { addToast(data.error, 'error'); setUploading(false); return; }
-      setForm(f => ({ ...f, media_url: data.url, media_type: data.type, media_key: data.key, media_size: data.size }));
+      // Step 1: Get presigned URL from our API (tiny request, no file bytes)
+      const presignRes = await fetch('/api/upload/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          clientId: 'upload',
+          projectId: form.project_id || 'unknown',
+        }),
+      });
+      const presignData = await presignRes.json();
+      if (presignData.error) { addToast(presignData.error, 'error'); setUploading(false); return; }
+
+      // Step 2: Upload directly from browser to R2 using the presigned URL
+      // Use XMLHttpRequest for real upload progress tracking
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', presignData.presignedUrl);
+        xhr.setRequestHeader('Content-Type', file.type);
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`Upload failed: ${xhr.status}`));
+        };
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.send(file);
+      });
+
+      setForm(f => ({
+        ...f,
+        media_url: presignData.publicUrl,
+        media_type: presignData.mediaType,
+        media_key: presignData.key,
+        media_size: file.size,
+      }));
       addToast('File uploaded!', 'success');
-    } catch { addToast('Upload failed', 'error'); }
+    } catch (err) {
+      console.error('Upload error:', err);
+      addToast(err.message || 'Upload failed', 'error');
+    }
     setUploading(false);
+    setUploadProgress(0);
   };
 
   const handleSubmit = async () => {
@@ -92,11 +135,18 @@ export default function NewPost() {
                     <button className="btn btn-secondary btn-sm" style={{marginTop:8}} onClick={() => setForm({...form, media_url: '', media_type: 'image'})}>Remove</button>
                   </div>
                 ) : (
-                  <label style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 20px',border:'1px dashed var(--border)',borderRadius:'var(--radius)',cursor:'pointer',backgroundColor:'var(--bg-layer)'}}>
-                    <input type="file" accept="image/*,video/*" onChange={handleUpload} style={{display:'none'}} />
-                    <div style={{fontSize:24,marginBottom:8}}>📁</div>
-                    <div style={{fontSize:14,color:'var(--text-primary)',fontWeight:500}}>{uploading ? 'Uploading...' : 'Click to upload media'}</div>
-                    <div style={{fontSize:12,color:'var(--text-muted)',marginTop:4}}>Supports images and videos</div>
+                  <label style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 20px',border:'1px dashed var(--border)',borderRadius:'var(--radius)',cursor: uploading ? 'default' : 'pointer',backgroundColor:'var(--bg-layer)'}}>
+                    {!uploading && <input type="file" accept="image/*,video/*" onChange={handleUpload} style={{display:'none'}} />}
+                    <div style={{fontSize:24,marginBottom:8}}>{uploading ? '⏳' : '📁'}</div>
+                    <div style={{fontSize:14,color:'var(--text-primary)',fontWeight:500}}>
+                      {uploading ? `Uploading… ${uploadProgress}%` : 'Click to upload media'}
+                    </div>
+                    <div style={{fontSize:12,color:'var(--text-muted)',marginTop:4}}>Supports images and videos (up to 500MB)</div>
+                    {uploading && (
+                      <div style={{width:'100%',marginTop:16,background:'var(--border)',borderRadius:99,height:4}}>
+                        <div style={{width:`${uploadProgress}%`,height:'100%',background:'var(--accent)',borderRadius:99,transition:'width 0.2s'}} />
+                      </div>
+                    )}
                   </label>
                 )}
               </div>
