@@ -1,9 +1,10 @@
 import { createClientServer } from '@/lib/supabase-server';
 
 export default async function AuditLogPage({ searchParams }) {
+  const params = await searchParams;
   const supabase = await createClientServer();
   
-  const filterAction = searchParams.action || 'all';
+  const filterAction = params.action || 'all';
 
   let query = supabase
     .from('audit_log')
@@ -24,11 +25,11 @@ export default async function AuditLogPage({ searchParams }) {
           <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)' }}>Audit Log</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>System-wide chronological activity log.</p>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <form style={{ display: 'flex', gap: 12 }}>
           <select 
             className="form-select" 
+            name="action"
             defaultValue={filterAction}
-            onChange={`window.location.href='?action='+this.value`}
             style={{ width: 'auto' }}
           >
             <option value="all">All Actions</option>
@@ -37,8 +38,8 @@ export default async function AuditLogPage({ searchParams }) {
             <option value="project">Projects</option>
             <option value="user">Users</option>
           </select>
-          <button className="btn btn-secondary">Export CSV</button>
-        </div>
+          <button type="submit" className="btn btn-secondary">Filter</button>
+        </form>
       </div>
 
       <div className="card">
