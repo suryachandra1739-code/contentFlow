@@ -8,7 +8,6 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [clients, setClients] = useState([]);
-  const [showModal, setShowModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [form, setForm] = useState({ client_id: '', name: '', description: '' });
   const [loading, setLoading] = useState(true);
