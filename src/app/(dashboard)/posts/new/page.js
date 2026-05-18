@@ -10,7 +10,7 @@ export default function NewPost() {
   const [projects, setProjects] = useState([]);
   const [step, setStep] = useState(1);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', scheduled_date: '' });
+  const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', media_key: '', media_size: 0, scheduled_date: '' });
 
   useEffect(() => {
     fetch('/api/projects').then(r => r.json()).then(data => {
@@ -27,7 +27,8 @@ export default function NewPost() {
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
-      setForm(f => ({ ...f, media_url: data.url, media_type: data.mediaType }));
+      if (data.error) { addToast(data.error, 'error'); setUploading(false); return; }
+      setForm(f => ({ ...f, media_url: data.url, media_type: data.type, media_key: data.key, media_size: data.size }));
       addToast('File uploaded!', 'success');
     } catch { addToast('Upload failed', 'error'); }
     setUploading(false);
