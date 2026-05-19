@@ -2,8 +2,8 @@ export default function PlatformPreview({ platform, caption, hashtags, mediaUrl,
   const hashtagList = hashtags ? hashtags.split(',').map(h => h.trim()) : [];
   const renderMedia = () => {
     if (mediaUrl) {
-      if (mediaType === 'video') return <video src={mediaUrl} controls style={{width:'100%',height:'100%',objectFit:'contain',background:'#000'}} />;
-      return <img src={mediaUrl} alt="Post media" style={{width:'100%',height:'100%',objectFit:'contain',background:'#000'}} />;
+      if (mediaType === 'video') return <video src={mediaUrl} controls style={{width:'100%',height:'100%',objectFit:'cover'}} />;
+      return <img src={mediaUrl} alt="Post media" style={{width:'100%',height:'100%',objectFit:'cover'}} />;
     }
     return <div style={{fontSize:48,opacity:0.2}}>{ {instagram:'📷',facebook:'📘',shorts:'🎬'}[platform] }</div>;
   };
@@ -61,7 +61,7 @@ export default function PlatformPreview({ platform, caption, hashtags, mediaUrl,
           <div style={{fontSize:11,color:'var(--text-muted)'}}>Just now</div>
         </div>
       </div>
-      <div className="preview-media" style={{aspectRatio:resolvedAspect,overflow:'hidden',background:'#000'}}>
+      <div className="preview-media" style={{aspectRatio:resolvedAspect,overflow:'hidden'}}>
         {renderMedia()}
       </div>
       <div className="preview-caption">
