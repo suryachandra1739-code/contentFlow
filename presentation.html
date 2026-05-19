@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContentFlow — Client Presentation & Interactive Showcase</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #070913;
+      --card-bg: rgba(13, 17, 33, 0.7);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(99, 102, 241, 0.4);
+      --text: #94a3b8;
+      --text-bright: #f8fafc;
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.15);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Grid Background Effect */
+    .grid-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .grid-bg::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 50%, transparent 20%, var(--bg) 80%);
+    }
+
+    header {
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 30px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--primary), #ec4899);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: -0.5px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 8px 18px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-bright);
+    }
+
+    .nav-btn.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    main {
+      flex: 1;
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 40px;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    /* Cards */
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 10px 30px rgba(99, 102, 241, 0.05);
+    }
+
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--success-glow);
+      color: var(--success);
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 16px;
+    }
+
+    .card-desc {
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* Live Pipeline Visualizer */
+    .pipeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    .pipeline-nodes {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* The Animated Flowing Line */
+    .pipeline-line {
+      position: absolute;
+      left: 28px;
+      top: 24px;
+      bottom: 24px;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.05);
+      z-index: 1;
+    }
+
+    .pipeline-progress-line {
+      position: absolute;
+      left: 28px;
+      top: 24px;
+      width: 2px;
+      height: 0;
+      background: linear-gradient(to bottom, var(--primary), #ec4899);
+      z-index: 2;
+      transition: height 0.5s ease;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    .node {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      position: relative;
+      z-index: 3;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: rgba(7, 9, 19, 0.4);
+      transition: all 0.4s ease;
+    }
+
+    .node.active {
+      border-color: var(--border-hover);
+      background: rgba(99, 102, 241, 0.06);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.05);
+    }
+
+    .node-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      transition: all 0.4s ease;
+      flex-shrink: 0;
+    }
+
+    .node.active .node-num {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    .node.completed .node-num {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .node-content {
+      flex: 1;
+    }
+
+    .node-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 4px;
+    }
+
+    .node-desc {
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    /* Simulator Controls */
+    .controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-bright);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Mockups & Animations on Right Side */
+    .interactive-display {
+      height: 480px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(7, 9, 19, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Upload Stream Animation */
+    .upload-visualization {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      width: 100%;
+      padding: 40px;
+      display: none;
+    }
+
+    .upload-visualization.active {
+      display: flex;
+    }
+
+    .cloud-nodes {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 320px;
+      position: relative;
+    }
+
+    .cloud-device {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      z-index: 2;
+    }
+
+    .stream-pipe {
+      position: absolute;
+      top: 30px;
+      left: 60px;
+      right: 60px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.05);
+      z-index: 1;
+    }
+
+    .stream-dots {
+      position: absolute;
+      top: 30px;
+      left: 60px;
+      right: 60px;
+      height: 2px;
+      background: transparent;
+      z-index: 2;
+      overflow: hidden;
+    }
+
+    .stream-dot {
+      position: absolute;
+      top: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+      offset-path: path('M 0 0 L 200 0');
+      animation: flowStream 1.5s infinite linear;
+      opacity: 0;
+    }
+
+    @keyframes flowStream {
+      0% {
+        left: 0;
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        left: 100%;
+        opacity: 0;
+      }
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      max-width: 280px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), #ec4899);
+      border-radius: 99px;
+      transition: width 0.1s linear;
+    }
+
+    .progress-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    /* Phone Mockup */
+    .phone-mockup {
+      width: 250px;
+      height: 400px;
+      border: 6px solid #1e293b;
+      border-radius: 32px;
+      background: #000;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+      display: none;
+    }
+
+    .phone-mockup.active {
+      display: block;
+    }
+
+    .phone-notch {
+      width: 100px;
+      height: 16px;
+      background: #1e293b;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 10;
+    }
+
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .instagram-header {
+      height: 36px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .instagram-feed-image {
+      flex: 1;
+      background-size: cover;
+      background-position: center;
+      background-color: #111;
+      position: relative;
+    }
+
+    .instagram-feed-image video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .instagram-caption-area {
+      padding: 12px;
+      background: #000;
+      font-size: 9px;
+      line-height: 1.4;
+      color: #e2e8f0;
+      border-top: 1px solid #1e293b;
+    }
+
+    .instagram-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: #94a3b8;
+    }
+
+    /* Decision Portal Mockup */
+    .decision-portal {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    .decision-portal.active {
+      display: flex;
+    }
+
+    .portal-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .portal-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+
+    .portal-btn.approve {
+      background: var(--success);
+      color: white;
+      box-shadow: 0 0 15px var(--success-glow);
+    }
+
+    .portal-btn.reject {
+      background: var(--danger);
+      color: white;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+    }
+
+    .toast-popup {
+      position: absolute;
+      bottom: 20px;
+      background: #10b981;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast-popup.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Simple Placeholder Display */
+    .placeholder-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .placeholder-display.hidden {
+      display: none;
+    }
+
+    .placeholder-icon {
+      font-size: 48px;
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.2));
+      }
+      50% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6));
+      }
+    }
+
+    /* Architectural Comparison Slide */
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    .compare-box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.01);
+      position: relative;
+    }
+
+    .compare-box.bad {
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .compare-box.good {
+      border-color: rgba(16, 185, 129, 0.2);
+      background: rgba(16, 185, 129, 0.01);
+    }
+
+    .compare-header {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compare-header.bad { color: var(--danger); }
+    .compare-header.good { color: var(--success); }
+
+    .compare-step {
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-step:last-child {
+      border-bottom: none;
+    }
+
+    .footer {
+      max-width: 1200px;
+      width: 100%;
+      margin: 40px auto 0 auto;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">//</div>
+      <div class="logo-text">ContentFlow</div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-btn active" onclick="switchSlide(0)">Overview</button>
+      <button class="nav-btn" onclick="switchSlide(1)">Interactive Simulator</button>
+      <button class="nav-btn" onclick="switchSlide(2)">Architecture</button>
+      <button class="nav-btn" onclick="switchSlide(3)">Business ROI</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Slide 0: Executive Overview -->
+    <section class="slide active" id="slide-0">
+      <div class="grid-2">
+        <div>
+          <div class="stat-badge">⚡ Next-Gen Agency Infrastructure</div>
+          <h1>Streamline Content Approval & Collaboration</h1>
+          <p class="subtitle">Email approvals, Slack messages, and spreadsheet schedules are fragmented and slow. ContentFlow brings copy, direct-to-cloud media streaming, live layout previews, and one-click client sign-offs into a single premium workspace.</p>
+          
+          <div style="display: flex; gap: 16px;">
+            <button class="btn" onclick="switchSlide(1)">Start Interactive Demo →</button>
+            <button class="btn btn-secondary" onclick="switchSlide(2)">Review Architecture</button>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-title" style="font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">Core Capabilities</div>
+          <div style="display:flex; flex-direction:column; gap: 16px; margin-top: 16px;">
+            <div style="display:flex; gap:12px;">
+              <span style="font-size: 18px;">👥</span>
+              <div>
+                <h4 style="color:var(--text-bright); font-size:14px; font-weight:600;">Workspace Isolation</h4>
+                <p style="font-size:12px; margin-top:2px;">Complete data privacy between client accounts using Supabase RLS.</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:12px;">
+              <span style="font-size: 18px;">📱</span>
+              <div>
+                <h4 style="color:var(--text-bright); font-size:14px; font-weight:600;">Live Layout Mockups</h4>
+                <p style="font-size:12px; margin-top:2px;">Perfect real-time simulations of Instagram and YouTube layouts.</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:12px;">
+              <span style="font-size: 18px;">⚡</span>
+              <div>
+                <h4 style="color:var(--text-bright); font-size:14px; font-weight:600;">Direct-to-Cloud Uploads</h4>
+                <p style="font-size:12px; margin-top:2px;">Stream large videos up to 500MB directly to secure R2 storage.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 1: Interactive Workflow Simulator -->
+    <section class="slide" id="slide-1">
+      <div class="grid-2">
+        <div>
+          <h1>Process Pipeline</h1>
+          <p class="subtitle" style="margin-bottom: 24px;">Run the simulator to follow an asset as it travels directly through the creation and approval pipeline.</p>
+          
+          <div class="pipeline-container">
+            <div class="pipeline-line"></div>
+            <div class="pipeline-progress-line" id="progress-line"></div>
+            
+            <div class="pipeline-nodes">
+              <div class="node" id="node-1">
+                <div class="node-num">1</div>
+                <div class="node-content">
+                  <div class="node-title">Setup Client & Workspace</div>
+                  <div class="node-desc">Create custom profiles and isolated project workspaces.</div>
+                </div>
+              </div>
+              <div class="node" id="node-2">
+                <div class="node-num">2</div>
+                <div class="node-content">
+                  <div class="node-title">Draft Campaign Post</div>
+                  <div class="node-desc">Write captions, structure hashtags, and configure schedules.</div>
+                </div>
+              </div>
+              <div class="node" id="node-3">
+                <div class="node-num">3</div>
+                <div class="node-content">
+                  <div class="node-title">Direct Cloud Upload</div>
+                  <div class="node-desc">Browser streams large video file straight to Cloudflare R2.</div>
+                </div>
+              </div>
+              <div class="node" id="node-4">
+                <div class="node-num">4</div>
+                <div class="node-content">
+                  <div class="node-title">Perfect Mockup Preview</div>
+                  <div class="node-desc">The dashboard renders exactly how it will look on social.</div>
+                </div>
+              </div>
+              <div class="node" id="node-5">
+                <div class="node-num">5</div>
+                <div class="node-content">
+                  <div class="node-title">Client Sign-off Decision</div>
+                  <div class="node-desc">Client accesses their private portal to approve or request changes.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button class="btn" id="sim-btn" onclick="startSimulation()">Simulate Content Flow</button>
+            <button class="btn btn-secondary" onclick="resetSimulation()">Reset</button>
+          </div>
+        </div>
+
+        <div class="interactive-display">
+          <!-- Placeholder State -->
+          <div class="placeholder-display" id="disp-placeholder">
+            <div class="placeholder-icon">//</div>
+            <h3 style="color:var(--text-bright); font-size: 16px; font-weight:600;">Interactive Visualizer</h3>
+            <p style="font-size: 13px; max-width: 250px; margin-top: 4px;">Click the button on the left to start the step-by-step pipeline simulation.</p>
+          </div>
+
+          <!-- Upload Progress Visualizer -->
+          <div class="upload-visualization" id="disp-upload">
+            <h3 style="color:var(--text-bright); font-size:16px;">Direct R2 Stream (Bypass Vercel Server)</h3>
+            <div class="cloud-nodes">
+              <div class="cloud-device">💻</div>
+              <div class="stream-pipe"></div>
+              <div class="stream-dots">
+                <div class="stream-dot" style="animation-delay: 0s;"></div>
+                <div class="stream-dot" style="animation-delay: 0.5s;"></div>
+                <div class="stream-dot" style="animation-delay: 1s;"></div>
+              </div>
+              <div class="cloud-device">☁️</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <div class="progress-text" id="upload-pct">Uploading: 0%</div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="upload-fill"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phone Mockup Previews -->
+          <div class="phone-mockup" id="disp-phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="instagram-header">📷 Instagram Feed Preview</div>
+              <div class="instagram-feed-image" id="phone-media">
+                <!-- Will load video or image -->
+              </div>
+              <div class="instagram-caption-area">
+                <div class="instagram-actions">❤️ 💬 ✈️</div>
+                <strong>@brand</strong> <span id="phone-caption">Writing a high-performing caption for our client here...</span>
+                <div style="color:var(--primary); margin-top:4px;" id="phone-tags">#summer #brand #marketing</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Review Portal -->
+          <div class="decision-portal" id="disp-portal">
+            <div class="placeholder-icon" style="animation:none;">🤝</div>
+            <h3 style="color:var(--text-bright); font-size:16px;">Secure Client Sign-off</h3>
+            <p style="font-size:13px; text-align:center; max-width: 280px;">Review complete. What is your final decision on this campaign asset?</p>
+            <div class="portal-buttons">
+              <button class="portal-btn reject" onclick="clientDecision(false)">Request Revisions</button>
+              <button class="portal-btn approve" onclick="clientDecision(true)">Approve Asset</button>
+            </div>
+          </div>
+
+          <!-- Toast Popup -->
+          <div class="toast-popup" id="toast">Post Approved successfully! 🎉</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 2: Technical Architecture -->
+    <section class="slide" id="slide-2">
+      <h1>Cloud Infrastructure Architecture</h1>
+      <p class="subtitle">ContentFlow utilizes direct-to-cloud presigning to deliver absolute reliability and bypass serverless timeouts.</p>
+
+      <div class="compare-container">
+        <div class="compare-box bad">
+          <div class="compare-header bad">❌ Traditional Hosting (Vercel Limit)</div>
+          <div class="compare-step">1. User uploads a 100MB video file through the form.</div>
+          <div class="compare-step">2. File streams to the Next.js Serverless Function.</div>
+          <div class="compare-step">3. <strong>Vercel 4.5MB Body Limit Exceeded.</strong></div>
+          <div class="compare-step" style="color:var(--danger); font-weight:600;">4. Connection crashes with HTTP 500 error.</div>
+        </div>
+
+        <div class="compare-box good">
+          <div class="compare-header good">✅ ContentFlow Presigned Direct Upload</div>
+          <div class="compare-step">1. User selects a 100MB video file.</div>
+          <div class="compare-step">2. Browser gets a secure, tiny signature token (takes 0.01 seconds).</div>
+          <div class="compare-step">3. Browser PUTs file <strong>directly</strong> to Cloudflare R2 Storage.</div>
+          <div class="compare-step" style="color:var(--success); font-weight:600;">4. 100% upload success for files up to 500MB.</div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-top: 40px; padding: 24px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+          <div>
+            <h4 style="color:var(--text-bright); margin-bottom:8px;">🔒 Data Privacy (Supabase RLS)</h4>
+            <p style="font-size:13px;">Row Level Security runs directly in the database, ensuring absolute isolation where clients can never access each other's data.</p>
+          </div>
+          <div>
+            <h4 style="color:var(--text-bright); margin-bottom:8px;">💨 Rust-Powered Compiling</h4>
+            <p style="font-size:13px;">Built using Rust-driven Turbopack for lightning-fast page loading and optimal bundle delivery.</p>
+          </div>
+          <div>
+            <h4 style="color:var(--text-bright); margin-bottom:8px;">📦 Infinite Scaling Assets</h4>
+            <p style="font-size:13px;">Cloudflare R2 provides zero egress fees and infinite media storage, keeping overall project hosting costs minimal.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 3: Client Business ROI -->
+    <section class="slide" id="slide-3">
+      <h1>Agency Growth & Client ROI</h1>
+      <p class="subtitle">ContentFlow elevates your agency's professional service and scales operations.</p>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-top: 20px;">
+        <div class="glass-card">
+          <div style="font-size:32px; margin-bottom:12px;">📈</div>
+          <div class="card-title" style="font-size: 18px;">Feedback Efficiency</div>
+          <p style="font-size:13px; line-height: 1.5;">Agencies migrating to ContentFlow experience an average **70% reduction** in client approval times by consolidating communication inside a dedicated dashboard.</p>
+        </div>
+
+        <div class="glass-card">
+          <div style="font-size:32px; margin-bottom:12px;">🌟</div>
+          <div class="card-title" style="font-size: 18px;">Agency Professionalism</div>
+          <p style="font-size:13px; line-height: 1.5;">Provide a branded, state-of-the-art client review portal that elevates your agency's reputation and justifies premium service retainer pricing.</p>
+        </div>
+
+        <div class="glass-card">
+          <div style="font-size:32px; margin-bottom:12px;">🛡️</div>
+          <div class="card-title" style="font-size: 18px;">Brand Protection</div>
+          <p style="font-size:13px; line-height: 1.5;">Live, high-fidelity mockup previews guarantee that the client reviews exact layouts—completely eliminating post-publishing deletion errors.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">
+    <div>// ContentFlow Platform pitch presentation</div>
+    <div>Press the tabs above to toggle between slides</div>
+  </div>
+
+  <script>
+    let activeSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const navButtons = document.querySelectorAll('.nav-btn');
+
+    function switchSlide(index) {
+      slides[activeSlideIndex].classList.remove('active');
+      navButtons[activeSlideIndex].classList.remove('active');
+      
+      activeSlideIndex = index;
+      
+      slides[activeSlideIndex].classList.add('active');
+      navButtons[activeSlideIndex].classList.add('active');
+
+      if (index !== 1) {
+        resetSimulation();
+      }
+    }
+
+    // Interactive Simulator States
+    let simInterval = null;
+    let simStep = 0;
+
+    function resetSimulation() {
+      clearInterval(simInterval);
+      simStep = 0;
+      
+      // Reset Nodes
+      document.querySelectorAll('.node').forEach(node => {
+        node.classList.remove('active', 'completed');
+      });
+      document.getElementById('progress-line').style.height = '0%';
+      document.getElementById('sim-btn').disabled = false;
+      document.getElementById('sim-btn').innerText = 'Simulate Content Flow';
+
+      // Reset Display areas
+      document.getElementById('disp-placeholder').classList.remove('hidden');
+      document.getElementById('disp-upload').classList.remove('active');
+      document.getElementById('disp-phone').classList.remove('active');
+      document.getElementById('disp-portal').classList.remove('active');
+      document.getElementById('toast').classList.remove('show');
+    }
+
+    function startSimulation() {
+      resetSimulation();
+      document.getElementById('sim-btn').disabled = true;
+      document.getElementById('sim-btn').innerText = 'Simulating...';
+      document.getElementById('disp-placeholder').classList.add('hidden');
+
+      runStep();
+    }
+
+    function runStep() {
+      simStep++;
+      if (simStep > 5) return;
+
+      const currentNode = document.getElementById(`node-${simStep}`);
+      currentNode.classList.add('active');
+
+      // Update line height
+      const progressLine = document.getElementById('progress-line');
+      const heights = ['0%', '25%', '50%', '75%', '100%'];
+      progressLine.style.height = heights[simStep - 1];
+
+      // Handle custom animations per step
+      if (simStep === 1) {
+        // Step 1: Profile setup display
+        setTimeout(() => {
+          currentNode.classList.replace('active', 'completed');
+          runStep();
+        }, 1500);
+      } else if (simStep === 2) {
+        // Step 2: Post drafted
+        setTimeout(() => {
+          currentNode.classList.replace('active', 'completed');
+          runStep();
+        }, 1500);
+      } else if (simStep === 3) {
+        // Step 3: Direct cloud upload animation
+        document.getElementById('disp-upload').classList.add('active');
+        let uploadProgress = 0;
+        const uploadFill = document.getElementById('upload-fill');
+        const uploadPct = document.getElementById('upload-pct');
+        
+        const uploadInterval = setInterval(() => {
+          uploadProgress += 5;
+          uploadFill.style.width = uploadProgress + '%';
+          uploadPct.innerText = `Uploading: ${uploadProgress}%`;
+
+          if (uploadProgress >= 100) {
+            clearInterval(uploadInterval);
+            setTimeout(() => {
+              document.getElementById('disp-upload').classList.remove('active');
+              currentNode.classList.replace('active', 'completed');
+              runStep();
+            }, 500);
+          }
+        }, 80);
+      } else if (simStep === 4) {
+        // Step 4: Renders phone mockup
+        const phone = document.getElementById('disp-phone');
+        phone.classList.add('active');
+        
+        const mediaArea = document.getElementById('phone-media');
+        // Let's create an elegant neon animated color visual representation in the mockup screen
+        mediaArea.innerHTML = `<div style="width:100%; height:100%; background:linear-gradient(135deg, #6366f1, #ec4899); display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:bold; letter-spacing:1px; animation: pulseGlow 3s infinite ease-in-out;">CAMPAIGN VIDEO</div>`;
+        
+        document.getElementById('phone-caption').innerText = "Unifying social copy, media streams, and instant client sign-offs into a premium workspace.";
+        document.getElementById('phone-tags').innerText = "#ContentApproval #SaaS #DirectUpload";
+
+        setTimeout(() => {
+          currentNode.classList.replace('active', 'completed');
+          runStep();
+        }, 2500);
+      } else if (simStep === 5) {
+        // Step 5: Client sign-off portal
+        document.getElementById('disp-portal').classList.add('active');
+        document.getElementById('sim-btn').disabled = false;
+        document.getElementById('sim-btn').innerText = 'Awaiting Decision';
+      }
+    }
+
+    function clientDecision(approved) {
+      document.getElementById('disp-portal').classList.remove('active');
+      const toast = document.getElementById('toast');
+      
+      if (approved) {
+        toast.innerText = 'Post Approved successfully! 🎉';
+        toast.style.background = 'var(--success)';
+        toast.classList.add('show');
+      } else {
+        toast.innerText = 'Revisions Requested! ✏️ Returned to Step 3.';
+        toast.style.background = 'var(--warning)';
+        toast.classList.add('show');
+        
+        // Loop back animation
+        setTimeout(() => {
+          resetSimulation();
+          // Instantly highlight draft stage
+          document.getElementById('node-2').classList.add('active');
+          document.getElementById('progress-line').style.height = '25%';
+        }, 2000);
+        return;
+      }
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+        resetSimulation();
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

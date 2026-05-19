@@ -80,10 +80,30 @@ export default function Dashboard() {
           <div className="stat-card-value">{data.byStatus.approved || 0}</div>
           <div className="stat-card-label">Approved</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-card-value">{data.approvalRate}%</div>
-          <div className="stat-card-label">Approval rate</div>
-        </div>
+        {(() => {
+          const usedBytes = data.storageUsedBytes || 0;
+          const limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB free tier
+          const pct = Math.min((usedBytes / limitBytes) * 100, 100);
+          const formatSize = (bytes) => {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+            return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+          };
+          const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
+          return (
+            <div className="stat-card">
+              <div className="stat-card-value" style={{fontSize:20}}>{formatSize(usedBytes)}</div>
+              <div style={{width:'100%',height:4,background:'var(--border)',borderRadius:2,marginTop:8,marginBottom:6,overflow:'hidden'}}>
+                <div style={{width:`${pct}%`,height:'100%',background:barColor,borderRadius:2,transition:'width 0.5s ease'}}></div>
+              </div>
+              <div className="stat-card-label" style={{display:'flex',justifyContent:'space-between'}}>
+                <span>Cloud storage</span>
+                <span style={{fontFamily:'var(--mono)',fontSize:11}}>{pct.toFixed(1)}% of 10 GB</span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="dashboard-content-grid">
