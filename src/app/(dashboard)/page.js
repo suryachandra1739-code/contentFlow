@@ -212,9 +212,9 @@ export default function Dashboard() {
             <Link href="/posts/new" className="btn btn-primary btn-sm">New post</Link>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', padding: '12px 16px', background: 'var(--bg-layer)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', padding: '12px 16px', background: 'var(--bg-layer)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
             {/* Search Input */}
-            <div style={{ position: 'relative', flex: '1 1 240px', minWidth: '180px' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               <input 
                 type="text" 
                 placeholder="Search captions, projects..." 
@@ -225,8 +225,8 @@ export default function Dashboard() {
             </div>
 
             {/* Filters */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-              <div style={{ display: 'flex', gap: '4px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 2 }}>
                 {['all', 'pending', 'approved', 'draft', 'rejected'].map(status => (
                   <button
                     key={status}

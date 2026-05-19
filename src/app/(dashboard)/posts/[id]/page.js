@@ -75,9 +75,9 @@ export default function PostDetail() {
         <div>
           <div className="card" style={{marginBottom:24}}>
             <div className="card-body">
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:8}}>
                 <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',margin:0}}>Platform preview</h2>
-                <div style={{display:'flex',gap:'4px',padding:'3px',background:'var(--bg-layer)',borderRadius:'var(--radius-pill)',border:'1px solid var(--border)'}}>
+                <div style={{display:'flex',gap:'4px',padding:'3px',background:'var(--bg-layer)',borderRadius:'var(--radius-pill)',border:'1px solid var(--border)',flexWrap:'wrap'}}>
                   {aspectOptions.map(opt => (
                     <button
                       key={opt.label}
