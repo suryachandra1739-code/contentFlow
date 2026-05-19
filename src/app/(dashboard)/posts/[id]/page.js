@@ -14,6 +14,7 @@ export default function PostDetail() {
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState('');
   const [authorName, setAuthorName] = useState('Creative Team');
+  const [aspectRatio, setAspectRatio] = useState(null); // null = platform default
 
   const load = () => {
     fetch(`/api/posts/${id}`).then(r => r.json()).then(data => {
@@ -47,6 +48,13 @@ export default function PostDetail() {
 
   if (!post) return <div className="empty-state">Loading...</div>;
 
+  const aspectOptions = [
+    { key: null, label: 'Original' },
+    { key: 'portrait', label: 'Portrait', ratio: '9:16' },
+    { key: 'landscape', label: 'Landscape', ratio: '16:9' },
+    { key: 'square', label: 'Square', ratio: '1:1' },
+  ];
+
   return (
     <div className="fade-in">
       <div className="page-header">
@@ -67,8 +75,33 @@ export default function PostDetail() {
         <div>
           <div className="card" style={{marginBottom:24}}>
             <div className="card-body">
-              <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Platform preview</h2>
-              <PlatformPreview platform={post.platform} caption={post.caption} hashtags={post.hashtags} mediaUrl={post.media_url} mediaType={post.media_type} />
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+                <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',margin:0}}>Platform preview</h2>
+                <div style={{display:'flex',gap:'4px',padding:'3px',background:'var(--bg-layer)',borderRadius:'var(--radius-pill)',border:'1px solid var(--border)'}}>
+                  {aspectOptions.map(opt => (
+                    <button
+                      key={opt.label}
+                      onClick={() => setAspectRatio(opt.key)}
+                      style={{
+                        padding:'5px 10px',
+                        fontSize:'11px',
+                        fontFamily:'var(--sans)',
+                        fontWeight:500,
+                        borderRadius:'var(--radius-pill)',
+                        border:'none',
+                        background: aspectRatio === opt.key ? 'var(--bg-card)' : 'transparent',
+                        color: aspectRatio === opt.key ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        boxShadow: aspectRatio === opt.key ? '0 1px 3px rgba(0,0,0,0.25)' : 'none',
+                        cursor:'pointer',
+                        transition:'all 0.15s ease',
+                      }}
+                    >
+                      {opt.label}{opt.ratio ? ` (${opt.ratio})` : ''}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <PlatformPreview platform={post.platform} caption={post.caption} hashtags={post.hashtags} mediaUrl={post.media_url} mediaType={post.media_type} aspectRatio={aspectRatio} />
             </div>
           </div>
 

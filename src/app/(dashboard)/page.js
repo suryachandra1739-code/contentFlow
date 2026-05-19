@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
 
@@ -8,6 +9,8 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const postsTableRef = useRef(null);
 
   // High-end volume tracking filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,15 +68,15 @@ export default function Dashboard() {
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card">
+        <div className="stat-card" style={{cursor:'pointer'}} onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
           <div className="stat-card-value">{data.total}</div>
           <div className="stat-card-label">Total posts</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" style={{cursor:'pointer'}} onClick={() => { setStatusFilter('pending'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
           <div className="stat-card-value">{data.byStatus.pending || 0}</div>
           <div className="stat-card-label">Awaiting review</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" style={{cursor:'pointer'}} onClick={() => { setStatusFilter('approved'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
           <div className="stat-card-value">{data.byStatus.approved || 0}</div>
           <div className="stat-card-label">Approved</div>
         </div>
@@ -121,8 +124,14 @@ export default function Dashboard() {
                   post_rejected: 'Post rejected',
                   post_updated: 'Post updated',
                   post_deleted: 'Post deleted',
+                  post_status_pending: 'Sent for review',
+                  post_status_approved: 'Post approved',
+                  post_status_rejected: 'Post rejected',
+                  post_status_revision: 'Revision requested',
                   client_created: 'Client created',
+                  client_deleted: 'Client deleted',
                   project_created: 'Project created',
+                  project_deleted: 'Project deleted',
                 };
                 const dotColors = {
                   post_created: 'var(--accent)',
@@ -130,22 +139,43 @@ export default function Dashboard() {
                   post_revision: 'var(--amber)',
                   post_rejected: 'var(--accent)',
                   post_updated: 'var(--cyan)',
+                  post_status_pending: 'var(--amber)',
+                  post_status_approved: 'var(--green)',
+                  post_status_rejected: 'var(--accent)',
+                  post_status_revision: 'var(--cyan)',
                   client_created: 'var(--text-muted)',
+                  client_deleted: 'var(--accent)',
                   project_created: 'var(--text-muted)',
+                  project_deleted: 'var(--accent)',
                 };
-                return (
-                  <div key={item.id || i} className="interactive-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
+
+                // Build the navigation link based on entity type
+                const getActivityLink = () => {
+                  if (item.entity_type === 'post' && item.entity_id) return `/posts/${item.entity_id}`;
+                  if (item.entity_type === 'client') return `/clients`;
+                  if (item.entity_type === 'project' && item.entity_id) return `/projects/${item.entity_id}`;
+                  return null;
+                };
+                const activityLink = getActivityLink();
+
+                const content = (
+                  <div key={item.id || i} className="interactive-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', cursor: activityLink ? 'pointer' : 'default' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                       <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColors[item.action] || 'var(--accent)', flexShrink: 0 }}></div>
                       <div className="truncate" style={{ fontSize: '13px', fontFamily: 'var(--sans)', color: 'var(--text-secondary)' }}>
                         <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.user_name || 'System'}</strong> <span style={{ opacity: 0.3, margin: '0 4px' }}>/</span> {actionLabels[item.action] || item.action}
                       </div>
                     </div>
-                    <div style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontWeight: 400, flexShrink: 0, marginLeft: '16px' }}>
-                      {new Date(item.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '16px' }}>
+                      <div style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontWeight: 400 }}>
+                        {new Date(item.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      {activityLink && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>}
                     </div>
                   </div>
                 );
+
+                return activityLink ? <Link href={activityLink} key={item.id || i} style={{textDecoration:'none',color:'inherit'}}>{content}</Link> : content;
               })}
               {(!data.recentActivity || data.recentActivity.length === 0) && (
                 <div className="empty-state" style={{padding:'40px 0'}}>No recent activity</div>
@@ -155,7 +185,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="card" style={{marginTop:32}}>
+      <div className="card" ref={postsTableRef} style={{marginTop:32, scrollMarginTop: '24px'}}>
         <div className="card-body">
           <div className="flex items-center justify-between mb-16">
             <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)'}}>All posts</h2>

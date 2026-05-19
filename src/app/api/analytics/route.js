@@ -18,10 +18,11 @@ export async function GET() {
     const approved = byStatus['approved'] || 0;
     const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
 
-    // Fetch recent audit log entries as "recent activity"
+    // Fetch recent audit log entries as "recent activity" — only content-related actions
     const { data: recentActivity } = await supabase
       .from('audit_log')
       .select('*')
+      .in('entity_type', ['post', 'client', 'project'])
       .order('created_at', { ascending: false })
       .limit(15);
 
