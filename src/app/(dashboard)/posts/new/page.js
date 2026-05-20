@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PlatformPreview from '@/components/PlatformPreview';
+import PlatformBadge from '@/components/PlatformBadge';
 import { useToast } from '@/components/Toast';
 
 export default function NewPost() {
@@ -11,7 +12,7 @@ export default function NewPost() {
   const [step, setStep] = useState(1);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', media_key: '', media_size: 0, scheduled_date: '' });
+  const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', media_key: '', media_size: 0, scheduled_date: '', thumbnail_url: 'original' });
 
   useEffect(() => {
     fetch('/api/projects').then(r => r.json()).then(data => {
@@ -110,8 +111,10 @@ export default function NewPost() {
             <div className="form-group">
               <label className="form-label">Platform</label>
               <div style={{display:'flex',gap:12}}>
-                {[{v:'instagram',l:'📷 Instagram'},{v:'facebook',l:'📘 Facebook'},{v:'shorts',l:'🎬 Shorts'}].map(p => (
-                  <button key={p.v} className={`btn ${form.platform === p.v ? 'btn-primary' : 'btn-secondary'}`} style={{padding:'12px 24px',fontSize:14}} onClick={() => setForm({...form, platform: p.v})}>{p.l}</button>
+                {[{v:'instagram',l:'Instagram'},{v:'facebook',l:'Facebook'},{v:'shorts',l:'Shorts'}].map(p => (
+                  <button key={p.v} className={`btn ${form.platform === p.v ? 'btn-primary' : 'btn-secondary'}`} style={{padding:'12px 24px',fontSize:14, display:'inline-flex', alignItems:'center', gap:8}} onClick={() => setForm({...form, platform: p.v})}>
+                    <PlatformBadge platform={p.v} /> {p.l}
+                  </button>
                 ))}
               </div>
             </div>
@@ -150,6 +153,29 @@ export default function NewPost() {
                   </label>
                 )}
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Aspect Ratio</label>
+                <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                  {[
+                    { key: 'original', label: 'Original' },
+                    { key: 'portrait', label: 'Portrait (9:16)' },
+                    { key: 'landscape', label: 'Landscape (16:9)' },
+                    { key: 'square', label: 'Square (1:1)' }
+                  ].map(opt => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      className={`btn ${form.thumbnail_url === opt.key ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{padding:'8px 12px', fontSize:13}}
+                      onClick={() => setForm({...form, thumbnail_url: opt.key})}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Caption</label>
                 <textarea className="form-textarea" value={form.caption} onChange={e => setForm({...form, caption: e.target.value})} placeholder="Write your caption..." rows={5} />
@@ -170,7 +196,7 @@ export default function NewPost() {
           </div>
           <div>
             <h3 style={{fontSize:14,fontWeight:600,fontFamily:'var(--sans)',color:'var(--text-muted)',marginBottom:12}}>Live preview</h3>
-            <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} />
+            <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
           </div>
         </div>
       )}
@@ -178,7 +204,7 @@ export default function NewPost() {
       {step === 3 && (
         <div className="slide-up" style={{textAlign:'center'}}>
           <div style={{maxWidth:400,margin:'0 auto',marginBottom:32}}>
-            <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} />
+            <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
           </div>
           <div className="card" style={{maxWidth:500,margin:'0 auto'}}>
             <div className="card-body">

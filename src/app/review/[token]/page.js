@@ -1,6 +1,7 @@
 import { createClientServer } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import PostReviewActions from '@/components/PostReviewActions';
+import PlatformPreview from '@/components/PlatformPreview';
 
 export default async function PublicReviewPage({ params }) {
   const { token } = await params;
@@ -36,21 +37,15 @@ export default async function PublicReviewPage({ params }) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Media Side */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-            {post.media_type === 'video' ? (
-              <video 
-                src={post.media_url} 
-                controls 
-                preload="metadata"
-                style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain' }} 
-              />
-            ) : (
-              <img 
-                src={post.media_url} 
-                alt={post.caption} 
-                style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain' }} 
-              />
-            )}
+          <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'var(--bg-card)' }}>
+            <PlatformPreview 
+              platform={post.platform} 
+              caption={post.caption} 
+              hashtags={post.hashtags} 
+              mediaUrl={post.media_url} 
+              mediaType={post.media_type} 
+              aspectRatio={post.thumbnail_url || 'original'} 
+            />
           </div>
 
           <div className="card">
@@ -72,6 +67,34 @@ export default async function PublicReviewPage({ params }) {
           </div>
 
           <PostReviewActions post={post} token={token} />
+
+          <div className="card">
+            <div className="card-body">
+              <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 16, color: 'var(--text-secondary)' }}>Comments ({comments?.length || 0})</h3>
+              {comments?.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>No comments yet.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {comments.map(c => (
+                    <div key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                      <img 
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Unknown')}&radius=50`} 
+                        alt={c.users?.name || 'Unknown'} 
+                        style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{c.users?.name || 'Unknown'}</span>
+                          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 11 }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.4 }}>{c.content}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

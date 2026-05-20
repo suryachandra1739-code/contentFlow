@@ -14,11 +14,14 @@ export default function PostDetail() {
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState('');
   const [authorName, setAuthorName] = useState('Creative Team');
-  const [aspectRatio, setAspectRatio] = useState(null); // null = platform default
+  const [aspectRatio, setAspectRatio] = useState('original');
 
   const load = () => {
     fetch(`/api/posts/${id}`).then(r => r.json()).then(data => {
-      if (data && !data.error) setPost(data);
+      if (data && !data.error) {
+        setPost(data);
+        setAspectRatio(data.thumbnail_url || 'original');
+      }
     });
     fetch(`/api/posts/${id}/comments`).then(r => r.json()).then(data => {
       if (Array.isArray(data)) setComments(data);
@@ -49,7 +52,7 @@ export default function PostDetail() {
   if (!post) return <div className="empty-state">Loading...</div>;
 
   const aspectOptions = [
-    { key: null, label: 'Original' },
+    { key: 'original', label: 'Original' },
     { key: 'portrait', label: 'Portrait', ratio: '9:16' },
     { key: 'landscape', label: 'Landscape', ratio: '16:9' },
     { key: 'square', label: 'Square', ratio: '1:1' },
@@ -127,7 +130,11 @@ export default function PostDetail() {
               <div className="comment-list">
                 {comments.map(c => (
                   <div className="comment-item" key={c.id} style={{display:'flex',gap:12,marginBottom:16}}>
-                    <div className="comment-avatar avatar" style={{width:28,height:28,fontSize:11,background:'var(--bg-input)'}}>{c.users?.name?.[0] || '?'}</div>
+                    <img 
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Team')}&radius=50`} 
+                      alt={c.users?.name || 'Team'} 
+                      style={{width:28,height:28,borderRadius:'50%',objectFit:'cover',flexShrink:0}} 
+                    />
                     <div className="comment-bubble" style={{background:'var(--bg-input)',padding:'10px 14px',borderRadius:'var(--radius-sm)',flex:1,border:'1px solid var(--border)'}}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
                         <div>
