@@ -5,11 +5,23 @@ import { useRouter } from 'next/navigation';
 import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= breakpoint);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const isMobile = useIsMobile();
   const postsTableRef = useRef(null);
 
   // High-end volume tracking filters
@@ -252,8 +264,8 @@ export default function Dashboard() {
             <Link href="/posts/new" className="btn btn-primary btn-sm">New post</Link>
           </div>
 
+          {/* Search & Filter Bar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', padding: '12px 16px', background: 'var(--bg-layer)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
-            {/* Search Input */}
             <div style={{ position: 'relative', width: '100%' }}>
               <input 
                 type="text" 
@@ -263,8 +275,6 @@ export default function Dashboard() {
                 className="form-input"
               />
             </div>
-
-            {/* Filters */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 2 }}>
                 {['all', 'pending', 'approved', 'draft', 'rejected'].map(status => (
@@ -282,20 +292,20 @@ export default function Dashboard() {
                       color: statusFilter === status ? 'var(--text-primary)' : 'var(--text-secondary)',
                       boxShadow: statusFilter === status ? '0 1px 2px rgba(0,0,0,0.2)' : 'none',
                       cursor: 'pointer',
-                      textTransform: 'capitalize'
+                      textTransform: 'capitalize',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     {status}
                   </button>
                 ))}
               </div>
-
               {uniqueClients.length > 0 && (
                 <select
                   value={clientFilter}
                   onChange={e => { setClientFilter(e.target.value); setCurrentPage(1); }}
                   className="form-select"
-                  style={{ width: 'auto' }}
+                  style={{ width: 'auto', minWidth: 0 }}
                 >
                   <option value="all">All clients</option>
                   {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
@@ -304,48 +314,84 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Platform</th>
-                  <th>Caption</th>
-                  <th>Project</th>
-                  <th>Client</th>
-                  <th>Status</th>
-                  <th>Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedPosts.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--sans)', color: 'var(--text-muted)' }}>
-                      No matching posts found
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedPosts.map(post => (
-                    <tr key={post.id} style={{cursor:'pointer'}} onClick={() => window.location.href = `/posts/${post.id}`}>
-                      <td><PlatformBadge platform={post.platform} /></td>
-                      <td><span className="truncate" style={{maxWidth:240,display:'inline-block',fontFamily:'var(--sans)',fontWeight:400, color:'var(--text-primary)'}}>{post.caption?.substring(0,50) || 'Untitled'}...</span></td>
-                      <td style={{fontFamily:'var(--sans)',fontSize:14,color:'var(--text-secondary)'}}>{post.projects?.name}</td>
-                      <td>
-                        <div className="flex items-center gap-8" style={{fontFamily:'var(--sans)',fontSize:14}}>
-                          <div className="avatar avatar-sm">{post.clients?.company_name?.[0]}</div>
-                          {post.clients?.company_name}
+          {/* Desktop: Table | Mobile: Card List */}
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {paginatedPosts.length === 0 ? (
+                <div className="empty-state" style={{ padding: '32px 0' }}>No matching posts found</div>
+              ) : (
+                paginatedPosts.map(post => (
+                  <Link href={`/posts/${post.id}`} key={post.id} className="mobile-post-card">
+                    <div className="mobile-post-card-thumb">
+                      {post.media_url ? (
+                        post.media_type === 'video' ? (
+                          <video src={post.media_url} />
+                        ) : (
+                          <img src={post.media_url} alt="" />
+                        )
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-layer)', fontSize: 18 }}>
+                          {post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬'}
                         </div>
+                      )}
+                    </div>
+                    <div className="mobile-post-card-info">
+                      <div className="mobile-post-card-title">{post.caption?.substring(0, 60) || 'Untitled'}</div>
+                      <div className="mobile-post-card-meta">
+                        <PlatformBadge platform={post.platform} />
+                        <StatusBadge status={post.status} />
+                        <span>{post.clients?.company_name}</span>
+                      </div>
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
+                  </Link>
+                ))
+              )}
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Platform</th>
+                    <th>Caption</th>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Status</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPosts.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--sans)', color: 'var(--text-muted)' }}>
+                        No matching posts found
                       </td>
-                      <td><StatusBadge status={post.status} /></td>
-                      <td style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:12}}>{new Date(post.updated_at).toLocaleDateString()}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    paginatedPosts.map(post => (
+                      <tr key={post.id} style={{cursor:'pointer'}} onClick={() => window.location.href = `/posts/${post.id}`}>
+                        <td><PlatformBadge platform={post.platform} /></td>
+                        <td><span className="truncate" style={{maxWidth:240,display:'inline-block',fontFamily:'var(--sans)',fontWeight:400, color:'var(--text-primary)'}}>{post.caption?.substring(0,50) || 'Untitled'}...</span></td>
+                        <td style={{fontFamily:'var(--sans)',fontSize:14,color:'var(--text-secondary)'}}>{post.projects?.name}</td>
+                        <td>
+                          <div className="flex items-center gap-8" style={{fontFamily:'var(--sans)',fontSize:14}}>
+                            <div className="avatar avatar-sm">{post.clients?.company_name?.[0]}</div>
+                            {post.clients?.company_name}
+                          </div>
+                        </td>
+                        <td><StatusBadge status={post.status} /></td>
+                        <td style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:12}}>{new Date(post.updated_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-          {/* Pagination summary & controller */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)', fontFamily: 'var(--sans)', fontSize: '13px', color: 'var(--text-secondary)' }}>
+          {/* Pagination */}
+          <div className={isMobile ? 'mobile-pagination' : ''} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)', fontFamily: 'var(--sans)', fontSize: '13px', color: 'var(--text-secondary)' }}>
             <div>
               Showing <strong style={{color:'var(--text-primary)', fontWeight:500}}>{filteredPosts.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</strong> to <strong style={{color:'var(--text-primary)', fontWeight:500}}>{Math.min(currentPage * itemsPerPage, filteredPosts.length)}</strong> of <strong style={{color:'var(--text-primary)', fontWeight:500}}>{filteredPosts.length}</strong> results
             </div>

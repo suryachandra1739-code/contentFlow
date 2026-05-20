@@ -27,25 +27,52 @@ export default function Sidebar() {
 
   const closeSidebar = () => setIsOpen(false);
 
+  // Derive page title from pathname for the mobile header
+  const getPageTitle = () => {
+    if (pathname === '/') return 'Dashboard';
+    if (pathname.startsWith('/projects')) return 'Projects';
+    if (pathname.startsWith('/posts/new')) return 'New Post';
+    if (pathname.startsWith('/posts')) return 'Post';
+    if (pathname.startsWith('/clients')) return 'Clients';
+    if (pathname.startsWith('/analytics')) return 'Analytics';
+    if (pathname.startsWith('/admin/team')) return 'Team';
+    if (pathname.startsWith('/admin/audit-log')) return 'Audit Log';
+    return 'ContentFlow';
+  };
+
   return (
     <>
-      {/* Floating Mobile Toggle Button */}
+      {/* Mobile Header Bar — full-width frosted bar with hamburger + title + logo */}
       <button 
         className="mobile-toggle-btn" 
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle navigation menu"
+        onClick={() => setIsOpen(true)}
+        aria-label="Open navigation menu"
       >
-        {isOpen ? (
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        ) : (
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        )}
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        <span className="mobile-header-title">{getPageTitle()}</span>
+        <div className="mobile-header-logo">{'//'}</div>
       </button>
 
       {/* Glassmorphic Mobile Backdrop Overlay */}
       {isOpen && <div className="sidebar-backdrop" onClick={closeSidebar} />}
 
       <aside className={`sidebar ${isOpen ? 'open' : ''}`} id="sidebar">
+        {/* Close button — positioned top-right inside sidebar, separate from logo */}
+        <button 
+          className="sidebar-close-btn" 
+          onClick={closeSidebar}
+          aria-label="Close navigation menu"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon" style={{
             width: 36,

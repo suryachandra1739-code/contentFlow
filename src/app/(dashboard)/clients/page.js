@@ -112,7 +112,7 @@ export default function ClientsPage() {
       ) : (
         <div className="content-grid">
           {clients.map(c => (
-            <div className="card" key={c.id}>
+            <div className="card mobile-client-card" key={c.id}>
               <div className="card-body">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-16">
@@ -123,7 +123,7 @@ export default function ClientsPage() {
                       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{c.email}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div className="mobile-client-actions">
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={() => { setInviteTarget(c); setInviteForm({ name: c.contact_name || '', email: c.email || '' }); }}

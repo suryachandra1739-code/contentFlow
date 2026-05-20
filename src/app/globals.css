@@ -191,12 +191,39 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   
-  /* Glowing background blobs + Subtle Dot Grid */
+  /* Grid Background (Dark Mode) */
   background-image: 
-    radial-gradient(circle at 10% 15%, rgba(229, 72, 77, 0.07) 0%, transparent 35%),
-    radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 100% 100%, 24px 24px;
-  background-position: 0 0, 0 0;
+    radial-gradient(circle at 10% 15%, rgba(229, 72, 77, 0.05) 0%, transparent 35%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.025) 0px,
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px,
+      transparent 80px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.025) 0px,
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px,
+      transparent 80px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 20px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 20px
+    );
+  background-size: 100% 100%, 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
   background-attachment: fixed;
   transition: background-color 0.3s ease;
 }
@@ -780,7 +807,12 @@ tr:hover td {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .fade-in { animation: fadeIn 0.2s ease; }
 
-/* Responsive */
+/* ── Responsive ── */
+
+/* Hide mobile toggle on desktop */
+.mobile-toggle-btn { display: none; }
+.sidebar-close-btn { display: none; }
+
 @media (max-width: 1100px) {
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-content-grid { grid-template-columns: 1fr; }
@@ -788,15 +820,43 @@ tr:hover td {
 }
 
 @media (max-width: 768px) {
+  /* ── Sidebar: off-canvas drawer ── */
   .sidebar { 
     transform: translateX(-100%); 
     transition: transform 0.3s var(--ease);
     box-shadow: none;
+    background-color: var(--bg-base);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .sidebar.open {
     transform: translateX(0);
     box-shadow: 20px 0 40px rgba(0, 0, 0, 0.8);
   }
+
+  /* Close button inside sidebar – top-right */
+  .sidebar-close-btn {
+    display: flex;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    background: var(--bg-layer);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    z-index: 200;
+    transition: all 0.2s var(--ease);
+  }
+  .sidebar-close-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+  }
+
   .sidebar-backdrop {
     position: fixed;
     top: 0;
@@ -805,141 +865,323 @@ tr:hover td {
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 95;
     animation: fadeIn 0.2s ease;
   }
+
+  /* ── Mobile Header Bar ── */
+  .mobile-toggle-btn {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    width: 100%;
+    background-color: var(--sidebar-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    z-index: 90;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  }
+  .mobile-toggle-btn svg {
+    flex-shrink: 0;
+  }
+  .mobile-header-title {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .mobile-header-logo {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  /* ── Main Content ── */
   .main-content { 
     margin-left: 0; 
-    padding: 68px 14px 28px; 
+    padding: 72px 16px 32px; 
     max-width: 100vw; 
     width: 100%;
     overflow-x: hidden;
   }
 
-  /* Stats: compact 2x2 */
+  /* ── Stats Grid ── */
   .stats-grid { 
     grid-template-columns: repeat(2, minmax(0, 1fr)); 
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
   .stat-card {
-    padding: 14px 16px;
+    padding: 16px;
   }
   .stat-card-value {
     font-size: 22px;
   }
   .stat-card-label {
     font-size: 10px;
-    margin-top: 6px;
+    margin-top: 8px;
   }
 
-  /* Dashboard content grid stacks */
+  /* ── Dashboard Content Grid ── */
   .dashboard-content-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
 
-  /* Page headers */
+  /* ── Page Headers ── */
   .page-header {
     margin-bottom: 20px;
   }
   .page-header h1 {
-    font-size: 20px;
+    font-size: 22px;
   }
   .page-header p {
     font-size: 13px;
     margin-top: 4px;
   }
 
-  /* Cards compact */
+  /* ── Cards ── */
   .card-body {
     padding: 16px;
   }
+  .card {
+    border-radius: var(--radius);
+  }
+  .card:hover {
+    transform: none;
+  }
 
-  /* Tables: tighter spacing */
+  /* ── Tables: tighter spacing ── */
   .table-wrapper {
     border-radius: var(--radius-sm);
   }
   th { padding: 10px 12px; font-size: 10px; }
   td { padding: 12px; font-size: 13px; }
 
-  /* Post detail / analytics 2-col → 1-col */
+  /* ── Post detail / analytics 2-col → 1-col ── */
   .grid-2 {
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    gap: 20px !important;
   }
 
-  /* Content grid */
+  /* ── Content Grid ── */
   .content-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 12px;
   }
 
-  /* Buttons */
+  /* ── Buttons ── */
   .btn {
-    padding: 7px 14px;
+    padding: 8px 16px;
     font-size: 13px;
   }
   .btn-sm {
-    padding: 5px 10px;
+    padding: 6px 12px;
     font-size: 12px;
   }
 
-  /* Flex header wrapping */
+  /* ── Flex header wrapping ── */
   .flex.items-center.justify-between {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
   }
 
-  /* Modal: full-width */
+  /* ── Modal: full-width ── */
   .modal {
-    width: 94%;
+    width: 92%;
     max-width: none;
-    margin: 16px;
+    margin: 16px auto;
   }
   .modal-header { padding: 16px; }
   .modal-body { padding: 16px; }
   .modal-footer { padding: 12px 16px; }
 
-  /* Empty state */
+  /* ── Empty state ── */
   .empty-state {
     padding: 32px 16px;
     font-size: 13px;
   }
-  
-  /* Floating Toggle Button for Mobile Navigation */
-  .mobile-toggle-btn {
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    width: 40px;
-    height: 40px;
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-hover);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
+
+  /* ── Interactive rows ── */
+  .interactive-row {
+    margin: 2px 0;
+    padding: 10px 8px !important;
+    gap: 12px;
+  }
+
+  /* ── Post Cards ── */
+  .post-card {
+    height: auto;
+    min-height: 420px;
+  }
+  .post-card:hover {
+    transform: none;
+  }
+
+  /* ── Approvals grid ── */
+  .approvals-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  /* ── Mobile Posts Card List (replaces table) ── */
+  .mobile-post-card {
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 150;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    gap: 12px;
+    padding: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     transition: all 0.2s var(--ease);
+    cursor: pointer;
   }
-  
-  .mobile-toggle-btn:hover {
-    background-color: var(--bg-card-hover);
-    border-color: var(--text-secondary);
+  .mobile-post-card:hover {
+    border-color: var(--accent-glow);
+    background: var(--bg-card-hover);
+  }
+  .mobile-post-card-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-layer);
+  }
+  .mobile-post-card-thumb img,
+  .mobile-post-card-thumb video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .mobile-post-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .mobile-post-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .mobile-post-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .mobile-post-card-meta .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  /* ── Mobile Client Card ── */
+  .mobile-client-card .flex.items-center.justify-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .mobile-client-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .mobile-client-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* ── Mobile Team Cards (table → cards) ── */
+  .mobile-team-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .mobile-team-card + .mobile-team-card {
+    margin-top: 10px;
+  }
+  .mobile-team-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mobile-team-stats {
+    display: flex;
+    gap: 16px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .mobile-team-stats span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .mobile-team-stats strong {
+    color: var(--text-primary);
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+
+  /* ── Pagination mobile ── */
+  .mobile-pagination {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px !important;
+    text-align: center;
+  }
+  .mobile-pagination > div:last-child {
+    justify-content: center;
+  }
+
+  /* ── Filter bar mobile ── */
+  .filter-bar {
+    gap: 6px;
+  }
+  .filter-chip {
+    padding: 5px 12px;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .main-content {
-    padding: 64px 12px 24px;
+    padding: 68px 12px 24px;
   }
   .stats-grid { 
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
   .stat-card {
     padding: 12px;
@@ -953,6 +1195,18 @@ tr:hover td {
   }
   .page-header h1 { font-size: 18px; }
   .page-header { margin-bottom: 14px; }
+
+  .mobile-post-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  .mobile-post-card-thumb {
+    width: 44px;
+    height: 44px;
+  }
+  .mobile-post-card-title {
+    font-size: 12px;
+  }
 }
 
 /* Scrollbars */
