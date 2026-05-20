@@ -101,25 +101,7 @@ export default function Dashboard() {
         <p>Overview of your content approval workflow.</p>
       </div>
 
-      <div className="hero-banner">
-        <div className="hero-text">
-          <h2>Create & Approve Social Content</h2>
-          <p>
-            Welcome back to your workspace! Coordinate post calendars, manage client accounts, and streamline comments and approvals across social networks.
-          </p>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Link href="/posts/new" className="btn btn-primary">Create New Post</Link>
-            <Link href="/projects" className="btn btn-secondary">Explore Projects</Link>
-          </div>
-        </div>
-        <div className="hero-image-wrapper">
-          <img 
-            src="/images/dashboard_banner.png" 
-            alt="SaaS Analytics Banner" 
-            className="hero-image"
-          />
-        </div>
-      </div>
+
 
       <div className="stats-grid">
         <div className="stat-card" style={{cursor:'pointer'}} onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>

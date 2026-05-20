@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
@@ -8,6 +8,7 @@ import { useToast } from '@/components/Toast';
 
 export default function ProjectDetail() {
   const { id } = useParams();
+  const router = useRouter();
   const [project, setProject] = useState(null);
   const [filter, setFilter] = useState('all');
   const addToast = useToast();
@@ -49,7 +50,15 @@ export default function ProjectDetail() {
 
       <div className="content-grid">
         {filtered.map(post => (
-          <div key={post.id} className="card post-card">
+          <div 
+            key={post.id} 
+            className="card post-card"
+            onClick={(e) => {
+              if (!e.target.closest('.post-card-footer') && !e.target.closest('a') && !e.target.closest('button')) {
+                router.push(`/posts/${post.id}`);
+              }
+            }}
+          >
             <div className="post-card-media">
               {post.media_url ? (
                 post.media_type === 'video' ? (
