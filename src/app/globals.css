@@ -35,7 +35,7 @@
   --radius-sm: 6px;
   --radius-pill: 9999px;            
   --sidebar-w: 240px;
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease: cubic-bezier(0.25, 1, 0.2, 1.08);
   
   /* Typography */
   --mono: 'Space Mono', monospace; 
@@ -178,22 +178,25 @@ input, textarea, select {
   align-items: center; 
   gap: 12px; 
   padding: 8px 12px; 
-  border-radius: 0;
+  border-radius: 8px;
   color: var(--text-secondary); 
   font-family: var(--sans);
   font-size: 13px; 
   font-weight: 400; 
-  transition: all 0.2s var(--ease); 
+  transition: all 0.3s var(--ease); 
   position: relative;
-  border-left: 2px solid transparent;
+  border-left: 2.5px solid transparent;
 }
 
 .nav-item:hover { 
   color: var(--text-primary); 
+  background-color: rgba(255, 255, 255, 0.02);
+  transform: translateX(4px);
 }
 
 .nav-item.active { 
   color: #ffffff; 
+  background-color: rgba(255, 255, 255, 0.03);
   border-left-color: var(--accent);
 }
 
@@ -258,9 +261,9 @@ input, textarea, select {
 }
 
 .card:hover { 
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6); 
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-6px) scale(1.008);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6); 
 }
 
 .card-body { 
@@ -269,33 +272,24 @@ input, textarea, select {
 
 /* Row Hover */
 .interactive-row {
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.2, 1.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 12px !important;
+  margin: 2px -12px;
+  border-radius: 8px;
   border: 1px solid transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.35s var(--ease);
   position: relative;
-  border-radius: var(--radius-sm);
 }
 
-.interactive-row::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-color: var(--border);
-  transition: opacity 0.3s ease;
-}
-
-.interactive-row:hover::after {
-  opacity: 0;
-}
 .interactive-row:hover {
   background-color: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(255, 255, 255, 0.06);
   transform: translateY(-4px) scale(1.015);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
-  border-color: rgba(255, 255, 255, 0.05);
-  position: relative;
-  z-index: 2;
+  z-index: 5;
 }
 
 /* Stats Grid */
@@ -331,9 +325,9 @@ input, textarea, select {
 }
 
 .stat-card:hover { 
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6); 
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6); 
 }
 
 .stat-card-value { 
@@ -365,35 +359,36 @@ input, textarea, select {
   font-family: var(--sans);
   font-size: 14px; 
   font-weight: 500; 
-  transition: all 0.2s var(--ease); 
+  transition: all 0.3s var(--ease); 
   white-space: nowrap; 
   cursor: pointer;
+  border-radius: 8px;
 }
 
 .btn-primary { 
   background: linear-gradient(135deg, var(--accent) 0%, #c12d32 100%); 
   color: #ffffff; 
-  border-radius: var(--radius-sm);
   border: none;
   box-shadow: 0 4px 14px rgba(229, 72, 77, 0.25);
 }
 
 .btn-primary:hover { 
   opacity: 0.95;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(229, 72, 77, 0.35);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(229, 72, 77, 0.4);
 }
 
 .btn-secondary { 
   background-color: var(--bg-input); 
   color: var(--text-primary); 
   border: 1px solid var(--border-hover);
-  border-radius: var(--radius-sm);
 }
 
 .btn-secondary:hover { 
   background-color: var(--bg-card); 
-  border-color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .btn-sm { 
