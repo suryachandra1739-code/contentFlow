@@ -533,25 +533,10 @@ td {
 td strong { color: var(--text-primary); font-weight: 500; }
 tr:last-child td { border-bottom: none; }
 tr {
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.2, 1.08), box-shadow 0.4s cubic-bezier(0.25, 1, 0.2, 1.08);
-}
-tr:hover {
-  transform: translateY(-4px) scale(1.01);
-  position: relative;
-  z-index: 2;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  transition: background-color 0.2s var(--ease);
 }
 tr:hover td { 
-  background-color: rgba(22, 22, 22, 0.95); 
-  border-color: rgba(255, 255, 255, 0.05);
-}
-tr:hover td:first-child {
-  border-top-left-radius: var(--radius-sm);
-  border-bottom-left-radius: var(--radius-sm);
-}
-tr:hover td:last-child {
-  border-top-right-radius: var(--radius-sm);
-  border-bottom-right-radius: var(--radius-sm);
+  background-color: rgba(255, 255, 255, 0.02); 
 }
 
 /* Avatars */
