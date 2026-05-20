@@ -24,8 +24,11 @@ export async function POST(request) {
     );
 
     // Construct the redirect URL dynamically using the request's origin
-    const requestUrl = new URL(request.url);
-    const redirectTo = `${requestUrl.origin}/update-password`;
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const redirectTo = `${protocol}://${host}/update-password`;
+
+    let userId;
 
     // 1. Send invite email via Supabase Auth
     const { data: authData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
@@ -34,12 +37,31 @@ export async function POST(request) {
     });
 
     if (inviteError) {
-      return NextResponse.json({ error: inviteError.message }, { status: 400 });
+      // If the user already exists in the auth system, we intercept the error, link their account to the new role/client, and send a password reset link instead.
+      if (inviteError.message.toLowerCase().includes('already registered') || inviteError.message.toLowerCase().includes('already exists')) {
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+        const existingUser = listData?.users?.find(u => u.email === email);
+        
+        if (!existingUser) {
+          return NextResponse.json({ error: inviteError.message }, { status: 400 });
+        }
+        
+        userId = existingUser.id;
+        
+        // Send a password reset link so they get an email notification
+        await supabaseAdmin.auth.resetPasswordForEmail(email, {
+          redirectTo: redirectTo
+        });
+      } else {
+        return NextResponse.json({ error: inviteError.message }, { status: 400 });
+      }
+    } else {
+      userId = authData.user.id;
     }
 
     // 2. Add to public.users table with role and optional client_id
     const userRow = {
-      id: authData.user.id,
+      id: userId,
       email: email,
       name: name,
       role: role,
