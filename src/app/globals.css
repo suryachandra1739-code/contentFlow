@@ -258,9 +258,10 @@ input, textarea, select {
 }
 
 .card:hover { 
-  border-color: rgba(255, 255, 255, 0.15);
-  background-color: rgba(26, 26, 26, 0.8);
+  border-color: rgba(229, 72, 77, 0.3);
+  background-color: rgba(26, 26, 26, 0.85);
   transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(229, 72, 77, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4); 
 }
 
 .card-body { 
@@ -313,9 +314,10 @@ input, textarea, select {
 }
 
 .stat-card:hover { 
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(229, 72, 77, 0.3);
   background-color: rgba(26, 26, 26, 0.85);
   transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(229, 72, 77, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4); 
 }
 
 .stat-card-value { 
