@@ -23,9 +23,14 @@ export async function POST(request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // Construct the redirect URL dynamically using the request's origin
+    const requestUrl = new URL(request.url);
+    const redirectTo = `${requestUrl.origin}/update-password`;
+
     // 1. Send invite email via Supabase Auth
     const { data: authData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      data: { role, name } // This puts it in raw_user_meta_data
+      data: { role, name }, // This puts it in raw_user_meta_data
+      redirectTo: redirectTo
     });
 
     if (inviteError) {
