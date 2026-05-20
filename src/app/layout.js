@@ -11,6 +11,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <div className="bg-grid-glow">
+          <div className="glow-orb orb-1"></div>
+          <div className="glow-orb orb-2"></div>
+          <div className="glow-orb orb-3"></div>
+        </div>
         <ToastProvider>
           {children}
         </ToastProvider>

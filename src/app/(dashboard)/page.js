@@ -60,11 +60,65 @@ export default function Dashboard() {
   // Extract unique clients for filter selector
   const uniqueClients = Array.from(new Set(posts.map(p => p.clients?.company_name).filter(Boolean)));
 
+  const renderPostThumbnail = (post) => {
+    if (post.media_url) {
+      if (post.media_type === 'video') {
+        return (
+          <div style={{ width: 80, height: 60, position: 'relative', borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0 }}>
+            <video src={post.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#fff' }}><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div style={{ width: 80, height: 60, borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0 }}>
+          <img src={post.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      );
+    }
+
+    const gradClass = post.platform === 'instagram' 
+      ? 'fallback-instagram' 
+      : post.platform === 'facebook' 
+      ? 'fallback-facebook' 
+      : 'fallback-shorts';
+    
+    const platformEmoji = post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬';
+
+    return (
+      <div className={`fallback-gradient ${gradClass}`} style={{ width: 80, height: 60, borderRadius: 6, flexShrink: 0, padding: 0 }}>
+        <span style={{ fontSize: 18, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>{platformEmoji}</span>
+      </div>
+    );
+  };
+
   return (
     <div className="fade-in">
       <div className="page-header">
         <h1>Dashboard</h1>
         <p>Overview of your content approval workflow.</p>
+      </div>
+
+      <div className="hero-banner">
+        <div className="hero-text">
+          <h2>Create & Approve Social Content</h2>
+          <p>
+            Welcome back to your workspace! Coordinate post calendars, manage client accounts, and streamline comments and approvals across social networks.
+          </p>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Link href="/posts/new" className="btn btn-primary">Create New Post</Link>
+            <Link href="/projects" className="btn btn-secondary">Explore Projects</Link>
+          </div>
+        </div>
+        <div className="hero-image-wrapper">
+          <img 
+            src="/images/dashboard_banner.png" 
+            alt="SaaS Analytics Banner" 
+            className="hero-image"
+          />
+        </div>
       </div>
 
       <div className="stats-grid">
@@ -119,10 +173,14 @@ export default function Dashboard() {
               <div style={{display:'flex',flexDirection:'column'}}>
                 {pendingPosts.slice(0, 5).map(post => (
                   <Link href={`/posts/${post.id}`} key={post.id} className="interactive-row" style={{display:'flex',alignItems:'center',gap:16,padding:'12px 0'}}>
-                    <PlatformBadge platform={post.platform} />
+                    {renderPostThumbnail(post)}
                     <div style={{flex:1,minWidth:0}}>
                       <div className="truncate" style={{fontSize:14,fontWeight:500,color:'var(--text-primary)'}}>{post.caption || 'Untitled post'}</div>
-                      <div style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-muted)',marginTop:2}}>{post.projects?.name} <span style={{opacity:0.4}}>·</span> {post.clients?.company_name}</div>
+                      <div style={{fontSize:12,fontFamily:'var(--sans)',color:'var(--text-muted)',marginTop:2}}>
+                        <PlatformBadge platform={post.platform} />
+                        <span style={{opacity:0.4, margin:'0 4px'}}>·</span>
+                        {post.clients?.company_name}
+                      </div>
                     </div>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   </Link>

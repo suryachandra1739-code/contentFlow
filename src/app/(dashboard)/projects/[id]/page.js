@@ -50,6 +50,29 @@ export default function ProjectDetail() {
       <div className="content-grid">
         {filtered.map(post => (
           <div key={post.id} className="card post-card">
+            <div className="post-card-media">
+              {post.media_url ? (
+                post.media_type === 'video' ? (
+                  <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <video src={post.media_url} style={{ pointerEvents: 'none' }} />
+                    <div className="play-overlay">
+                      <div className="play-button-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <img src={post.media_url} alt="" />
+                )
+              ) : (
+                <div className={`fallback-gradient fallback-${post.platform}`}>
+                  <span className="fallback-icon">
+                    {post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬'}
+                  </span>
+                  <span className="fallback-label">{post.platform}</span>
+                </div>
+              )}
+            </div>
             <div className="card-body">
               <div className="post-card-header">
                 <PlatformBadge platform={post.platform} />
