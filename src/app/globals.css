@@ -259,7 +259,6 @@ input, textarea, select {
 
 .card:hover { 
   border-color: rgba(229, 72, 77, 0.3);
-  background-color: rgba(26, 26, 26, 0.85);
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(229, 72, 77, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4); 
 }
@@ -278,7 +277,7 @@ input, textarea, select {
   border-bottom: none;
 }
 .interactive-row:hover {
-  background-color: var(--bg-card-hover) !important;
+  background-color: rgba(229, 72, 77, 0.04) !important;
 }
 
 /* Stats Grid */
@@ -315,7 +314,6 @@ input, textarea, select {
 
 .stat-card:hover { 
   border-color: rgba(229, 72, 77, 0.3);
-  background-color: rgba(26, 26, 26, 0.85);
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(229, 72, 77, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4); 
 }
@@ -516,7 +514,7 @@ td {
 }
 td strong { color: var(--text-primary); font-weight: 500; }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background-color: var(--bg-card-hover); }
+tr:hover td { background-color: rgba(229, 72, 77, 0.04); }
 
 /* Avatars */
 .avatar { 
