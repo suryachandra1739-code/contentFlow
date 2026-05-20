@@ -1,11 +1,28 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('contentflow-theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.body.classList.toggle('light', savedTheme === 'light');
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('contentflow-theme', nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.body.classList.toggle('light', nextTheme === 'light');
+  };
+
   const isActive = (path) => pathname === path || (path !== '/' && pathname.startsWith(path));
 
   const closeSidebar = () => setIsOpen(false);
@@ -43,6 +60,7 @@ export default function Sidebar() {
             fontWeight: 700,
             fontFamily: 'var(--mono)',
             letterSpacing: '-1px',
+            boxShadow: '0 4px 10px var(--accent-glow)'
           }}>
             {'//'}
           </div>
@@ -85,6 +103,44 @@ export default function Sidebar() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             Audit Log
           </Link>
+
+          <div className="sidebar-section">Aesthetics</div>
+          <div 
+            className="nav-item" 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} 
+            onClick={toggleTheme}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                {theme === 'light' ? (
+                  <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                ) : (
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                )}
+              </svg>
+              <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+            </div>
+            <div style={{
+              width: 32,
+              height: 18,
+              borderRadius: 99,
+              background: theme === 'light' ? 'var(--accent)' : '#2a2a2a',
+              position: 'relative',
+              transition: 'background 0.2s',
+              flexShrink: 0
+            }}>
+              <div style={{
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute',
+                top: 3,
+                left: theme === 'light' ? 17 : 3,
+                transition: 'left 0.2s',
+              }} />
+            </div>
+          </div>
         </nav>
       </aside>
     </>
