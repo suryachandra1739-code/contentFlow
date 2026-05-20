@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { submitReview } from '@/app/actions/review';
 import { useToast } from '@/components/Toast';
 
@@ -8,6 +9,7 @@ export default function PostReviewActions({ post, token = null }) {
   const [comment, setComment] = useState('');
   const [showRejectInput, setShowRejectInput] = useState(false);
   const addToast = useToast();
+  const router = useRouter();
 
   const isActioned = post.status !== 'pending' && post.status !== 'draft';
 
@@ -32,6 +34,7 @@ export default function PostReviewActions({ post, token = null }) {
       addToast(`Post ${action === 'approve' ? 'approved' : 'changes requested'} successfully`, 'success');
       setLoading(false);
       setShowRejectInput(false);
+      router.refresh();
     }
   };
 

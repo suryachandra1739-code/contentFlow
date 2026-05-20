@@ -2,6 +2,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import PostReviewActions from '@/components/PostReviewActions';
 import PlatformPreview from '@/components/PlatformPreview';
+import AutoRefresh from '@/components/AutoRefresh';
 
 export default async function PublicReviewPage({ params }) {
   const { token } = await params;
@@ -26,6 +27,7 @@ export default async function PublicReviewPage({ params }) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)', padding: '40px 24px' }}>
+      <AutoRefresh />
       <div className="fade-in" style={{ maxWidth: 800, margin: '0 auto' }}>
         
         <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40, justifyContent: 'center' }}>

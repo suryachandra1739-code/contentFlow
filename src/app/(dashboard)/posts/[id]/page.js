@@ -27,7 +27,11 @@ export default function PostDetail() {
       if (Array.isArray(data)) setComments(data);
     });
   };
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 4000);
+    return () => clearInterval(interval);
+  }, [id]);
 
   const updateStatus = async (status) => {
     await fetch(`/api/posts/${id}/status`, { method: 'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status }) });

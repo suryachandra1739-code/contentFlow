@@ -202,18 +202,24 @@ export default function NewPost() {
       )}
 
       {step === 3 && (
-        <div className="slide-up" style={{textAlign:'center'}}>
-          <div style={{maxWidth:400,margin:'0 auto',marginBottom:32}}>
-            <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
-          </div>
-          <div className="card" style={{maxWidth:500,margin:'0 auto'}}>
-            <div className="card-body">
-              <h2 style={{fontSize:18,fontWeight:600,fontFamily:'var(--sans)',marginBottom:8}}>Ready to create?</h2>
-              <p style={{color:'var(--text-secondary)',fontSize:14,marginBottom:24}}>Your post will be saved as a draft. You can send it for review from the project page.</p>
+        <div className="grid-2 slide-up" style={{alignItems:'center', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px'}}>
+          <div className="card" style={{height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+            <div className="card-body" style={{textAlign: 'center', padding: '40px 32px'}}>
+              <div style={{fontSize:48, marginBottom: 16}}>🚀</div>
+              <h2 style={{fontSize:20,fontWeight:600,fontFamily:'var(--sans)',marginBottom:12}}>Ready to create?</h2>
+              <p style={{color:'var(--text-secondary)',fontSize:14,marginBottom:32,lineHeight:1.6}}>
+                Your post will be saved as a draft. You can send it for review from the project page.
+              </p>
               <div style={{display:'flex',gap:12,justifyContent:'center'}}>
-                <button className="btn btn-secondary" onClick={() => setStep(2)}>Edit</button>
-                <button className="btn btn-primary" onClick={handleSubmit}>Create post</button>
+                <button className="btn btn-secondary" onClick={() => setStep(2)} style={{padding: '10px 24px'}}>Edit</button>
+                <button className="btn btn-primary" onClick={handleSubmit} style={{padding: '10px 24px'}}>Create post</button>
               </div>
+            </div>
+          </div>
+          <div>
+            <h3 style={{fontSize:14,fontWeight:600,fontFamily:'var(--sans)',color:'var(--text-muted)',marginBottom:12,textAlign:'center'}}>Final preview</h3>
+            <div style={{maxWidth:400, margin:'0 auto'}}>
+              <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import PostReviewActions from '@/components/PostReviewActions';
 import PlatformPreview from '@/components/PlatformPreview';
+import AutoRefresh from '@/components/AutoRefresh';
 
 export default async function ClientPortalReviewPage({ params }) {
   const { id } = await params;
@@ -34,6 +35,7 @@ export default async function ClientPortalReviewPage({ params }) {
 
   return (
     <div className="fade-in" style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <AutoRefresh />
       <div style={{ marginBottom: 24 }}>
         <Link href="/client-portal" style={{ color: 'var(--text-muted)', fontSize: 14, textDecoration: 'none' }}>
           ← Back to overview

@@ -32,6 +32,18 @@ export async function POST(request) {
     const body = await request.json();
     const { caption, platform, media_url, media_key, media_type, media_size, thumbnail_url, project_id, client_id, status } = body;
 
+    let finalClientId = client_id;
+    if (!finalClientId && project_id) {
+      const { data: proj } = await supabase
+        .from('projects')
+        .select('client_id')
+        .eq('id', project_id)
+        .single();
+      if (proj?.client_id) {
+        finalClientId = proj.client_id;
+      }
+    }
+
     const insertData = {
       caption,
       platform,
@@ -41,7 +53,7 @@ export async function POST(request) {
       media_size,
       thumbnail_url,
       project_id,
-      client_id,
+      client_id: finalClientId,
       status: status || 'draft',
       created_by: user.id
     };
