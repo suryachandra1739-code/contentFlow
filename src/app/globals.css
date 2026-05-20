@@ -191,7 +191,7 @@ input, textarea, select {
 .nav-item:hover { 
   color: var(--text-primary); 
   background-color: rgba(255, 255, 255, 0.02);
-  transform: translateX(4px);
+  transform: translateX(2px);
 }
 
 .nav-item.active { 
@@ -262,8 +262,8 @@ input, textarea, select {
 
 .card:hover { 
   border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-6px) scale(1.008);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6); 
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5); 
 }
 
 .card-body { 
@@ -285,10 +285,10 @@ input, textarea, select {
 }
 
 .interactive-row:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(255, 255, 255, 0.025) !important;
   border-color: rgba(255, 255, 255, 0.06);
-  transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
   z-index: 5;
 }
 
@@ -326,8 +326,8 @@ input, textarea, select {
 
 .stat-card:hover { 
   border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6); 
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5); 
 }
 
 .stat-card-value { 
@@ -374,8 +374,8 @@ input, textarea, select {
 
 .btn-primary:hover { 
   opacity: 0.95;
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(229, 72, 77, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(229, 72, 77, 0.35);
 }
 
 .btn-secondary { 
@@ -387,8 +387,8 @@ input, textarea, select {
 .btn-secondary:hover { 
   background-color: var(--bg-card); 
   border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 .btn-sm { 
