@@ -29,11 +29,14 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [clientFilter, setClientFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [authorFilter, setAuthorFilter] = useState('all');
 
-  useEffect(() => {
+  const fetchDashboardData = (authorId) => {
+    setLoading(true);
+    const apiQuery = authorId && authorId !== 'all' ? `?authorId=${authorId}` : '';
     Promise.all([
-      fetch('/api/analytics').then(r => r.json()),
-      fetch('/api/posts').then(r => r.json()),
+      fetch(`/api/analytics${apiQuery}`).then(r => r.json()),
+      fetch(`/api/posts${apiQuery}`).then(r => r.json()),
     ]).then(([analytics, allPosts]) => {
       setData(analytics);
       if (allPosts && allPosts.error) {
@@ -44,7 +47,22 @@ export default function Dashboard() {
       }
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authorId = urlParams.get('authorId') || 'all';
+    setAuthorFilter(authorId);
+    fetchDashboardData(authorId);
   }, []);
+
+  const clearAuthorFilter = () => {
+    setAuthorFilter('all');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('authorId');
+    window.history.pushState({}, '', url);
+    fetchDashboardData('all');
+  };
 
   if (loading) return <div className="fade-in empty-state">Loading dashboard...</div>;
 
@@ -276,6 +294,40 @@ export default function Dashboard() {
               />
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+              {authorFilter !== 'all' && (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8, 
+                  padding: '5px 12px', 
+                  background: 'rgba(229,72,77,0.1)', 
+                  color: 'var(--accent)', 
+                  border: '1px solid rgba(229,72,77,0.2)',
+                  borderRadius: 'var(--radius-pill)', 
+                  fontSize: '12px', 
+                  fontWeight: 500 
+                }}>
+                  <span>Author: <strong>{posts.find(p => p.created_by === authorFilter)?.users?.name || 'Team Member'}</strong></span>
+                  <button 
+                    onClick={clearAuthorFilter} 
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      color: 'var(--accent)', 
+                      cursor: 'pointer', 
+                      padding: '0 2px', 
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    aria-label="Clear author filter"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
               <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 2 }}>
                 {['all', 'pending', 'approved', 'draft', 'rejected'].map(status => (
                   <button

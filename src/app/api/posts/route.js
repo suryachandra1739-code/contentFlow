@@ -5,14 +5,35 @@ import { v4 as uuidv4 } from 'uuid';
 export async function GET(request) {
   try {
     const supabase = await createClientServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Fetch user role
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    const role = profile?.role || 'team';
+
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
     const projectId = searchParams.get('projectId');
+    const authorId = searchParams.get('authorId');
     
-    let query = supabase.from('posts').select('*, clients(company_name), projects(name)').order('created_at', { ascending: false });
+    let query = supabase
+      .from('posts')
+      .select('*, clients(company_name), projects(name), users:created_by(name)')
+      .order('created_at', { ascending: false });
 
     if (clientId) query = query.eq('client_id', clientId);
     if (projectId) query = query.eq('project_id', projectId);
+
+    if (role === 'admin') {
+      if (authorId) query = query.eq('created_by', authorId);
+    } else {
+      query = query.eq('created_by', user.id);
+    }
 
     const { data, error } = await query;
     if (error) throw error;

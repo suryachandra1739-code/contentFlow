@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import InviteTeamModal from './InviteTeamModal';
 import { useToast } from '@/components/Toast';
 
@@ -136,7 +137,19 @@ export default function TeamManagementPage() {
               </div>
               <div className="mobile-team-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', gap: 12, color: 'var(--text-muted)', fontSize: 12 }}>
-                  <span>Posts: <strong>{postCounts[member.id] || 0}</strong></span>
+                  <span>
+                    Posts:{' '}
+                    <Link 
+                      href={`/?authorId=${member.id}`} 
+                      style={{ 
+                        color: 'var(--accent)', 
+                        fontWeight: 600,
+                        textDecoration: 'none'
+                      }}
+                    >
+                      {postCounts[member.id] || 0}
+                    </Link>
+                  </span>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button 
@@ -195,8 +208,22 @@ export default function TeamManagementPage() {
                           {member.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td style={{ padding: '16px 24px', fontSize: 14, fontFamily: 'var(--mono)', color: 'var(--text-primary)' }}>
-                        {postCounts[member.id] || 0}
+                      <td style={{ padding: '16px 24px', fontSize: 14, fontFamily: 'var(--mono)' }}>
+                        <Link 
+                          href={`/?authorId=${member.id}`} 
+                          className="hover-underline"
+                          style={{ 
+                            color: 'var(--accent)', 
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}
+                        >
+                          {postCounts[member.id] || 0}
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                        </Link>
                       </td>
                       <td style={{ padding: '16px 24px', fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
                         {new Date(member.created_at).toLocaleDateString()}

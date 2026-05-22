@@ -1,18 +1,37 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { createClientBrowser } from '@/lib/supabase';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
+  const [userRole, setUserRole] = useState('team');
+  const supabase = createClientBrowser();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('contentflow-theme') || 'dark';
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.body.classList.toggle('light', savedTheme === 'light');
+
+    async function getRole() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile?.role) {
+          setUserRole(profile.role);
+        }
+      }
+    }
+    getRole();
   }, []);
 
   const toggleTheme = () => {
@@ -122,19 +141,23 @@ export default function Sidebar() {
             Analytics
           </Link>
 
-          <div className="sidebar-section">Admin</div>
-          <Link href="/admin/team" onClick={closeSidebar} className={`nav-item ${isActive('/admin/team') ? 'active' : ''}`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            Team
-          </Link>
-          <Link href="/admin/audit-log" onClick={closeSidebar} className={`nav-item ${isActive('/admin/audit-log') ? 'active' : ''}`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Audit Log
-          </Link>
-          <Link href="/admin/break-points" onClick={closeSidebar} className={`nav-item ${isActive('/admin/break-points') ? 'active' : ''}`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            Break Points
-          </Link>
+          {userRole === 'admin' && (
+            <>
+              <div className="sidebar-section">Admin</div>
+              <Link href="/admin/team" onClick={closeSidebar} className={`nav-item ${isActive('/admin/team') ? 'active' : ''}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Team
+              </Link>
+              <Link href="/admin/audit-log" onClick={closeSidebar} className={`nav-item ${isActive('/admin/audit-log') ? 'active' : ''}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Audit Log
+              </Link>
+              <Link href="/admin/break-points" onClick={closeSidebar} className={`nav-item ${isActive('/admin/break-points') ? 'active' : ''}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                Break Points
+              </Link>
+            </>
+          )}
 
           <div className="sidebar-section">Aesthetics</div>
           <div 
@@ -172,6 +195,20 @@ export default function Sidebar() {
                 transition: 'left 0.2s',
               }} />
             </div>
+          </div>
+
+          <div 
+            className="nav-item" 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginTop: 12, color: 'var(--text-muted)' }} 
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push('/login');
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            <span>Sign Out</span>
           </div>
         </nav>
       </aside>

@@ -5,6 +5,15 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const supabase = await createClientServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    const role = profile?.role || 'team';
 
     const { data: project, error } = await supabase
       .from('projects')
@@ -16,11 +25,17 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const { data: posts } = await supabase
+    let postsQuery = supabase
       .from('posts')
       .select('*')
       .eq('project_id', id)
       .order('created_at', { ascending: false });
+
+    if (role !== 'admin') {
+      postsQuery = postsQuery.eq('created_by', user.id);
+    }
+
+    const { data: posts } = await postsQuery;
 
     return NextResponse.json({ ...project, posts: posts || [] });
   } catch (error) {
