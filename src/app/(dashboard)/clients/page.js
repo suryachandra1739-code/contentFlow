@@ -12,6 +12,8 @@ export default function ClientsPage() {
   const [inviteForm, setInviteForm] = useState({ name: '', email: '' });
   const [form, setForm] = useState({ company_name: '', contact_name: '', email: '' });
   const [loading, setLoading] = useState(true);
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [copied, setCopied] = useState(false);
   const addToast = useToast();
   const router = useRouter();
 
@@ -84,14 +86,31 @@ export default function ClientsPage() {
         addToast(result.error, 'error');
       } else {
         addToast(`Invite sent to ${inviteForm.email}!`, 'success');
-        setInviteTarget(null);
-        setInviteForm({ name: '', email: '' });
+        if (result.inviteLink) {
+          setGeneratedLink(result.inviteLink);
+        } else {
+          setInviteTarget(null);
+          setInviteForm({ name: '', email: '' });
+        }
       }
     } catch (err) {
       addToast('Failed to send invite', 'error');
     } finally {
       setInviteLoading(false);
     }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(generatedLink);
+    setCopied(true);
+    addToast('Link copied to clipboard!', 'success');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const closeInviteModal = () => {
+    setInviteTarget(null);
+    setInviteForm({ name: '', email: '' });
+    setGeneratedLink('');
   };
 
   if (loading) return <div className="fade-in empty-state">Loading clients...</div>;
@@ -199,40 +218,89 @@ export default function ClientsPage() {
 
       {/* Invite Client Login Modal */}
       {inviteTarget && (
-        <div className="modal-overlay" onClick={() => setInviteTarget(null)}>
+        <div className="modal-overlay" onClick={closeInviteModal}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
-            <div className="modal-header">
-              <h2>Invite Client Login</h2>
-              <button className="btn-icon" onClick={() => setInviteTarget(null)} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
-            </div>
-            <form onSubmit={handleInviteClient}>
-              <div className="modal-body">
-                <div style={{ padding: '12px 16px', background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div className="avatar" style={{ background: inviteTarget.avatar_color || '#161616', width: 32, height: 32, fontSize: 13, flexShrink: 0 }}>{inviteTarget.company_name?.[0]}</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{inviteTarget.company_name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Portal access for this client</div>
+            {generatedLink ? (
+              /* Success Screen with Copy Link option */
+              <div>
+                <div className="modal-header">
+                  <h2>Invite Link Generated</h2>
+                  <button className="btn-icon" onClick={closeInviteModal} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
+                </div>
+                <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ textAlign: 'center', margin: '8px 0' }}>
+                    <span style={{ fontSize: 40 }}>✉️</span>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginTop: 12, color: 'var(--text-primary)' }}>Invitation link is ready!</h3>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.5 }}>
+                      We attempted to email the invite. If the client didn't receive it, or if you prefer to invite them directly, you can copy the link below.
+                    </p>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">Direct Invite Link</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input 
+                        type="text" 
+                        readOnly 
+                        className="form-input" 
+                        value={generatedLink} 
+                        style={{ fontFamily: 'var(--mono)', fontSize: 12, background: 'var(--bg-layer)' }} 
+                        onClick={e => e.target.select()}
+                      />
+                      <button 
+                        type="button" 
+                        className="btn btn-primary" 
+                        onClick={handleCopyLink}
+                        style={{ whiteSpace: 'nowrap' }}
+                      >
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Contact name</label>
-                  <input className="form-input" value={inviteForm.name} onChange={e => setInviteForm({ ...inviteForm, name: e.target.value })} required placeholder="e.g. Alice Smith" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Email address</label>
-                  <input className="form-input" type="email" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} required placeholder="alice@acme.com" />
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
-                    They will receive an email invitation to set their password and access the client portal.
-                  </p>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" style={{ width: '100%' }} onClick={closeInviteModal}>
+                    Close
+                  </button>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setInviteTarget(null)} disabled={inviteLoading}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={inviteLoading}>
-                  {inviteLoading ? 'Sending...' : 'Send Invite'}
-                </button>
+            ) : (
+              /* Initial Form Screen */
+              <div>
+                <div className="modal-header">
+                  <h2>Invite Client Login</h2>
+                  <button className="btn-icon" onClick={closeInviteModal} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
+                </div>
+                <form onSubmit={handleInviteClient}>
+                  <div className="modal-body">
+                    <div style={{ padding: '12px 16px', background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div className="avatar" style={{ background: inviteTarget.avatar_color || '#161616', width: 32, height: 32, fontSize: 13, flexShrink: 0 }}>{inviteTarget.company_name?.[0]}</div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 600 }}>{inviteTarget.company_name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Portal access for this client</div>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Contact name</label>
+                      <input className="form-input" value={inviteForm.name} onChange={e => setInviteForm({ ...inviteForm, name: e.target.value })} required placeholder="e.g. Alice Smith" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Email address</label>
+                      <input className="form-input" type="email" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} required placeholder="alice@acme.com" />
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
+                        They will receive an email invitation to set their password and access the client portal.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={closeInviteModal} disabled={inviteLoading}>Cancel</button>
+                    <button type="submit" className="btn btn-primary" disabled={inviteLoading}>
+                      {inviteLoading ? 'Sending...' : 'Send Invite'}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

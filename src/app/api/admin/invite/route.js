@@ -26,7 +26,7 @@ export async function POST(request) {
     // Construct the redirect URL dynamically using the request's origin
     const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const redirectTo = `${protocol}://${host}/update-password`;
+    const redirectTo = `${protocol}://${host}/api/auth/callback?next=/update-password`;
 
     let userId;
 
@@ -75,7 +75,24 @@ export async function POST(request) {
 
     await supabaseAdmin.from('users').upsert(userRow);
 
-    return NextResponse.json({ success: true, userId: userId });
+    // 3. Generate action link as backup
+    let inviteLink = '';
+    try {
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'recovery',
+        email: email,
+        options: {
+          redirectTo: redirectTo
+        }
+      });
+      if (!linkError && linkData?.properties?.action_link) {
+        inviteLink = linkData.properties.action_link;
+      }
+    } catch (err) {
+      console.error('Error generating backup link:', err);
+    }
+
+    return NextResponse.json({ success: true, userId: userId, inviteLink: inviteLink });
   } catch (error) {
     console.error('Invite Error:', error);
     return NextResponse.json({ error: 'Internal server error during invite' }, { status: 500 });

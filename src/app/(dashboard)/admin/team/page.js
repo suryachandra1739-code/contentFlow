@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import InviteTeamModal from './InviteTeamModal';
+import { useToast } from '@/components/Toast';
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
@@ -18,6 +19,13 @@ export default function TeamManagementPage() {
   const [postCounts, setPostCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
+  const addToast = useToast();
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'team' });
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchTeam = () => {
     fetch('/api/admin/team')
@@ -33,6 +41,66 @@ export default function TeamManagementPage() {
   useEffect(() => {
     fetchTeam();
   }, []);
+
+  useEffect(() => {
+    if (editTarget) {
+      setEditForm({
+        name: editTarget.name || '',
+        email: editTarget.email || '',
+        role: editTarget.role || 'team'
+      });
+    }
+  }, [editTarget]);
+
+  const handleEdit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    try {
+      const res = await fetch('/api/admin/team', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: editTarget.id,
+          name: editForm.name,
+          email: editForm.email,
+          role: editForm.role
+        })
+      });
+      const data = await res.json();
+      if (data.error) {
+        addToast(data.error, 'error');
+      } else {
+        addToast('Team member updated successfully!', 'success');
+        setEditTarget(null);
+        fetchTeam();
+      }
+    } catch (err) {
+      addToast('Failed to update team member', 'error');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/admin/team?userId=${deleteTarget.id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.error) {
+        addToast(data.error, 'error');
+      } else {
+        addToast('Team member deleted successfully!', 'success');
+        setDeleteTarget(null);
+        fetchTeam();
+      }
+    } catch (err) {
+      addToast('Failed to delete team member', 'error');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   if (loading) return <div className="fade-in empty-state">Loading team...</div>;
 
@@ -66,9 +134,26 @@ export default function TeamManagementPage() {
                   </span>
                 </div>
               </div>
-              <div className="mobile-team-stats">
-                <span>Posts: <strong>{postCounts[member.id] || 0}</strong></span>
-                <span>Joined: <strong>{new Date(member.created_at).toLocaleDateString()}</strong></span>
+              <div className="mobile-team-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', gap: 12, color: 'var(--text-muted)', fontSize: 12 }}>
+                  <span>Posts: <strong>{postCounts[member.id] || 0}</strong></span>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button 
+                    className="btn btn-sm btn-secondary" 
+                    onClick={() => setEditTarget(member)}
+                    style={{ fontSize: 11, padding: '4px 8px' }}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-danger" 
+                    onClick={() => setDeleteTarget(member)}
+                    style={{ fontSize: 11, padding: '4px 8px' }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -117,14 +202,106 @@ export default function TeamManagementPage() {
                         {new Date(member.created_at).toLocaleDateString()}
                       </td>
                       <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                        <button className="btn btn-sm" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
-                          Edit
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                          <button 
+                            className="btn btn-sm btn-secondary" 
+                            onClick={() => setEditTarget(member)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-danger" 
+                            onClick={() => setDeleteTarget(member)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editTarget && (
+        <div className="modal-overlay" onClick={() => setEditTarget(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+            <div className="modal-header">
+              <h2>Edit Team Member</h2>
+              <button className="btn-icon" onClick={() => setEditTarget(null)} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
+            </div>
+            <form onSubmit={handleEdit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input 
+                    className="form-input" 
+                    value={editForm.name} 
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })} 
+                    required 
+                    placeholder="Jane Doe" 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input 
+                    className="form-input" 
+                    type="email" 
+                    value={editForm.email} 
+                    onChange={e => setEditForm({ ...editForm, email: e.target.value })} 
+                    required 
+                    placeholder="jane@company.com" 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Role</label>
+                  <select 
+                    className="form-select" 
+                    value={editForm.role} 
+                    onChange={e => setEditForm({ ...editForm, role: e.target.value })} 
+                    required
+                    style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-layer)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="team">Team Member</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setEditTarget(null)} disabled={editLoading}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={editLoading}>
+                  {editLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+            <div className="modal-header">
+              <h2>Confirm Deletion</h2>
+              <button className="btn-icon" onClick={() => setDeleteTarget(null)} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px 24px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+                Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.email}</strong>? This will revoke their access to the workspace.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteLoading}>Cancel</button>
+              <button type="button" className="btn btn-danger" onClick={handleConfirmDelete} disabled={deleteLoading}>
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>
