@@ -110,7 +110,7 @@ export default function NewPost() {
             </div>
             <div className="form-group">
               <label className="form-label">Platform</label>
-              <div style={{display:'flex',gap:12}}>
+              <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
                 {[{v:'instagram',l:'Instagram'},{v:'facebook',l:'Facebook'},{v:'shorts',l:'Shorts'}].map(p => (
                   <button key={p.v} className={`btn ${form.platform === p.v ? 'btn-primary' : 'btn-secondary'}`} style={{padding:'12px 24px',fontSize:14, display:'inline-flex', alignItems:'center', gap:8}} onClick={() => setForm({...form, platform: p.v})}>
                     <PlatformBadge platform={p.v} /> {p.l}

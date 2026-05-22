@@ -4,6 +4,36 @@ import { NextResponse } from 'next/server';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://content-flow-eight-mu.vercel.app';
 
+/**
+ * Rewrite Supabase's hosted actionLink into a direct link to our /auth/confirm route.
+ * 
+ * Supabase generateLink() returns URLs like:
+ *   https://<project>.supabase.co/auth/v1/verify?token=xxx&type=invite&redirect_to=...
+ * 
+ * These go through Supabase's hosted redirect, which can fail if:
+ *   - The redirect URL isn't in the project's allowed list
+ *   - PKCE exchange fails due to cookie/session issues
+ * 
+ * Instead, we extract the token_hash and type and build a direct URL to our
+ * own /auth/confirm route, which calls verifyOtp() server-side.
+ */
+function rewriteActionLink(actionLink, nextPath = '/update-password') {
+  try {
+    const url = new URL(actionLink);
+    const tokenHash = url.searchParams.get('token') || url.searchParams.get('token_hash');
+    const linkType = url.searchParams.get('type');
+
+    if (tokenHash && linkType) {
+      return `${SITE_URL}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(linkType)}&next=${encodeURIComponent(nextPath)}`;
+    }
+    console.warn('Could not parse actionLink, using original:', actionLink);
+    return actionLink;
+  } catch (err) {
+    console.error('Error rewriting action link:', err);
+    return actionLink;
+  }
+}
+
 export async function POST(request) {
   try {
     const { email, role, name, client_id } = await request.json();
@@ -25,17 +55,13 @@ export async function POST(request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Redirect destination after Supabase verifies the token
     const redirectTo = `${SITE_URL}/auth/confirm?next=/update-password`;
 
     let userId;
-    let actionLink;
+    let rawActionLink;
     let isExistingUser = false;
 
     // --- Step 1: Generate the invite/recovery link ---
-    // Using generateLink instead of inviteUserByEmail so we control
-    // email delivery via Resend and avoid Supabase's built-in email
-    // rate limits and deliverability issues.
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
       email: email,
@@ -46,7 +72,6 @@ export async function POST(request) {
     });
 
     if (inviteError) {
-      // User already exists — generate a recovery link instead
       if (
         inviteError.message.toLowerCase().includes('already registered') ||
         inviteError.message.toLowerCase().includes('already exists') ||
@@ -54,7 +79,6 @@ export async function POST(request) {
       ) {
         isExistingUser = true;
 
-        // Find the existing user
         const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
         const existingUser = listData?.users?.find(u => u.email === email);
 
@@ -64,13 +88,15 @@ export async function POST(request) {
 
         userId = existingUser.id;
 
-        // Generate a recovery (password reset) link — ONE link only, no invalidation
+        // Update metadata
+        await supabaseAdmin.auth.admin.updateUserById(userId, {
+          user_metadata: { name, role },
+        });
+
         const { data: recoveryData, error: recoveryError } = await supabaseAdmin.auth.admin.generateLink({
           type: 'recovery',
           email: email,
-          options: {
-            redirectTo: redirectTo,
-          },
+          options: { redirectTo },
         });
 
         if (recoveryError) {
@@ -78,51 +104,48 @@ export async function POST(request) {
           return NextResponse.json({ error: recoveryError.message }, { status: 400 });
         }
 
-        actionLink = recoveryData?.properties?.action_link;
+        rawActionLink = recoveryData?.properties?.action_link;
       } else {
         console.error('Invite error:', inviteError);
         return NextResponse.json({ error: inviteError.message }, { status: 400 });
       }
     } else {
       userId = inviteData.user.id;
-      actionLink = inviteData.properties?.action_link;
+      rawActionLink = inviteData.properties?.action_link;
     }
 
-    // --- Step 2: Upsert the user record in our public.users table ---
-    const userRow = {
-      id: userId,
-      email: email,
-      name: name,
-      role: role,
-      is_active: true,
-    };
+    // --- Step 1b: Rewrite actionLink to bypass Supabase's hosted redirect ---
+    const directLink = rawActionLink ? rewriteActionLink(rawActionLink) : null;
+    console.log('[Invite] Direct link for', email, '→', directLink ? 'OK' : 'MISSING');
 
-    if (role === 'client' && client_id) {
-      userRow.client_id = client_id;
-    }
+    // --- Step 2: Upsert user in public.users ---
+    const userRow = { id: userId, email, name, role, is_active: true };
+    if (role === 'client' && client_id) userRow.client_id = client_id;
 
     const { error: upsertError } = await supabaseAdmin.from('users').upsert(userRow);
-    if (upsertError) {
-      console.error('User upsert error:', upsertError);
-    }
+    if (upsertError) console.error('User upsert error:', upsertError);
 
-    // --- Step 3: Send the invite email via Resend ---
+    // --- Step 3: Send email via Resend ---
     let emailSent = false;
-    if (actionLink && process.env.RESEND_API_KEY) {
+    if (directLink && process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-
         const portalType = role === 'client' ? 'Client Portal' : 'Dashboard';
         const subject = isExistingUser
           ? `Set your password — ContentFlow ${portalType}`
           : `You've been invited to ContentFlow ${portalType}`;
 
-        const { error: emailError } = await resend.emails.send({
+        const roleLabel = role === 'client' ? 'Client' : role === 'admin' ? 'Administrator' : 'Team Member';
+        const headline = isExistingUser ? 'Set your new password' : `Welcome to ContentFlow, ${name}!`;
+        const body = isExistingUser
+          ? 'A password reset has been requested for your account. Click the button below to set a new password.'
+          : `You've been invited to join ContentFlow as a <strong>${roleLabel}</strong>. Click the button below to set your password and get started.`;
+
+        const { data: emailData, error: emailError } = await resend.emails.send({
           from: 'ContentFlow <onboarding@resend.dev>',
           to: [email],
-          subject: subject,
-          html: `
-<!DOCTYPE html>
+          subject,
+          html: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
@@ -132,16 +155,9 @@ export async function POST(request) {
           <span style="color:#ffffff;font-size:18px;font-weight:600;">📦 ContentFlow</span>
         </td></tr>
         <tr><td style="padding:32px;">
-          <h1 style="margin:0 0 8px;font-size:22px;color:#111;">
-            ${isExistingUser ? 'Set your new password' : `Welcome to ContentFlow, ${name}!`}
-          </h1>
-          <p style="margin:0 0 24px;color:#555;font-size:14px;line-height:1.6;">
-            ${isExistingUser
-              ? 'A password reset has been requested for your account. Click the button below to set a new password.'
-              : `You've been invited to join ContentFlow as a <strong>${role === 'client' ? 'Client' : role === 'admin' ? 'Administrator' : 'Team Member'}</strong>. Click the button below to set your password and get started.`
-            }
-          </p>
-          <a href="${actionLink}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">
+          <h1 style="margin:0 0 8px;font-size:22px;color:#111;">${headline}</h1>
+          <p style="margin:0 0 24px;color:#555;font-size:14px;line-height:1.6;">${body}</p>
+          <a href="${directLink}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">
             Set Your Password →
           </a>
           <p style="margin:24px 0 0;color:#999;font-size:12px;line-height:1.5;">
@@ -161,6 +177,7 @@ export async function POST(request) {
           console.error('Resend email error:', emailError);
         } else {
           emailSent = true;
+          console.log('[Invite] Email sent via Resend, id:', emailData?.id);
         }
       } catch (emailErr) {
         console.error('Resend send error:', emailErr);
@@ -168,14 +185,12 @@ export async function POST(request) {
     }
 
     // --- Step 4: Return success ---
-    // If Resend failed or isn't configured, return the link so admin can share manually
     return NextResponse.json({
       success: true,
-      userId: userId,
-      emailSent: emailSent,
-      // Only return link if email wasn't sent (fallback for admin to copy)
-      inviteLink: emailSent ? '' : (actionLink || ''),
-      isExistingUser: isExistingUser,
+      userId,
+      emailSent,
+      inviteLink: emailSent ? '' : (directLink || ''),
+      isExistingUser,
     });
   } catch (error) {
     console.error('Invite Error:', error);

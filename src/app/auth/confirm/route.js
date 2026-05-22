@@ -11,6 +11,12 @@ import { NextResponse } from 'next/server';
  *   ?error=xxx          (Supabase error)
  * 
  * After verifying, we set session cookies and redirect to the final destination.
+ * 
+ * Edge cases handled:
+ *   - Token already used → redirect to /login with message
+ *   - Token expired → friendly error with option to request new invite
+ *   - User already exists → redirect to /login
+ *   - No valid params → error page
  */
 export async function GET(request) {
   const requestUrl = new URL(request.url);
@@ -57,8 +63,7 @@ export async function GET(request) {
       return NextResponse.redirect(new URL(next, request.url));
     }
     console.error('Code exchange error:', error);
-    const msg = encodeURIComponent(error.message || 'Your invite link has expired or is invalid.');
-    return NextResponse.redirect(new URL(`/auth/error?message=${msg}`, request.url));
+    return handleAuthError(error, request);
   }
 
   // --- Handle token_hash verification (invite, recovery, signup, email_change) ---
@@ -71,18 +76,36 @@ export async function GET(request) {
       return NextResponse.redirect(new URL(next, request.url));
     }
     console.error('OTP verification error:', error);
-
-    // Specific error handling
-    const errMsg = error.message?.toLowerCase() || '';
-    if (errMsg.includes('expired') || errMsg.includes('invalid')) {
-      const msg = encodeURIComponent('This invite link has expired. Please ask your admin to send a new one.');
-      return NextResponse.redirect(new URL(`/auth/error?message=${msg}`, request.url));
-    }
-
-    const msg = encodeURIComponent(error.message || 'Authentication failed. Please try again.');
-    return NextResponse.redirect(new URL(`/auth/error?message=${msg}`, request.url));
+    return handleAuthError(error, request);
   }
 
   // --- No valid auth params — redirect to error ---
-  return NextResponse.redirect(new URL('/auth/error?message=Invalid+authentication+link.+Please+request+a+new+invite.', request.url));
+  return NextResponse.redirect(
+    new URL('/auth/error?message=Invalid+authentication+link.+Please+request+a+new+invite.', request.url)
+  );
+}
+
+/**
+ * Categorize auth errors and redirect appropriately
+ */
+function handleAuthError(error, request) {
+  const msg = (error.message || '').toLowerCase();
+
+  // Token already used / user already confirmed
+  if (msg.includes('already') || msg.includes('confirmed') || msg.includes('used')) {
+    const loginMsg = encodeURIComponent('This link has already been used. Please log in with your password.');
+    return NextResponse.redirect(new URL(`/login?message=${loginMsg}`, request.url));
+  }
+
+  // Token expired
+  if (msg.includes('expired') || msg.includes('invalid')) {
+    const expiredMsg = encodeURIComponent(
+      'This invite link has expired. Please ask your administrator to send a new one.'
+    );
+    return NextResponse.redirect(new URL(`/auth/error?message=${expiredMsg}`, request.url));
+  }
+
+  // Generic error
+  const genericMsg = encodeURIComponent(error.message || 'Authentication failed. Please try again.');
+  return NextResponse.redirect(new URL(`/auth/error?message=${genericMsg}`, request.url));
 }

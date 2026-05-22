@@ -1,10 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { createClientBrowser } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const redirectMessage = searchParams.get('message');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,6 +62,12 @@ export default function LoginPage() {
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Welcome back to ContentFlow</p>
         </div>
 
+        {redirectMessage && (
+          <div style={{ padding: '12px 16px', background: 'var(--amber-soft)', border: '1px solid var(--amber)', borderRadius: 'var(--radius-sm)', marginBottom: 20, fontSize: 13, color: 'var(--amber)', lineHeight: 1.5 }}>
+            {redirectMessage}
+          </div>
+        )}
+
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div className="form-group">
             <label className="form-label">Email address</label>
@@ -95,5 +103,17 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
+        <div style={{ color: 'var(--text-muted)' }}>Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
