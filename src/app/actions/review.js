@@ -1,12 +1,13 @@
 'use server';
-
+ 
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-
+ 
 export async function submitReview(postId, action, comment, token = null) {
   const cookieStore = await cookies();
-  const supabase = createServerClient(
+  let supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
@@ -16,14 +17,22 @@ export async function submitReview(postId, action, comment, token = null) {
       }
     }
   );
-
+ 
   let userId = null;
   let userName = 'Anonymous Reviewer';
   let clientId = null;
   let post = null;
-
+ 
   // 1. Fetch the post to verify access
   if (token) {
+    // If public review token is used, initialize a service role client to query and update the post bypassing RLS
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        { auth: { persistSession: false } }
+      );
+    }
     // Public link path
     const { data } = await supabase.from('posts').select('*').eq('id', postId).eq('review_token', token).single();
     if (!data) return { error: 'Invalid or expired review link.' };

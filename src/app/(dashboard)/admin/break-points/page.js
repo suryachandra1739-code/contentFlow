@@ -245,18 +245,18 @@ export default function BreakPointsPage() {
               <div>
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>1. Next.js Server Media Buffering</h3>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)', display: 'block', marginTop: 2 }}>
-                  File Reference: <a href="file:///Users/a/.gemini/antigravity/scratch/content-approval/src/app/api/upload/route.js#L34" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>src/app/api/upload/route.js:L34</a>
+                  File Reference: <a href="file:///Users/a/.gemini/antigravity/scratch/content-approval/src/components/upload/MediaUpload.jsx" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>src/components/upload/MediaUpload.jsx</a>
                 </span>
               </div>
-              {getRiskBadge('High')}
+              {getRiskBadge('Resolved')}
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>
-              <strong>Vulnerability:</strong> High-resolution photos and videos (up to 500MB) are uploaded to `/api/upload` on the Next.js server first. The server reads the file into memory via <code>Buffer.from(await file.arrayBuffer())</code> before forwarding it to Cloudflare R2. This causes memory bloat and will trigger Out Of Memory (OOM) crashes on serverless hosts like Vercel (50MB body limit and 1024MB lambda RAM limit).
+              <strong>Vulnerability:</strong> High-resolution photos and videos (up to 500MB) were previously buffered entirely in memory before saving to Cloudflare R2, triggering Out of Memory (OOM) errors and timeouts on serverless runtimes.
             </p>
-            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Recommendation</span>
+            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--green)' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Implemented</span>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                Re-implement direct-to-cloud presigned URL generation. The server should only sign a time-limited PUT URL, allowing the client browser to stream files directly to Cloudflare R2's endpoint, bypassing Next.js hosting.
+                Re-engineered the client upload process to request a time-limited presigned URL from <code>/api/upload/presign</code> and stream the file payload directly to R2. The Next.js server is bypassed during the data stream, eliminating body-size limits.
               </span>
             </div>
           </div>
@@ -269,18 +269,18 @@ export default function BreakPointsPage() {
               <div>
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>2. RLS Public Review Token Restrictions</h3>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)', display: 'block', marginTop: 2 }}>
-                  File Reference: <a href="file:///Users/a/.gemini/antigravity/scratch/content-approval/src/app/actions/review.js#L62" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>src/app/actions/review.js:L62</a>
+                  File Reference: <a href="file:///Users/a/.gemini/antigravity/scratch/content-approval/src/app/actions/review.js#L26" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>src/app/actions/review.js:L26</a>
                 </span>
               </div>
-              {getRiskBadge('High')}
+              {getRiskBadge('Resolved')}
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>
-              <strong>Vulnerability:</strong> The review actions action client (<code>submitReview</code>) initializes Supabase using the public browser anon key. If Row-Level Security (RLS) is active on the <code>posts</code> database table, it blocks anonymous updates. External users trying to approve posts via review tokens will receive an authorization failure.
+              <strong>Vulnerability:</strong> Public review approvals submitted without active login session cookies failed because anonymous clients were blocked by Supabase Row-Level Security (RLS) constraints on the <code>posts</code> database table.
             </p>
-            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Recommendation</span>
+            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--green)' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Implemented</span>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                Check if a valid <code>review_token</code> is supplied. If yes, use the <code>SUPABASE_SERVICE_ROLE_KEY</code> client inside the server action to bypass RLS for that specific transaction safely.
+                Configured the server action <code>submitReview</code> to instantiate a secure privileged client using the <code>SUPABASE_SERVICE_ROLE_KEY</code> when a valid <code>review_token</code> is supplied, safely bypassing public RLS limits.
               </span>
             </div>
           </div>
@@ -293,18 +293,18 @@ export default function BreakPointsPage() {
               <div>
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>3. Static Cache Inconsistencies</h3>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)', display: 'block', marginTop: 2 }}>
-                  File Reference: <a href="file:///Users/a/.gemini/antigravity/scratch/content-approval/src/app/api/clients/route.js#L6" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>src/app/api/clients/route.js:L6</a>
+                  File Reference: <a href="file:///Users/a/.gemini/antigravity/scratch/content-approval/src/app/api/analytics/route.js#L5" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>src/app/api/analytics/route.js:L5</a>
                 </span>
               </div>
-              {getRiskBadge('Medium')}
+              {getRiskBadge('Resolved')}
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>
-              <strong>Vulnerability:</strong> Next.js App Router aggressively caches fetch responses in production. When clients are added from the dashboard modal, the list page might not reflect changes without manual browser refreshes.
+              <strong>Vulnerability:</strong> Next.js App Router aggressively caches static fetch responses, meaning page lists and dashboards did not reflect newly added clients or updated review statistics without manually forcing cache purges.
             </p>
-            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Recommendation</span>
+            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--green)' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Implemented</span>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                Ensure all listing and analytics endpoints use <code>export const dynamic = 'force-dynamic'</code> or <code>revalidate = 0</code>. Invoke client-side page updates with <code>router.refresh()</code>.
+                Forced dynamic rendering across listing and analytics endpoints (<code>src/app/api/clients/route.js</code> and <code>src/app/api/analytics/route.js</code>) via <code>export const dynamic = 'force-dynamic'</code>.
               </span>
             </div>
           </div>
@@ -320,15 +320,15 @@ export default function BreakPointsPage() {
                   File Reference: <a href="file:///Users/a/.gemini/antigravity/scratch/content-approval/src/components/upload/MediaUpload.jsx" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>src/components/upload/MediaUpload.jsx</a>
                 </span>
               </div>
-              {getRiskBadge('Low')}
+              {getRiskBadge('Resolved')}
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>
-              <strong>Vulnerability:</strong> S3/R2 presigned upload links expire (typically after 15-60 minutes). If a content creator stays on the "New Post" page for an extended period of time before submitting the file, the R2 upload transaction will fail due to expired credentials.
+              <strong>Vulnerability:</strong> Presigned upload URLs expire after a short window (e.g. 15 minutes). Generating links on page mount meant they expired if a user remained idle in the form page before uploading.
             </p>
-            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Recommendation</span>
+            <div style={{ padding: 12, background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--green)' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Fix Implemented</span>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                Generate the presigned upload URL instantly when the user drops a file or starts uploading, rather than during initial page load.
+                Shifted the presigned URL request logic to invoke instantly when a file drops or is selected by the user, assuring the S3 signature is fresh when the PUT stream initiates.
               </span>
             </div>
           </div>

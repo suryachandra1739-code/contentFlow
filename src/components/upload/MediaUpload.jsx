@@ -29,38 +29,58 @@ export default function MediaUpload({ onUpload, onRemove, accept = 'image/*,vide
     setPreview(objectUrl);
     setFileData({ name: file.name, size: (file.size / (1024 * 1024)).toFixed(2) + ' MB', type });
 
-    // Upload to server
+    // Upload directly to Cloudflare R2 using presigned URL
     setIsUploading(true);
-    setProgress(10); // Fake initial progress
+    setProgress(10);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (clientId) formData.append('clientId', clientId);
-      if (projectId) formData.append('projectId', projectId);
-
       // Simulate progress for UI
       const interval = setInterval(() => {
         setProgress(p => Math.min(p + 10, 90));
-      }, 500);
+      }, 300);
 
-      const res = await fetch('/api/upload', {
+      // 1. Get presigned upload URL from Next.js server
+      const presignRes = await fetch('/api/upload/presign', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          clientId,
+          projectId
+        })
+      });
+
+      if (!presignRes.ok) {
+        const errorData = await presignRes.json();
+        throw new Error(errorData.error || 'Failed to generate upload signature');
+      }
+
+      const presignData = await presignRes.json();
+
+      // 2. Upload file directly to R2 bucket via presigned PUT url
+      const uploadRes = await fetch(presignData.presignedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type
+        },
+        body: file
       });
 
       clearInterval(interval);
       setProgress(100);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Upload failed');
+      if (!uploadRes.ok) {
+        throw new Error('Direct-to-cloud upload connection failed');
       }
 
-      const data = await res.json();
-      
-      // We pass the R2 url, key, and type up to the parent form
-      onUpload(data);
+      // 3. Inform parent form of successfully uploaded R2 key & public URL
+      onUpload({
+        url: presignData.publicUrl,
+        key: presignData.key,
+        type: presignData.mediaType,
+        size: file.size
+      });
     } catch (err) {
       setError(err.message);
       setPreview(null);
