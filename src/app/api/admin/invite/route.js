@@ -75,7 +75,7 @@ export async function POST(request) {
 
     await supabaseAdmin.from('users').upsert(userRow);
 
-    return NextResponse.json({ success: true, userId: authData.user.id });
+    return NextResponse.json({ success: true, userId: userId });
   } catch (error) {
     console.error('Invite Error:', error);
     return NextResponse.json({ error: 'Internal server error during invite' }, { status: 500 });

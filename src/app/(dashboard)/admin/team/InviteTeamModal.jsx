@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/components/Toast';
 
-export default function InviteTeamModal() {
+export default function InviteTeamModal({ onInviteSuccess }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const addToast = useToast();
@@ -26,6 +26,7 @@ export default function InviteTeamModal() {
       
       addToast('Invitation sent successfully!', 'success');
       setIsOpen(false);
+      if (onInviteSuccess) onInviteSuccess();
     } catch (err) {
       addToast(err.message || 'Failed to send invite', 'error');
     } finally {

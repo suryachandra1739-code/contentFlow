@@ -19,7 +19,7 @@ export default function TeamManagementPage() {
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
-  useEffect(() => {
+  const fetchTeam = () => {
     fetch('/api/admin/team')
       .then(r => r.json())
       .then(data => {
@@ -28,6 +28,10 @@ export default function TeamManagementPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchTeam();
   }, []);
 
   if (loading) return <div className="fade-in empty-state">Loading team...</div>;
@@ -39,7 +43,7 @@ export default function TeamManagementPage() {
           <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)' }}>Team Management</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>Manage admin and team access.</p>
         </div>
-        <InviteTeamModal />
+        <InviteTeamModal onInviteSuccess={fetchTeam} />
       </div>
 
       {isMobile ? (
