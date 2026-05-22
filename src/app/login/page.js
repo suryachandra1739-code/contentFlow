@@ -37,8 +37,9 @@ export default function LoginPage() {
       return;
     }
     
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/api/auth/callback?next=/update-password`,
+      redirectTo: `${siteUrl}/auth/confirm?next=/update-password`,
     });
 
     if (error) {

@@ -84,14 +84,15 @@ export default function ClientsPage() {
       const result = await res.json();
       if (result.error) {
         addToast(result.error, 'error');
+      } else if (result.emailSent) {
+        addToast(`Invitation email sent to ${inviteForm.email}!`, 'success');
+        closeInviteModal();
+      } else if (result.inviteLink) {
+        addToast('Email delivery failed. Copy the link below to share manually.', 'error');
+        setGeneratedLink(result.inviteLink);
       } else {
-        addToast(`Invite sent to ${inviteForm.email}!`, 'success');
-        if (result.inviteLink) {
-          setGeneratedLink(result.inviteLink);
-        } else {
-          setInviteTarget(null);
-          setInviteForm({ name: '', email: '' });
-        }
+        addToast('Invitation created successfully!', 'success');
+        closeInviteModal();
       }
     } catch (err) {
       addToast('Failed to send invite', 'error');
@@ -221,18 +222,17 @@ export default function ClientsPage() {
         <div className="modal-overlay" onClick={closeInviteModal}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
             {generatedLink ? (
-              /* Success Screen with Copy Link option */
+              /* Fallback: email delivery failed, show link to copy */
               <div>
                 <div className="modal-header">
-                  <h2>Invite Link Generated</h2>
+                  <h2>Copy Invite Link</h2>
                   <button className="btn-icon" onClick={closeInviteModal} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
                 </div>
                 <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div style={{ textAlign: 'center', margin: '8px 0' }}>
-                    <span style={{ fontSize: 40 }}>✉️</span>
-                    <h3 style={{ fontSize: 18, fontWeight: 600, marginTop: 12, color: 'var(--text-primary)' }}>Invitation link is ready!</h3>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.5 }}>
-                      We attempted to email the invite. If the client didn't receive it, or if you prefer to invite them directly, you can copy the link below.
+                    <span style={{ fontSize: 36 }}>📋</span>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
+                      We couldn't deliver the email. Share this link directly with the client:
                     </p>
                   </div>
                   
@@ -260,7 +260,7 @@ export default function ClientsPage() {
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" style={{ width: '100%' }} onClick={closeInviteModal}>
-                    Close
+                    Done
                   </button>
                 </div>
               </div>

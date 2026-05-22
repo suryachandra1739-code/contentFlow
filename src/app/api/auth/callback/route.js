@@ -2,6 +2,11 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
+/**
+ * /api/auth/callback — Handles PKCE code exchange.
+ * Used as a fallback for password resets initiated from the login page.
+ * The primary auth email handler is /auth/confirm.
+ */
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -23,7 +28,7 @@ export async function GET(request) {
                 cookieStore.set(name, value, options)
               );
             } catch (err) {
-              // Can be ignored if middleware handles user sessions refreshing
+              // Ignored
             }
           },
         },
@@ -37,6 +42,6 @@ export async function GET(request) {
     console.error('Code exchange error:', error);
   }
 
-  // If code exchange fails, redirect to login with error parameter
-  return NextResponse.redirect(new URL('/login?error=auth-callback-failed', request.url));
+  // Redirect to the auth error page
+  return NextResponse.redirect(new URL('/auth/error?message=Your+link+has+expired+or+is+invalid.+Please+request+a+new+one.', request.url));
 }

@@ -5,7 +5,7 @@ import { useToast } from '@/components/Toast';
 export default function InviteTeamModal({ onInviteSuccess }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
   const [copied, setCopied] = useState(false);
   const addToast = useToast();
 
@@ -27,12 +27,20 @@ export default function InviteTeamModal({ onInviteSuccess }) {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);
       
-      addToast('Invitation sent successfully!', 'success');
-      if (result.inviteLink) {
-        setGeneratedLink(result.inviteLink);
-      } else {
+      if (result.emailSent) {
+        addToast(`Invitation email sent to ${email}!`, 'success');
         setIsOpen(false);
+        e.target.reset();
+      } else if (result.inviteLink) {
+        // Email failed — show the link for manual sharing
+        addToast('Email delivery failed. Copy the link below to share manually.', 'error');
+        setInviteLink(result.inviteLink);
+      } else {
+        addToast('Invitation created successfully!', 'success');
+        setIsOpen(false);
+        e.target.reset();
       }
+
       if (onInviteSuccess) onInviteSuccess();
     } catch (err) {
       addToast(err.message || 'Failed to send invite', 'error');
@@ -42,7 +50,7 @@ export default function InviteTeamModal({ onInviteSuccess }) {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(generatedLink);
+    navigator.clipboard.writeText(inviteLink);
     setCopied(true);
     addToast('Link copied to clipboard!', 'success');
     setTimeout(() => setCopied(false), 2000);
@@ -50,7 +58,8 @@ export default function InviteTeamModal({ onInviteSuccess }) {
 
   const handleClose = () => {
     setIsOpen(false);
-    setGeneratedLink('');
+    setInviteLink('');
+    setCopied(false);
   };
 
   return (
@@ -60,58 +69,44 @@ export default function InviteTeamModal({ onInviteSuccess }) {
       </button>
 
       {isOpen && (
-        <div className="modal-backdrop">
-          <div className="modal-content fade-in" style={{ maxWidth: 440 }}>
-            {generatedLink ? (
-              /* Success Screen with Copy Link option */
+        <div className="modal-overlay" onClick={handleClose}>
+          <div className="modal fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
+            {inviteLink ? (
+              /* Fallback: email failed, show link to copy */
               <div>
                 <div className="modal-header">
-                  <h2>Invite Link Generated</h2>
-                  <button className="btn-icon" onClick={handleClose}>✕</button>
+                  <h2>Copy Invite Link</h2>
+                  <button className="btn-icon" onClick={handleClose} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
                 </div>
-                <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ textAlign: 'center', margin: '8px 0' }}>
-                    <span style={{ fontSize: 40 }}>✉️</span>
-                    <h3 style={{ fontSize: 18, fontWeight: 600, marginTop: 12, color: 'var(--text-primary)' }}>Invitation link is ready!</h3>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.5 }}>
-                      We attempted to email the invite. If the user didn't receive it, or if you prefer to invite them directly, you can copy the link below.
+                <div className="modal-body">
+                  <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                    <span style={{ fontSize: 36 }}>📋</span>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
+                      We couldn't deliver the email. Share this link directly with the team member:
                     </p>
                   </div>
-                  
-                  <div className="form-group">
-                    <label className="form-label">Direct Invite Link</label>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <input 
-                        type="text" 
-                        readOnly 
-                        className="form-input" 
-                        value={generatedLink} 
-                        style={{ fontFamily: 'var(--mono)', fontSize: 12, background: 'var(--bg-layer)' }} 
-                        onClick={e => e.target.select()}
-                      />
-                      <button 
-                        type="button" 
-                        className="btn btn-primary" 
-                        onClick={handleCopy}
-                        style={{ whiteSpace: 'nowrap' }}
-                      >
-                        {copied ? 'Copied!' : 'Copy'}
-                      </button>
-                    </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text" readOnly className="form-input"
+                      value={inviteLink}
+                      style={{ fontFamily: 'var(--mono)', fontSize: 11, background: 'var(--bg-layer)' }}
+                      onClick={e => e.target.select()}
+                    />
+                    <button type="button" className="btn btn-primary" onClick={handleCopy} style={{ whiteSpace: 'nowrap' }}>
+                      {copied ? '✓ Copied' : 'Copy'}
+                    </button>
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" style={{ width: '100%' }} onClick={handleClose}>
-                    Close
-                  </button>
+                  <button type="button" className="btn btn-secondary" style={{ width: '100%' }} onClick={handleClose}>Done</button>
                 </div>
               </div>
             ) : (
-              /* Initial Form Screen */
+              /* Main invite form */
               <div>
                 <div className="modal-header">
                   <h2>Invite Team Member</h2>
-                  <button className="btn-icon" onClick={() => setIsOpen(false)}>✕</button>
+                  <button className="btn-icon" onClick={handleClose} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
                 </div>
                 <form onSubmit={handleInvite}>
                   <div className="modal-body">
@@ -135,7 +130,7 @@ export default function InviteTeamModal({ onInviteSuccess }) {
                     </div>
                   </div>
                   <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={() => setIsOpen(false)} disabled={loading}>Cancel</button>
+                    <button type="button" className="btn btn-secondary" onClick={handleClose} disabled={loading}>Cancel</button>
                     <button type="submit" className="btn btn-primary" disabled={loading}>
                       {loading ? 'Sending...' : 'Send Invite'}
                     </button>

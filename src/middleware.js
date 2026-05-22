@@ -9,6 +9,7 @@ export async function middleware(request) {
     path.startsWith('/review/') ||
     path.startsWith('/api/') ||
     path.startsWith('/_next/') ||
+    path.startsWith('/auth/') ||
     path === '/favicon.ico' ||
     path === '/update-password'
   ) {
