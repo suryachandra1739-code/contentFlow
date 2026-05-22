@@ -90,7 +90,7 @@ export default function TeamManagementPage() {
                 </thead>
                 <tbody>
                   {teamMembers?.map(member => (
-                    <tr key={member.id} style={{ borderBottom: '1px solid var(--border)' }} className="interactive-row">
+                    <tr key={member.id} style={{ borderBottom: '1px solid var(--border)' }}>
                       <td style={{ padding: '16px 24px' }}>
                         <div style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2 }}>{member.name || 'Pending Invite'}</div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{member.email}</div>

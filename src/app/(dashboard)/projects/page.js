@@ -71,10 +71,10 @@ export default function ProjectsPage() {
 
       <div className="content-grid">
         {projects.map(project => (
-          <div className="card interactive-row" key={project.id} style={{position:'relative'}}>
-            <Link href={`/projects/${project.id}`} style={{display:'block'}}>
+          <div className="card" key={project.id} style={{position:'relative', overflow:'hidden'}}>
+            <Link href={`/projects/${project.id}`} style={{display:'block', width:'100%', height:'100%', textDecoration:'none', color:'inherit'}}>
               <div className="card-body">
-                <div className="flex items-center gap-12 mb-16">
+                <div className="flex items-center gap-12 mb-16" style={{ paddingRight: 24 }}>
                   <div className="avatar" style={{background: project.clients?.avatar_color || '#161616'}}>{project.clients?.company_name?.[0] || '?'}</div>
                   <div>
                     <div style={{fontSize:15,fontWeight:600}}>{project.name}</div>
@@ -83,7 +83,7 @@ export default function ProjectsPage() {
                 </div>
                 {project.description && <p style={{fontSize:14,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.5}}>{project.description}</p>}
                 <div style={{paddingTop:16,borderTop:'1px solid var(--border)'}}>
-                  <span style={{fontSize:13,color:'var(--text-muted)'}}>{project.status || 'active'}</span>
+                  <span style={{fontSize:13,color:'var(--text-muted)', textTransform:'capitalize'}}>{project.status || 'active'}</span>
                 </div>
               </div>
             </Link>

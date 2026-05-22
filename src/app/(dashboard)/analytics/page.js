@@ -20,19 +20,19 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="stats-grid">
-        <Link href="/" className="stat-card interactive-row slide-up stagger-1" style={{display:'block',textDecoration:'none'}}>
+        <Link href="/" className="stat-card slide-up stagger-1" style={{display:'block',textDecoration:'none'}}>
           <div className="stat-card-value">{data.total}</div>
           <div className="stat-card-label">Total posts</div>
         </Link>
-        <Link href="/" className="stat-card interactive-row slide-up stagger-2" style={{display:'block',textDecoration:'none'}}>
+        <Link href="/" className="stat-card slide-up stagger-2" style={{display:'block',textDecoration:'none'}}>
           <div className="stat-card-value">{data.approvalRate}%</div>
           <div className="stat-card-label">Approval rate</div>
         </Link>
-        <Link href="/" className="stat-card interactive-row slide-up stagger-3" style={{display:'block',textDecoration:'none'}}>
+        <Link href="/" className="stat-card slide-up stagger-3" style={{display:'block',textDecoration:'none'}}>
           <div className="stat-card-value">{data.byStatus?.pending || 0}</div>
           <div className="stat-card-label">Awaiting review</div>
         </Link>
-        <Link href="/" className="stat-card interactive-row slide-up stagger-4" style={{display:'block',textDecoration:'none'}}>
+        <Link href="/" className="stat-card slide-up stagger-4" style={{display:'block',textDecoration:'none'}}>
           <div className="stat-card-value">{(data.byStatus?.revision || 0) + (data.byStatus?.rejected || 0)}</div>
           <div className="stat-card-label">Need attention</div>
         </Link>

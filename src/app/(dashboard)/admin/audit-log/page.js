@@ -62,7 +62,7 @@ export default async function AuditLogPage({ searchParams }) {
                   </tr>
                 )}
                 {logs?.map(log => (
-                  <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }} className="interactive-row">
+                  <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '16px 24px', fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
                       {new Date(log.created_at).toLocaleString()}
                     </td>
