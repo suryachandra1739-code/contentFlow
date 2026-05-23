@@ -20,7 +20,7 @@ export default async function AuditLogPage({ searchParams }) {
 
   return (
     <div className="fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="audit-header-container">
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)' }}>Audit Log</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>System-wide chronological activity log.</p>
@@ -42,7 +42,8 @@ export default async function AuditLogPage({ searchParams }) {
         </form>
       </div>
 
-      <div className="card">
+      {/* Desktop view (table) */}
+      <div className="card hide-on-mobile">
         <div className="card-body" style={{ padding: 0 }}>
           <div className="table-wrapper">
             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
@@ -84,6 +85,57 @@ export default async function AuditLogPage({ searchParams }) {
             </table>
           </div>
         </div>
+      </div>
+
+      {/* Mobile view (cards list) */}
+      <div className="show-on-mobile">
+        {logs?.length === 0 ? (
+          <div className="empty-state">No audit logs found.</div>
+        ) : (
+          <div className="segmented-list">
+            {logs?.map(log => (
+              <div key={log.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--accent)' }}></div>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
+                      {log.user_name || 'System / Anonymous'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
+                    {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 4 }}>
+                  <span className="badge" style={{ background: 'var(--bg-layer)', textTransform: 'capitalize', fontSize: 11 }}>
+                    {log.action}
+                  </span>
+                  {log.clients?.company_name && (
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                      Client: <strong>{log.clients.company_name}</strong>
+                    </span>
+                  )}
+                </div>
+                {log.metadata && Object.keys(log.metadata).length > 0 && (
+                  <div style={{ 
+                    marginTop: 8, 
+                    padding: 8, 
+                    background: 'rgba(255,255,255,0.02)', 
+                    borderRadius: 6, 
+                    fontSize: 11, 
+                    fontFamily: 'var(--mono)', 
+                    color: 'var(--text-muted)',
+                    wordBreak: 'break-all',
+                    maxHeight: 80,
+                    overflowY: 'auto'
+                  }}>
+                    {JSON.stringify(log.metadata)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
