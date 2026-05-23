@@ -16,11 +16,11 @@
   --text-secondary: #888888;     
   --text-muted: #555555;         
   
-  /* Primary Accents - Green Theme */
-  --accent: #30a46c;             
-  --accent-soft: rgba(48, 164, 108, 0.12);
-  --accent-glow: rgba(48, 164, 108, 0.10);
-  --accent-end: #248a56;
+  /* Primary Accents */
+  --accent: #e5484d;             
+  --accent-soft: rgba(229, 72, 77, 0.12);
+  --accent-glow: rgba(229, 72, 77, 0.10);
+  --accent-end: #c12d32;
   
   /* Status Accents */
   --green: #30a46c;
@@ -204,7 +204,7 @@ body {
   
   /* Grid Background (Dark Mode) */
   background-image: 
-    radial-gradient(circle at 10% 15%, rgba(48, 164, 108, 0.06) 0%, transparent 35%),
+    radial-gradient(circle at 10% 15%, rgba(229, 72, 77, 0.05) 0%, transparent 35%),
     repeating-linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.025) 0px,
@@ -1766,8 +1766,7 @@ tr:hover td {
 }
 
 .segmented-list-item:hover {
-  background: rgba(48, 164, 108, 0.06);
-  border-color: rgba(48, 164, 108, 0.12);
+  /* No hover highlight overlay */
 }
 
 /* Make existing mobile post cards follow Segmented List look */
