@@ -28,7 +28,7 @@ export default async function ClientPortalReviewPage({ params }) {
   // Also fetch public comments
   const { data: comments } = await supabase
     .from('comments')
-    .select('*, users(name)')
+    .select('*, users(name, role)')
     .eq('post_id', id)
     .eq('is_internal', false)
     .order('created_at', { ascending: true });
@@ -84,22 +84,63 @@ export default async function ClientPortalReviewPage({ params }) {
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>No comments yet.</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {comments.map(c => (
-                    <div key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <img 
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Unknown')}&radius=50`} 
-                        alt={c.users?.name || 'Unknown'} 
-                        style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
-                      />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-                          <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{c.users?.name || 'Unknown'}</span>
-                          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 11 }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                  {comments.map(c => {
+                    const getRoleDetails = (role) => {
+                      const normalized = (role || 'client').toLowerCase();
+                      if (normalized === 'admin') {
+                        return {
+                          label: 'Admin',
+                          color: 'var(--red)',
+                          bg: 'rgba(229,72,77,0.15)',
+                          borderColor: '#e5484d',
+                        };
+                      } else if (normalized === 'team') {
+                        return {
+                          label: 'Team',
+                          color: '#8b5cf6',
+                          bg: 'rgba(139,92,246,0.15)',
+                          borderColor: '#8b5cf6',
+                        };
+                      } else {
+                        return {
+                          label: 'Client',
+                          color: '#3b82f6',
+                          bg: 'rgba(59,130,246,0.15)',
+                          borderColor: '#3b82f6',
+                        };
+                      }
+                    };
+                    const roleInfo = getRoleDetails(c.users?.role);
+
+                    return (
+                      <div key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        <img 
+                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Unknown')}&radius=50`} 
+                          alt={c.users?.name || 'Unknown'} 
+                          style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${roleInfo.borderColor}`, padding: 1 }} 
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{c.users?.name || 'Unknown'}</span>
+                              <span style={{
+                                padding: '1px 5px',
+                                borderRadius: 4,
+                                fontSize: 9,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.03em',
+                                color: roleInfo.color,
+                                background: roleInfo.bg
+                              }}>{roleInfo.label}</span>
+                            </div>
+                            <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 11 }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.4 }}>{c.content}</div>
                         </div>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.4 }}>{c.content}</div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

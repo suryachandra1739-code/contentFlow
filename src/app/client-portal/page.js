@@ -1,6 +1,27 @@
 import { createClientServer } from '@/lib/supabase-server';
 import Link from 'next/link';
 
+const parsePostCaption = (caption) => {
+  if (!caption) return { title: 'Untitled', description: '' };
+  if (caption.startsWith('Title: ')) {
+    const doubleNewline = caption.indexOf('\n\n');
+    if (doubleNewline !== -1) {
+      return {
+        title: caption.substring(7, doubleNewline),
+        description: caption.substring(doubleNewline + 2)
+      };
+    }
+    const singleNewline = caption.indexOf('\n');
+    if (singleNewline !== -1) {
+      return {
+        title: caption.substring(7, singleNewline),
+        description: caption.substring(singleNewline + 1)
+      };
+    }
+  }
+  return { title: caption.substring(0, 40) + (caption.length > 40 ? '...' : ''), description: caption };
+};
+
 export default async function ClientPortalOverview() {
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -82,7 +103,12 @@ export default async function ClientPortalOverview() {
                       )}
                     </div>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>{post.caption?.substring(0, 60) || 'Untitled post'}...</div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{parsePostCaption(post.caption).title}</div>
+                      {parsePostCaption(post.caption).description && (
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {parsePostCaption(post.caption).description}
+                        </div>
+                      )}
                       <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                         <span style={{ textTransform: 'capitalize' }}>{post.platform}</span> • {post.projects?.name} • {new Date(post.created_at).toLocaleDateString()}
                       </div>

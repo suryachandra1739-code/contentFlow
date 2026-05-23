@@ -6,6 +6,27 @@ import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
 import { useToast } from '@/components/Toast';
 
+const parsePostCaption = (caption) => {
+  if (!caption) return { title: 'Untitled', description: '' };
+  if (caption.startsWith('Title: ')) {
+    const doubleNewline = caption.indexOf('\n\n');
+    if (doubleNewline !== -1) {
+      return {
+        title: caption.substring(7, doubleNewline),
+        description: caption.substring(doubleNewline + 2)
+      };
+    }
+    const singleNewline = caption.indexOf('\n');
+    if (singleNewline !== -1) {
+      return {
+        title: caption.substring(7, singleNewline),
+        description: caption.substring(singleNewline + 1)
+      };
+    }
+  }
+  return { title: caption.substring(0, 40) + (caption.length > 40 ? '...' : ''), description: caption };
+};
+
 export default function ProjectDetail() {
   const { id } = useParams();
   const router = useRouter();
@@ -87,7 +108,8 @@ export default function ProjectDetail() {
                 <PlatformBadge platform={post.platform} />
                 <StatusBadge status={post.status} />
               </div>
-              <div className="post-card-caption">{post.caption || 'No caption yet'}</div>
+               <div className="post-card-title" style={{fontWeight:600, fontSize:14, marginBottom:4, color:'var(--text-primary)'}}>{parsePostCaption(post.caption).title}</div>
+               <div className="post-card-caption" style={{color:'var(--text-secondary)'}}>{parsePostCaption(post.caption).description || 'No caption yet'}</div>
               <div className="post-card-footer">
                 <Link href={`/posts/${post.id}`} className="btn btn-secondary btn-sm">View Details</Link>
                 {post.status === 'draft' && <button className="btn btn-primary btn-sm" onClick={() => sendForReview(post.id)}>Send for Review</button>}

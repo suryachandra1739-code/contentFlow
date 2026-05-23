@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  color-scheme: light dark;
   /* SaaS Professional Palette */
   --bg-base: #0d0d0d;            
   --bg-card: rgba(22, 22, 22, 0.7);            

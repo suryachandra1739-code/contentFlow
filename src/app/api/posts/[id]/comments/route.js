@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
 
     const { data: comments, error } = await supabase
       .from('comments')
-      .select('*, users(name)')
+      .select('*, users(name, role)')
       .eq('post_id', id)
       .order('created_at', { ascending: true });
 
@@ -36,7 +36,7 @@ export async function POST(request, { params }) {
       user_id: user?.id,
       content: body.content,
       is_internal: body.is_internal || false,
-    }).select('*, users(name)').single();
+    }).select('*, users(name, role)').single();
 
     if (error) throw error;
     return NextResponse.json(comment, { status: 201 });

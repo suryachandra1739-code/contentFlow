@@ -17,6 +17,7 @@ export default function PostDetail() {
   const [aspectRatio, setAspectRatio] = useState('original');
 
   // Local editing states
+  const [editTitle, setEditTitle] = useState('');
   const [editCaption, setEditCaption] = useState('');
   const [editHashtags, setEditHashtags] = useState('');
   const [newMedia, setNewMedia] = useState({ media_url: '', media_type: 'image', media_key: '', media_size: 0 });
@@ -24,13 +25,36 @@ export default function PostDetail() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [hasPrefilled, setHasPrefilled] = useState(false);
 
+  const parseCaption = (rawCaption) => {
+    if (!rawCaption) return { title: '', description: '' };
+    if (rawCaption.startsWith('Title: ')) {
+      const doubleNewline = rawCaption.indexOf('\n\n');
+      if (doubleNewline !== -1) {
+        return {
+          title: rawCaption.substring(7, doubleNewline),
+          description: rawCaption.substring(doubleNewline + 2)
+        };
+      }
+      const singleNewline = rawCaption.indexOf('\n');
+      if (singleNewline !== -1) {
+        return {
+          title: rawCaption.substring(7, singleNewline),
+          description: rawCaption.substring(singleNewline + 1)
+        };
+      }
+    }
+    return { title: '', description: rawCaption };
+  };
+
   const load = () => {
     fetch(`/api/posts/${id}`).then(r => r.json()).then(data => {
       if (data && !data.error) {
         setPost(data);
         setAspectRatio(data.thumbnail_url || 'original');
         if (!hasPrefilled) {
-          setEditCaption(data.caption || '');
+          const parsed = parseCaption(data.caption || '');
+          setEditTitle(parsed.title);
+          setEditCaption(parsed.description);
           setEditHashtags(data.hashtags || '');
           setHasPrefilled(true);
         }
@@ -96,8 +120,9 @@ export default function PostDetail() {
   };
 
   const saveChanges = async () => {
+    const finalCaption = editTitle ? `Title: ${editTitle}\n\n${editCaption}` : editCaption;
     const payload = {
-      caption: editCaption,
+      caption: finalCaption,
       hashtags: editHashtags,
     };
     if (newMedia.media_url) {
@@ -124,7 +149,9 @@ export default function PostDetail() {
         if (latest && !latest.error) {
           setPost(latest);
           setAspectRatio(latest.thumbnail_url || 'original');
-          setEditCaption(latest.caption || '');
+          const parsed = parseCaption(latest.caption || '');
+          setEditTitle(parsed.title);
+          setEditCaption(parsed.description);
           setEditHashtags(latest.hashtags || '');
         }
       });
@@ -282,24 +309,63 @@ export default function PostDetail() {
             <div className="card-body">
               <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Comments ({comments.length})</h2>
               <div className="comment-list">
-                {comments.map(c => (
-                  <div className="comment-item" key={c.id} style={{display:'flex',gap:12,marginBottom:16}}>
-                    <img 
-                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Team')}&radius=50`} 
-                      alt={c.users?.name || 'Team'} 
-                      style={{width:28,height:28,borderRadius:'50%',objectFit:'cover',flexShrink:0}} 
-                    />
-                    <div className="comment-bubble" style={{background:'var(--bg-input)',padding:'10px 14px',borderRadius:'var(--radius-sm)',flex:1,border:'1px solid var(--border)'}}>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
-                        <div>
-                          <span className="comment-author" style={{fontWeight:600,fontSize:13}}>{c.users?.name || 'Team'}</span>
+                {comments.map(c => {
+                  const getRoleDetails = (role) => {
+                    const normalized = (role || 'client').toLowerCase();
+                    if (normalized === 'admin') {
+                      return {
+                        label: 'Admin',
+                        color: 'var(--red)',
+                        bg: 'rgba(229,72,77,0.15)',
+                        borderColor: '#e5484d',
+                      };
+                    } else if (normalized === 'team') {
+                      return {
+                        label: 'Team',
+                        color: '#8b5cf6',
+                        bg: 'rgba(139,92,246,0.15)',
+                        borderColor: '#8b5cf6',
+                      };
+                    } else {
+                      return {
+                        label: 'Client',
+                        color: '#3b82f6',
+                        bg: 'rgba(59,130,246,0.15)',
+                        borderColor: '#3b82f6',
+                      };
+                    }
+                  };
+                  const roleInfo = getRoleDetails(c.users?.role);
+
+                  return (
+                    <div className="comment-item" key={c.id} style={{display:'flex',gap:12,marginBottom:16}}>
+                      <img 
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Team')}&radius=50`} 
+                        alt={c.users?.name || 'Team'} 
+                        style={{width:28,height:28,borderRadius:'50%',objectFit:'cover',flexShrink:0, border:`2px solid ${roleInfo.borderColor}`, padding:1}} 
+                      />
+                      <div className="comment-bubble" style={{background:'var(--bg-input)',padding:'10px 14px',borderRadius:'var(--radius-sm)',flex:1,border:'1px solid var(--border)'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
+                          <div style={{display:'flex',alignItems:'center',gap:6}}>
+                            <span className="comment-author" style={{fontWeight:600,fontSize:13}}>{c.users?.name || 'Team'}</span>
+                            <span style={{
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              fontSize: 9,
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.03em',
+                              color: roleInfo.color,
+                              background: roleInfo.bg
+                            }}>{roleInfo.label}</span>
+                          </div>
+                          <div className="comment-time" style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--text-muted)'}}>{new Date(c.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
                         </div>
-                        <div className="comment-time" style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--text-muted)'}}>{new Date(c.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+                        <div className="comment-text" style={{fontSize:13,color:'var(--text-primary)'}}>{c.content}</div>
                       </div>
-                      <div className="comment-text" style={{fontSize:13,color:'var(--text-primary)'}}>{c.content}</div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {comments.length === 0 && <p className="empty-state" style={{padding:'20px 0'}}>No comments yet</p>}
               </div>
               <form onSubmit={addCommentHandler} className="comment-form" style={{marginTop:20,display:'flex',gap:8}}>
@@ -359,6 +425,19 @@ export default function PostDetail() {
                     )}
                   </label>
                 )}
+              </div>
+
+              {/* Title field */}
+              <div className="form-group" style={{marginBottom:16}}>
+                <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Post Title</label>
+                <input 
+                  type="text"
+                  className="form-input" 
+                  value={editTitle} 
+                  onChange={e => setEditTitle(e.target.value)} 
+                  placeholder="Enter post title (visible in list view only)..." 
+                  style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13, color:'var(--text-primary)', fontFamily:'var(--sans)'}}
+                />
               </div>
 
               {/* Caption field */}

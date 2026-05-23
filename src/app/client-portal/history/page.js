@@ -1,6 +1,27 @@
 import { createClientServer } from '@/lib/supabase-server';
 import Link from 'next/link';
 
+const parsePostCaption = (caption) => {
+  if (!caption) return { title: 'Untitled', description: '' };
+  if (caption.startsWith('Title: ')) {
+    const doubleNewline = caption.indexOf('\n\n');
+    if (doubleNewline !== -1) {
+      return {
+        title: caption.substring(7, doubleNewline),
+        description: caption.substring(doubleNewline + 2)
+      };
+    }
+    const singleNewline = caption.indexOf('\n');
+    if (singleNewline !== -1) {
+      return {
+        title: caption.substring(7, singleNewline),
+        description: caption.substring(singleNewline + 1)
+      };
+    }
+  }
+  return { title: caption.substring(0, 40) + (caption.length > 40 ? '...' : ''), description: caption };
+};
+
 export default async function ClientPortalHistory({ searchParams }) {
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -91,8 +112,13 @@ export default async function ClientPortalHistory({ searchParams }) {
                           )}
                         </div>
                       </td>
-                      <td style={{ padding: '16px 24px', fontSize: 14, color: 'var(--text-primary)', maxWidth: 300 }} className="truncate">
-                        {post.caption || 'Untitled'}
+                      <td style={{ padding: '16px 24px', fontSize: 14, color: 'var(--text-primary)', maxWidth: 300 }}>
+                        <div style={{ fontWeight: 600 }}>{parsePostCaption(post.caption).title}</div>
+                        {parsePostCaption(post.caption).description && (
+                          <div className="truncate" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            {parsePostCaption(post.caption).description}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '16px 24px', fontSize: 13, textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
                         {post.platform}

@@ -13,6 +13,7 @@ export default function NewPost() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', media_key: '', media_size: 0, scheduled_date: '', thumbnail_url: 'original' });
+  const [title, setTitle] = useState('');
 
   useEffect(() => {
     fetch('/api/projects').then(r => r.json()).then(data => {
@@ -79,7 +80,8 @@ export default function NewPost() {
   };
 
   const handleSubmit = async () => {
-    const res = await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+    const finalCaption = title ? `Title: ${title}\n\n${form.caption}` : form.caption;
+    const res = await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, caption: finalCaption }) });
     const post = await res.json();
     addToast('Post created!', 'success');
     router.push(`/posts/${post.id}`);
@@ -174,6 +176,11 @@ export default function NewPost() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Post Title</label>
+                <input type="text" className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter post title (visible in list view only)..." />
               </div>
 
               <div className="form-group">

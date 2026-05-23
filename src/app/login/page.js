@@ -10,6 +10,8 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const addToast = useToast();
   const supabase = createClientBrowser();
@@ -39,15 +41,23 @@ function LoginForm() {
       return;
     }
     
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/auth/confirm?next=/update-password`,
-    });
-
-    if (error) {
-      addToast(error.message, 'error');
-    } else {
-      addToast('Password reset link sent!', 'success');
+    setResetLoading(true);
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        addToast(data.error, 'error');
+      } else {
+        addToast('Password reset link sent!', 'success');
+      }
+    } catch (err) {
+      addToast('Failed to request password reset link', 'error');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -84,17 +94,56 @@ function LoginForm() {
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <label className="form-label" style={{ margin: 0 }}>Password</label>
-              <button type="button" onClick={handleResetPassword} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', padding: 0 }}>
-                Forgot password?
+              <button 
+                type="button" 
+                onClick={handleResetPassword} 
+                disabled={resetLoading}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', padding: 0 }}
+              >
+                {resetLoading ? 'Sending...' : 'Forgot password?'}
               </button>
             </div>
-            <input 
-              type="password" 
-              className="form-input" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              required 
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                className="form-input" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                required 
+                style={{ width: '100%', paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} disabled={loading}>

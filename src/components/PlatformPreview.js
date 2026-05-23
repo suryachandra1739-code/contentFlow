@@ -1,5 +1,21 @@
 export default function PlatformPreview({ platform, caption, hashtags, mediaUrl, mediaType, aspectRatio }) {
+  const cleanCaption = (str) => {
+    if (!str) return '';
+    if (str.startsWith('Title: ')) {
+      const doubleNewline = str.indexOf('\n\n');
+      if (doubleNewline !== -1) {
+        return str.substring(doubleNewline + 2);
+      }
+      const singleNewline = str.indexOf('\n');
+      if (singleNewline !== -1) {
+        return str.substring(singleNewline + 1);
+      }
+    }
+    return str;
+  };
+
   const hashtagList = hashtags ? hashtags.split(',').map(h => h.trim()) : [];
+  const displayCaption = cleanCaption(caption);
   
   // Resolve the aspect ratio for the media container
   const getAspectRatio = () => {
@@ -93,7 +109,7 @@ export default function PlatformPreview({ platform, caption, hashtags, mediaUrl,
             zIndex: 2
           }}>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: '#fff' }}>@creator</div>
-            <div style={{ fontSize: 13, lineHeight: 1.4, color: '#fff' }}>{caption}</div>
+            <div style={{ fontSize: 13, lineHeight: 1.4, color: '#fff' }}>{displayCaption}</div>
             {hashtagList.length > 0 && (
               <div style={{ fontSize: 12, color: '#06b6d4', marginTop: 4 }}>
                 {hashtagList.map(h => h.startsWith('#') ? h : `#${h}`).join(' ')}
@@ -128,7 +144,7 @@ export default function PlatformPreview({ platform, caption, hashtags, mediaUrl,
         {renderMedia()}
       </div>
       <div className="preview-caption">
-        <div>{caption}</div>
+        <div>{displayCaption}</div>
         {hashtagList.length > 0 && (
           <div className="preview-hashtags" style={{ marginTop: 8 }}>
             {hashtagList.map(h => h.startsWith('#') ? h : `#${h}`).join(' ')}

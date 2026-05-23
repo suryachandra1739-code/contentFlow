@@ -16,6 +16,27 @@ function useIsMobile(breakpoint = 768) {
   return isMobile;
 }
 
+const parsePostCaption = (caption) => {
+  if (!caption) return { title: 'Untitled', description: '' };
+  if (caption.startsWith('Title: ')) {
+    const doubleNewline = caption.indexOf('\n\n');
+    if (doubleNewline !== -1) {
+      return {
+        title: caption.substring(7, doubleNewline),
+        description: caption.substring(doubleNewline + 2)
+      };
+    }
+    const singleNewline = caption.indexOf('\n');
+    if (singleNewline !== -1) {
+      return {
+        title: caption.substring(7, singleNewline),
+        description: caption.substring(singleNewline + 1)
+      };
+    }
+  }
+  return { title: caption.substring(0, 40) + (caption.length > 40 ? '...' : ''), description: caption };
+};
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -388,7 +409,12 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="mobile-post-card-info">
-                      <div className="mobile-post-card-title">{post.caption?.substring(0, 60) || 'Untitled'}</div>
+                      <div className="mobile-post-card-title" style={{fontWeight:600}}>{parsePostCaption(post.caption).title}</div>
+                      {parsePostCaption(post.caption).description && (
+                        <div style={{fontSize:12, color:'var(--text-secondary)', marginBottom:4}} className="truncate">
+                          {parsePostCaption(post.caption).description}
+                        </div>
+                      )}
                       <div className="mobile-post-card-meta">
                         <PlatformBadge platform={post.platform} />
                         <StatusBadge status={post.status} />
@@ -424,7 +450,12 @@ export default function Dashboard() {
                     paginatedPosts.map(post => (
                       <tr key={post.id} style={{cursor:'pointer'}} onClick={() => window.location.href = `/posts/${post.id}`}>
                         <td><PlatformBadge platform={post.platform} /></td>
-                        <td><span className="truncate" style={{maxWidth:240,display:'inline-block',fontFamily:'var(--sans)',fontWeight:400, color:'var(--text-primary)'}}>{post.caption?.substring(0,50) || 'Untitled'}...</span></td>
+                        <td>
+                          <div style={{fontFamily:'var(--sans)',fontWeight:500, color:'var(--text-primary)'}}>{parsePostCaption(post.caption).title}</div>
+                          {parsePostCaption(post.caption).description && (
+                            <div className="truncate" style={{maxWidth:240, fontSize:12, color:'var(--text-muted)'}}>{parsePostCaption(post.caption).description}</div>
+                          )}
+                        </td>
                         <td style={{fontFamily:'var(--sans)',fontSize:14,color:'var(--text-secondary)'}}>{post.projects?.name}</td>
                         <td>
                           <div className="flex items-center gap-8" style={{fontFamily:'var(--sans)',fontSize:14}}>
