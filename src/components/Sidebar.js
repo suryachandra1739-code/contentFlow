@@ -72,7 +72,7 @@ export default function Sidebar() {
           <line x1="3" y1="6" x2="21" y2="6"/>
           <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
-        <span className="mobile-header-title">{getPageTitle()}</span>
+        <span className="mobile-header-title" style={{ fontWeight: 700, letterSpacing: '-0.2px' }}>ContentFlow</span>
         <div className="mobile-header-logo">{'//'}</div>
       </button>
 

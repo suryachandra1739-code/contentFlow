@@ -117,7 +117,7 @@ export default function TeamManagementPage() {
 
       {isMobile ? (
         /* Mobile: Card Layout */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="segmented-list">
           {teamMembers?.map(member => (
             <div className="mobile-team-card" key={member.id}>
               <div className="mobile-team-header">

@@ -59,17 +59,20 @@ export async function middleware(request) {
       return NextResponse.redirect(url);
     }
 
-    // User exists — try to get role, but don't crash if table doesn't exist
-    let role = 'team';
-    try {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      if (profile?.role) role = profile.role;
-    } catch {
-      // Table may not exist yet — default to team role
+    // User exists — try to get role from metadata first to avoid db query
+    let role = user.user_metadata?.role;
+
+    if (!role) {
+      try {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile?.role) role = profile.role;
+      } catch {
+        role = 'team';
+      }
     }
 
     // Client trying to access admin dashboard

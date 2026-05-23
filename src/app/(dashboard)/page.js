@@ -203,9 +203,9 @@ export default function Dashboard() {
             {pendingPosts.length === 0 ? (
               <div className="empty-state" style={{padding:'40px 0'}}>No pending posts to review</div>
             ) : (
-              <div style={{display:'flex',flexDirection:'column'}}>
+              <div className="segmented-list">
                 {pendingPosts.slice(0, 5).map(post => (
-                  <Link href={`/posts/${post.id}`} key={post.id} className="interactive-row" style={{display:'flex',alignItems:'center',gap:16,padding:'12px 0'}}>
+                  <Link href={`/posts/${post.id}`} key={post.id} className="segmented-list-item">
                     {renderPostThumbnail(post)}
                     <div style={{flex:1,minWidth:0}}>
                       <div className="truncate" style={{fontSize:14,fontWeight:500,color:'var(--text-primary)'}}>{post.caption || 'Untitled post'}</div>
@@ -226,7 +226,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="card-body">
             <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:20}}>Recent activity</h2>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="segmented-list">
               {data.recentActivity?.slice(0, 8).map((item, i) => {
                 const actionLabels = {
                   post_created: 'Post created',
@@ -269,8 +269,8 @@ export default function Dashboard() {
                 };
                 const activityLink = getActivityLink();
 
-                const content = (
-                  <div key={item.id || i} className="interactive-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', cursor: activityLink ? 'pointer' : 'default' }}>
+                const innerContent = (
+                  <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                       <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColors[item.action] || 'var(--accent)', flexShrink: 0 }}></div>
                       <div className="truncate" style={{ fontSize: '13px', fontFamily: 'var(--sans)', color: 'var(--text-secondary)' }}>
@@ -283,10 +283,22 @@ export default function Dashboard() {
                       </div>
                       {activityLink && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>}
                     </div>
-                  </div>
+                  </>
                 );
 
-                return activityLink ? <Link href={activityLink} key={item.id || i} style={{textDecoration:'none',color:'inherit'}}>{content}</Link> : content;
+                if (activityLink) {
+                  return (
+                    <Link href={activityLink} key={item.id || i} className="segmented-list-item" style={{ justifyContent: 'space-between', textDecoration: 'none' }}>
+                      {innerContent}
+                    </Link>
+                  );
+                } else {
+                  return (
+                    <div key={item.id || i} className="segmented-list-item" style={{ justifyContent: 'space-between' }}>
+                      {innerContent}
+                    </div>
+                  );
+                }
               })}
               {(!data.recentActivity || data.recentActivity.length === 0) && (
                 <div className="empty-state" style={{padding:'40px 0'}}>No recent activity</div>
@@ -389,7 +401,7 @@ export default function Dashboard() {
 
           {/* Desktop: Table | Mobile: Card List */}
           {isMobile ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="segmented-list">
               {paginatedPosts.length === 0 ? (
                 <div className="empty-state" style={{ padding: '32px 0' }}>No matching posts found</div>
               ) : (
