@@ -16,11 +16,11 @@
   --text-secondary: #888888;     
   --text-muted: #555555;         
   
-  /* Primary Accents */
-  --accent: #e5484d;             
-  --accent-soft: rgba(229, 72, 77, 0.12);
-  --accent-glow: rgba(229, 72, 77, 0.10);
-  --accent-end: #c12d32;
+  /* Primary Accents - Green Theme */
+  --accent: #30a46c;             
+  --accent-soft: rgba(48, 164, 108, 0.12);
+  --accent-glow: rgba(48, 164, 108, 0.10);
+  --accent-end: #248a56;
   
   /* Status Accents */
   --green: #30a46c;
@@ -204,7 +204,7 @@ body {
   
   /* Grid Background (Dark Mode) */
   background-image: 
-    radial-gradient(circle at 10% 15%, rgba(229, 72, 77, 0.05) 0%, transparent 35%),
+    radial-gradient(circle at 10% 15%, rgba(48, 164, 108, 0.06) 0%, transparent 35%),
     repeating-linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.025) 0px,
@@ -494,20 +494,20 @@ input, textarea, select {
 
 /* Cards */
 .card {
-  background-color: var(--bg-card); 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border); 
-  border-radius: var(--radius);
-  box-shadow: var(--shadow); 
+  background-color: rgba(22, 22, 26, 0.45); 
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08); 
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35); 
   transition: all 0.3s var(--ease);
   min-width: 0;
 }
 
 .card:hover { 
   border-color: var(--accent);
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover), 0 10px 30px -10px var(--accent-glow); 
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow); 
 }
 
 .card-body { 
@@ -545,13 +545,13 @@ input, textarea, select {
 }
 
 .stat-card {
-  background-color: var(--bg-card); 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border); 
-  border-radius: var(--radius); 
+  background-color: rgba(22, 22, 26, 0.45); 
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08); 
+  border-radius: 16px; 
   padding: 20px 24px;
-  box-shadow: var(--shadow); 
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35); 
   transition: all 0.3s var(--ease);
   position: relative;
   overflow: hidden;
@@ -570,8 +570,8 @@ input, textarea, select {
 
 .stat-card:hover { 
   border-color: var(--accent);
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover), 0 10px 30px -10px var(--accent-glow); 
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow); 
 }
 
 .stat-card-value { 
