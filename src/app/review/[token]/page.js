@@ -67,7 +67,7 @@ export default async function PublicReviewPage({ params }) {
         transform: 'translate(-50%, -50%)',
         width: '650px',
         height: '650px',
-        backgroundImage: "url('/images/bg-cube.png')",
+        backgroundImage: "url('/images/post-driftwood.jpg')",
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

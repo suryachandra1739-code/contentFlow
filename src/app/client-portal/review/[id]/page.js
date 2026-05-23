@@ -68,7 +68,7 @@ export default async function ClientPortalReviewPage({ params }) {
         transform: 'translate(-50%, -50%)',
         width: '600px',
         height: '600px',
-        backgroundImage: "url('/images/bg-cube.png')",
+        backgroundImage: "url('/images/post-driftwood.jpg')",
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
