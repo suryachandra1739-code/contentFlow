@@ -38,6 +38,15 @@ export async function submitReview(postId, action, comment, token = null) {
     if (!data) return { error: 'Invalid or expired review link.' };
     post = data;
     clientId = post.client_id;
+
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('company_name')
+      .eq('id', clientId)
+      .single();
+    if (clientData?.company_name) {
+      userName = `Client (${clientData.company_name})`;
+    }
   } else {
     // Authenticated path
     const { data: { user } } = await supabase.auth.getUser();

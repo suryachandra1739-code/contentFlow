@@ -63,7 +63,7 @@ export default function ProjectDetail() {
               {post.media_url ? (
                 post.media_type === 'video' ? (
                   <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    <video src={post.media_url} style={{ pointerEvents: 'none' }} />
+                    <video src={post.media_url} preload="none" playsInline muted style={{ pointerEvents: 'none' }} />
                     <div className="play-overlay">
                       <div className="play-button-icon">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -71,7 +71,7 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                 ) : (
-                  <img src={post.media_url} alt="" />
+                  <img src={post.media_url} alt="" loading="lazy" />
                 )
               ) : (
                 <div className={`fallback-gradient fallback-${post.platform}`}>

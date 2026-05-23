@@ -100,16 +100,24 @@ export async function POST(request) {
 
     // Audit log
     try {
-      if (postRow.id && !postRow.id.toString().includes('-')) {
-        await supabase.from('audit_log').insert({
-          user_id: user.id,
-          action: 'post_created',
-          entity_type: 'post',
-          entity_id: postRow.id,
-          client_id: client_id
-        });
-      }
-    } catch (err) {}
+      const { data: uProfile } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+      const userName = uProfile?.name || user.email || 'Team Member';
+
+      await supabase.from('audit_log').insert({
+        user_id: user.id,
+        user_name: userName,
+        action: 'post_created',
+        entity_type: 'post',
+        entity_id: postRow.id,
+        client_id: finalClientId || postRow.client_id
+      });
+    } catch (err) {
+      console.error('Audit log insertion failed:', err);
+    }
 
     return NextResponse.json(postRow);
   } catch (error) {

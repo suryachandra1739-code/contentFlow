@@ -24,8 +24,19 @@ export async function PATCH(request, { params }) {
     if (error) throw error;
 
     const { data: { user } } = await supabase.auth.getUser();
+    let userName = 'Team Member';
+    if (user) {
+      const { data: uProfile } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+      userName = uProfile?.name || user.email || 'Team Member';
+    }
+
     await supabase.from('audit_log').insert({
       user_id: user?.id,
+      user_name: userName,
       action: `post_status_${status}`,
       entity_type: 'post',
       entity_id: id,

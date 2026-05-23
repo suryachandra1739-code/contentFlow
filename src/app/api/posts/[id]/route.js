@@ -24,6 +24,16 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Post not found or unauthorized' }, { status: 404 });
     }
 
+    // Fetch activity (audit logs)
+    const { data: activity } = await supabase
+      .from('audit_log')
+      .select('*')
+      .eq('entity_type', 'post')
+      .eq('entity_id', id)
+      .order('created_at', { ascending: false });
+
+    data.activity = activity || [];
+
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -45,8 +55,12 @@ export async function PATCH(request, { params }) {
       .single();
     const role = profile?.role || 'team';
 
-    // Fetch post to check creator
-    const { data: post, error: fetchError } = await supabase.from('posts').select('created_by').eq('id', id).single();
+    // Fetch post to check creator and media details for version history
+    const { data: post, error: fetchError } = await supabase
+      .from('posts')
+      .select('created_by, media_url, media_type, caption, client_id')
+      .eq('id', id)
+      .single();
     if (fetchError || !post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
@@ -59,12 +73,30 @@ export async function PATCH(request, { params }) {
     const { data, error } = await supabase.from('posts').update(body).eq('id', id).select().single();
     if (error) throw error;
 
+    // Determine what changed for version history
+    const isMediaChanged = body.media_url && body.media_url !== post.media_url;
+    const isCaptionChanged = body.caption !== undefined && body.caption !== post.caption;
+
+    const { data: uProfile } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+    const userName = uProfile?.name || user.email || 'Team Member';
+
     await supabase.from('audit_log').insert({
       user_id: user.id,
+      user_name: userName,
       action: 'post_updated',
       entity_type: 'post',
       entity_id: id,
-      client_id: data.client_id
+      client_id: data.client_id,
+      metadata: {
+        is_media_changed: isMediaChanged,
+        previous_media_url: isMediaChanged ? post.media_url : null,
+        previous_media_type: isMediaChanged ? post.media_type : null,
+        previous_caption: isCaptionChanged ? post.caption : null
+      }
     });
 
     return NextResponse.json(data);
@@ -124,8 +156,19 @@ export async function DELETE(request, { params }) {
     if (deleteError) throw deleteError;
 
     // Log deletion
+    let userName = 'Team Member';
+    if (user) {
+      const { data: uProfile } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+      userName = uProfile?.name || user.email || 'Team Member';
+    }
+
     await supabase.from('audit_log').insert({
       user_id: user?.id,
+      user_name: userName,
       action: 'post_deleted',
       entity_type: 'post',
       entity_id: id,

@@ -95,7 +95,7 @@ export default function Dashboard() {
       if (post.media_type === 'video') {
         return (
           <div style={{ width: 80, height: 60, position: 'relative', borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0 }}>
-            <video src={post.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <video src={post.media_url} preload="none" playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#fff' }}><path d="M8 5v14l11-7z"/></svg>
             </div>
@@ -104,7 +104,7 @@ export default function Dashboard() {
       }
       return (
         <div style={{ width: 80, height: 60, borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0 }}>
-          <img src={post.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={post.media_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       );
     }
@@ -377,9 +377,9 @@ export default function Dashboard() {
                     <div className="mobile-post-card-thumb">
                       {post.media_url ? (
                         post.media_type === 'video' ? (
-                          <video src={post.media_url} />
+                          <video src={post.media_url} preload="none" playsInline muted />
                         ) : (
-                          <img src={post.media_url} alt="" />
+                          <img src={post.media_url} alt="" loading="lazy" />
                         )
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-layer)', fontSize: 18 }}>

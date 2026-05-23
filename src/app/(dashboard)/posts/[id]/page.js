@@ -183,39 +183,83 @@ export default function PostDetail() {
         </div>
       </div>
 
-      <div className="grid-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:32,alignItems:'start'}}>
+      <div className="grid-2" style={{display:'grid',gridTemplateColumns:'1.2fr 1fr',gap:32,alignItems:'start'}}>
+        {/* Left Column */}
         <div>
           <div className="card" style={{marginBottom:24}}>
             <div className="card-body">
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:8}}>
                 <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',margin:0}}>Platform preview</h2>
-                <div style={{display:'flex',gap:'4px',padding:'3px',background:'var(--bg-layer)',borderRadius:'var(--radius-pill)',border:'1px solid var(--border)',flexWrap:'wrap'}}>
-                  {aspectOptions.map(opt => (
-                    <button
-                      key={opt.label}
-                      onClick={() => setAspectRatio(opt.key)}
-                      style={{
-                        padding:'5px 10px',
-                        fontSize:'11px',
-                        fontFamily:'var(--sans)',
-                        fontWeight:500,
-                        borderRadius:'var(--radius-pill)',
-                        border:'none',
-                        background: aspectRatio === opt.key ? 'var(--bg-card)' : 'transparent',
-                        color: aspectRatio === opt.key ? 'var(--text-primary)' : 'var(--text-secondary)',
-                        boxShadow: aspectRatio === opt.key ? '0 1px 3px rgba(0,0,0,0.25)' : 'none',
-                        cursor:'pointer',
-                        transition:'all 0.15s ease',
-                      }}
-                    >
-                      {opt.label}{opt.ratio ? ` (${opt.ratio})` : ''}
-                    </button>
-                  ))}
-                </div>
               </div>
               <PlatformPreview platform={post.platform} caption={post.caption} hashtags={post.hashtags} mediaUrl={post.media_url} mediaType={post.media_type} aspectRatio={aspectRatio} />
             </div>
           </div>
+
+          {/* Previous Media Version History */}
+          {post.activity && post.activity.filter(item => item.action === 'post_updated' && item.metadata?.previous_media_url).length > 0 && (
+            <div className="card" style={{marginBottom:24}}>
+              <div className="card-body">
+                <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:4}}>Version History</h2>
+                <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:16}}>
+                  Hover over a previous version and click Preview to load it. Click Save Changes to restore it.
+                </p>
+                <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+                  {post.activity.filter(item => item.action === 'post_updated' && item.metadata?.previous_media_url).map((ver, idx) => (
+                    <div key={idx} style={{width:100,display:'flex',flexDirection:'column',gap:4}}>
+                      <div 
+                        style={{
+                          width:100,
+                          height:75,
+                          borderRadius:'var(--radius-sm)',
+                          overflow:'hidden',
+                          background:'#000',
+                          border:'1px solid var(--border)',
+                          position:'relative'
+                        }}
+                      >
+                        {ver.metadata.previous_media_type === 'video' ? (
+                          <video src={ver.metadata.previous_media_url} preload="none" playsInline muted style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                        ) : (
+                          <img src={ver.metadata.previous_media_url} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                        )}
+                        <div 
+                          className="version-preview-overlay"
+                          style={{
+                            position:'absolute',
+                            inset:0,
+                            background:'rgba(0,0,0,0.5)',
+                            display:'flex',
+                            alignItems:'center',
+                            justifyContent:'center',
+                            opacity:0,
+                            transition:'opacity 0.2s',
+                            cursor:'pointer',
+                            color:'#fff',
+                            fontSize:11,
+                            fontWeight:600
+                          }}
+                          onClick={() => {
+                            setNewMedia({
+                              media_url: ver.metadata.previous_media_url,
+                              media_type: ver.metadata.previous_media_type || 'image',
+                              media_key: '',
+                              media_size: 0
+                            });
+                            addToast("Loaded historical media into preview! Click Save Changes to restore it.", "success");
+                          }}
+                        >
+                          Preview
+                        </div>
+                      </div>
+                      <div style={{fontSize:11,color:'var(--text-muted)',textAlign:'center',fontFamily:'var(--sans)'}}>
+                        {new Date(ver.created_at).toLocaleDateString([], {month:'short',day:'numeric'})}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="card">
             <div className="card-body">
@@ -230,8 +274,42 @@ export default function PostDetail() {
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="card" style={{marginTop:24}}>
+        {/* Right Column */}
+        <div>
+          <div className="card" style={{marginBottom:24}}>
+            <div className="card-body">
+              <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Comments ({comments.length})</h2>
+              <div className="comment-list">
+                {comments.map(c => (
+                  <div className="comment-item" key={c.id} style={{display:'flex',gap:12,marginBottom:16}}>
+                    <img 
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Team')}&radius=50`} 
+                      alt={c.users?.name || 'Team'} 
+                      style={{width:28,height:28,borderRadius:'50%',objectFit:'cover',flexShrink:0}} 
+                    />
+                    <div className="comment-bubble" style={{background:'var(--bg-input)',padding:'10px 14px',borderRadius:'var(--radius-sm)',flex:1,border:'1px solid var(--border)'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
+                        <div>
+                          <span className="comment-author" style={{fontWeight:600,fontSize:13}}>{c.users?.name || 'Team'}</span>
+                        </div>
+                        <div className="comment-time" style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--text-muted)'}}>{new Date(c.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+                      </div>
+                      <div className="comment-text" style={{fontSize:13,color:'var(--text-primary)'}}>{c.content}</div>
+                    </div>
+                  </div>
+                ))}
+                {comments.length === 0 && <p className="empty-state" style={{padding:'20px 0'}}>No comments yet</p>}
+              </div>
+              <form onSubmit={addCommentHandler} className="comment-form" style={{marginTop:20,display:'flex',gap:8}}>
+                <input className="form-input" value={comment} onChange={e => setComment(e.target.value)} placeholder="Add a comment..." style={{flex:1}} />
+                <button type="submit" className="btn btn-primary btn-sm">Send</button>
+              </form>
+            </div>
+          </div>
+
+          <div className="card" style={{marginBottom:24}}>
             <div className="card-body">
               <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:4}}>Edit post details</h2>
               <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:20}}>
@@ -245,9 +323,9 @@ export default function PostDetail() {
                 {newMedia.media_url ? (
                   <div style={{position:'relative', padding:'8px', background:'var(--bg-layer)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', display:'flex', alignItems:'center', gap:12}}>
                     {newMedia.media_type === 'video' ? (
-                      <video src={newMedia.media_url} style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
+                      <video src={newMedia.media_url} preload="none" playsInline muted style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
                     ) : (
-                      <img src={newMedia.media_url} alt="Uploaded thumbnail" style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
+                      <img src={newMedia.media_url} alt="Uploaded thumbnail" loading="lazy" style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
                     )}
                     <div style={{flex:1}}>
                       <div style={{fontSize:13, fontWeight:500, color:'var(--text-primary)'}}>New media loaded</div>
@@ -330,57 +408,53 @@ export default function PostDetail() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div>
-          <div className="card" style={{marginBottom:24}}>
-            <div className="card-body">
-              <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Comments ({comments.length})</h2>
-              <div className="comment-list">
-                {comments.map(c => (
-                  <div className="comment-item" key={c.id} style={{display:'flex',gap:12,marginBottom:16}}>
-                    <img 
-                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.users?.name || 'Team')}&radius=50`} 
-                      alt={c.users?.name || 'Team'} 
-                      style={{width:28,height:28,borderRadius:'50%',objectFit:'cover',flexShrink:0}} 
-                    />
-                    <div className="comment-bubble" style={{background:'var(--bg-input)',padding:'10px 14px',borderRadius:'var(--radius-sm)',flex:1,border:'1px solid var(--border)'}}>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
-                        <div>
-                          <span className="comment-author" style={{fontWeight:600,fontSize:13}}>{c.users?.name || 'Team'}</span>
-                        </div>
-                        <div className="comment-time" style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--text-muted)'}}>{new Date(c.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
-                      </div>
-                      <div className="comment-text" style={{fontSize:13,color:'var(--text-primary)'}}>{c.content}</div>
-                    </div>
-                  </div>
-                ))}
-                {comments.length === 0 && <p className="empty-state" style={{padding:'20px 0'}}>No comments yet</p>}
-              </div>
-              <form onSubmit={addCommentHandler} className="comment-form" style={{marginTop:20,display:'flex',gap:8}}>
-                <input className="form-input" value={comment} onChange={e => setComment(e.target.value)} placeholder="Add a comment..." style={{flex:1}} />
-                <button type="submit" className="btn btn-primary btn-sm">Send</button>
-              </form>
-            </div>
-          </div>
 
           <div className="card">
             <div className="card-body">
               <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Activity</h2>
               <div className="timeline" style={{display:'flex',flexDirection:'column',gap:16}}>
                 {post.activity?.map((item, i) => {
-                  const details = item.details ? JSON.parse(item.details) : {};
-                  const labels = { created: 'Post created', status_change: `Status changed to ${details.status}`, comment: `Comment added`, edited: 'Post edited' };
+                  const actor = item.user_name || 'System';
+                  let label = item.action;
+                  let dotColor = 'var(--text-muted)';
+                  
+                  if (item.action === 'post_created') {
+                    label = `Post created by ${actor}`;
+                    dotColor = 'var(--accent)';
+                  } else if (item.action.startsWith('post_status_')) {
+                    const statusVal = item.action.replace('post_status_', '');
+                    label = `Status updated to ${statusVal} by ${actor}`;
+                    if (statusVal === 'approved') dotColor = 'var(--green)';
+                    else if (statusVal === 'revision') dotColor = 'var(--amber)';
+                    else if (statusVal === 'rejected') dotColor = 'var(--red)';
+                  } else if (item.action === 'post_updated') {
+                    const hasMedia = item.metadata?.is_media_changed || item.metadata?.previous_media_url;
+                    label = hasMedia ? `Media replaced by ${actor}` : `Details edited by ${actor}`;
+                    dotColor = 'var(--cyan)';
+                  } else if (item.action === 'post_approved') {
+                    label = `Approved by ${actor}`;
+                    dotColor = 'var(--green)';
+                  } else if (item.action === 'post_revision') {
+                    label = `Revision requested by ${actor}`;
+                    dotColor = 'var(--amber)';
+                  } else if (item.action === 'post_rejected') {
+                    label = `Rejected by ${actor}`;
+                    dotColor = 'var(--red)';
+                  } else if (item.action === 'comment_added') {
+                    label = `Comment added by ${actor}`;
+                  }
+
                   return (
                     <div className="timeline-item" key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:13}}>
                       <div style={{display:'flex',alignItems:'center',gap:12}}>
-                        <div className={`timeline-dot`} style={{width:6,height:6,borderRadius:'50%',background:'var(--text-muted)'}}></div>
-                        <div className="timeline-content" style={{color:'var(--text-secondary)'}}>{labels[item.action] || item.action}</div>
+                        <div className="timeline-dot" style={{width:8,height:8,borderRadius:'50%',background:dotColor,boxShadow:dotColor !== 'var(--text-muted)' ? `0 0 8px ${dotColor}` : 'none'}}></div>
+                        <div className="timeline-content" style={{color:'var(--text-primary)', fontWeight:500}}>{label}</div>
                       </div>
                       <div className="timeline-time" style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:11}}>{new Date(item.created_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
                     </div>
                   );
                 })}
+                {(!post.activity || post.activity.length === 0) && <p className="empty-state" style={{padding:'20px 0'}}>No activity logged yet</p>}
               </div>
             </div>
           </div>

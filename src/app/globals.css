@@ -18,7 +18,7 @@
   /* Primary Accents */
   --accent: #e5484d;             
   --accent-soft: rgba(229, 72, 77, 0.12);
-  --accent-glow: rgba(229, 72, 77, 0.25);
+  --accent-glow: rgba(229, 72, 77, 0.10);
   --accent-end: #c12d32;
   
   /* Status Accents */
@@ -1709,6 +1709,14 @@ tr:hover td {
   margin-top: auto;
   padding-top: 10px;
   border-top: 1px solid var(--border);
+}
+
+/* Version Preview Overlay Hover Effect */
+.version-preview-overlay {
+  transition: opacity 0.2s ease !important;
+}
+.version-preview-overlay:hover {
+  opacity: 1 !important;
 }
 
 

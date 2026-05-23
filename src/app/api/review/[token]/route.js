@@ -70,12 +70,19 @@ export async function POST(request, { params }) {
 
       if (error) throw error;
 
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('company_name')
+        .eq('id', post.client_id)
+        .single();
+      const clientName = clientData?.company_name ? `Client (${clientData.company_name})` : 'Client (Anonymous)';
+
       await supabase.from('audit_log').insert({
         action: `post_${body.status}`,
         entity_type: 'post',
         entity_id: post.id,
         client_id: post.client_id,
-        user_name: 'Anonymous (via link)',
+        user_name: clientName,
         metadata: { token_used: true },
       });
 
