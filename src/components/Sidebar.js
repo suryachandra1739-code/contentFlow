@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClientBrowser } from '@/lib/supabase';
+import NotificationBell from './NotificationBell';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -92,28 +93,31 @@ export default function Sidebar() {
           </svg>
         </button>
 
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon" style={{
-            width: 36,
-            height: 36,
-            background: 'var(--accent)',
-            borderRadius: 10,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: 18,
-            fontWeight: 700,
-            fontFamily: 'var(--mono)',
-            letterSpacing: '-1px',
-            boxShadow: '0 4px 10px var(--accent-glow)'
-          }}>
-            {'//'}
+        <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="sidebar-logo-icon" style={{
+              width: 36,
+              height: 36,
+              background: 'var(--accent)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: 18,
+              fontWeight: 700,
+              fontFamily: 'var(--mono)',
+              letterSpacing: '-1px',
+              boxShadow: '0 4px 10px var(--accent-glow)'
+            }}>
+              {'//'}
+            </div>
+            <div>
+              <h1>ContentFlow</h1>
+              <span>Approval Platform</span>
+            </div>
           </div>
-          <div>
-            <h1>ContentFlow</h1>
-            <span>Approval Platform</span>
-          </div>
+          <NotificationBell role="team" />
         </div>
         <nav className="sidebar-nav">
           <div className="sidebar-section">Main</div>

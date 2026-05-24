@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClientBrowser } from '@/lib/supabase';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function ClientPortalLayout({ children }) {
   const pathname = usePathname();
@@ -48,6 +49,7 @@ export default function ClientPortalLayout({ children }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <NotificationBell role="client" />
             <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>{profile?.name}</span>
             <button onClick={handleLogout} className="btn btn-sm" style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
               Log out

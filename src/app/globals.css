@@ -718,6 +718,31 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   letter-spacing: 0.1em;
 }
 
+/* Notification Bell Dropdown styles */
+.nav-btn-hover:hover {
+  background: var(--bg-hover-pill) !important;
+  color: var(--text-primary) !important;
+}
+
+.notif-item-hover:hover {
+  background: var(--bg-hover-pill) !important;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(229, 72, 77, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0);
+  }
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
