@@ -154,7 +154,6 @@ export default function Sidebar() {
             </>
           )}
 
-          <div className="sidebar-section">Aesthetics</div>
           <div
             className="nav-item"
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
@@ -162,19 +161,15 @@ export default function Sidebar() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
-                {theme === 'light' ? (
-                  <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
-                ) : (
-                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                )}
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
-              <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+              <span>Dark Mode</span>
             </div>
             <div style={{
               width: 32,
               height: 18,
               borderRadius: 99,
-              background: theme === 'light' ? 'var(--accent)' : '#2a2a2a',
+              background: theme === 'dark' ? 'var(--accent)' : 'rgba(120, 120, 128, 0.32)',
               position: 'relative',
               transition: 'background 0.2s',
               flexShrink: 0
@@ -186,7 +181,7 @@ export default function Sidebar() {
                 background: '#fff',
                 position: 'absolute',
                 top: 3,
-                left: theme === 'light' ? 17 : 3,
+                left: theme === 'dark' ? 17 : 3,
                 transition: 'left 0.2s',
               }} />
             </div>

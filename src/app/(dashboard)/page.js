@@ -2,8 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
+
+const MotionLink = motion.create ? motion.create(Link) : motion(Link);
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
@@ -37,6 +40,30 @@ const parsePostCaption = (caption) => {
   return { title: caption.substring(0, 40) + (caption.length > 40 ? '...' : ''), description: caption };
 };
 
+const getExpiryDetails = (createdAt) => {
+  if (!createdAt) return { label: '7d left', color: 'var(--text-muted)', bg: 'transparent' };
+  const expiry = new Date(new Date(createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
+  const diffMs = expiry - Date.now();
+  if (diffMs <= 0) return { label: 'Expired', color: 'var(--red)', bg: 'rgba(229,72,77,0.1)' };
+  
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  
+  let label = '';
+  if (diffDays > 0) {
+    label = `${diffDays}d ${diffHours}h left`;
+  } else {
+    label = `${diffHours}h left`;
+  }
+
+  if (diffMs < 24 * 60 * 60 * 1000) {
+    return { label, color: 'var(--red)', bg: 'rgba(229,72,77,0.15)' };
+  } else if (diffMs < 3 * 24 * 60 * 60 * 1000) {
+    return { label, color: 'var(--amber)', bg: 'rgba(245,166,35,0.12)' };
+  }
+  return { label, color: 'var(--text-muted)', bg: 'transparent' };
+};
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -51,6 +78,7 @@ export default function Dashboard() {
   const [clientFilter, setClientFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [authorFilter, setAuthorFilter] = useState('all');
+  const [allClientsList, setAllClientsList] = useState([]);
 
   const fetchDashboardData = (authorId) => {
     setLoading(true);
@@ -58,7 +86,8 @@ export default function Dashboard() {
     Promise.all([
       fetch(`/api/analytics${apiQuery}`).then(r => r.json()),
       fetch(`/api/posts${apiQuery}`).then(r => r.json()),
-    ]).then(([analytics, allPosts]) => {
+      fetch(`/api/clients`).then(r => r.json()),
+    ]).then(([analytics, allPosts, clientsData]) => {
       setData(analytics);
       if (allPosts && allPosts.error) {
         console.error('Error fetching posts:', allPosts.error);
@@ -66,6 +95,7 @@ export default function Dashboard() {
       } else {
         setPosts(Array.isArray(allPosts) ? allPosts : []);
       }
+      setAllClientsList(Array.isArray(clientsData) ? clientsData : []);
       setLoading(false);
     });
   };
@@ -109,14 +139,17 @@ export default function Dashboard() {
   const paginatedPosts = filteredPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Extract unique clients for filter selector
-  const uniqueClients = Array.from(new Set(posts.map(p => p.clients?.company_name).filter(Boolean)));
+  const uniqueClients = Array.from(new Set([
+    ...allClientsList.map(c => c.company_name),
+    ...posts.map(p => p.clients?.company_name)
+  ].filter(Boolean)));
 
   const renderPostThumbnail = (post) => {
     if (post.media_url) {
       if (post.media_type === 'video') {
         return (
-          <div style={{ width: 80, height: 60, position: 'relative', borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0 }}>
-            <video src={post.media_url} preload="none" playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ width: 80, height: 60, position: 'relative', borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0, border: '1px solid rgba(0,0,0,0.08)' }}>
+            <video src={post.media_url} preload="metadata" playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#fff' }}><path d="M8 5v14l11-7z"/></svg>
             </div>
@@ -124,7 +157,7 @@ export default function Dashboard() {
         );
       }
       return (
-        <div style={{ width: 80, height: 60, borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0 }}>
+        <div style={{ width: 80, height: 60, borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0, border: '1px solid rgba(0,0,0,0.08)' }}>
           <img src={post.media_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       );
@@ -139,7 +172,7 @@ export default function Dashboard() {
     const platformEmoji = post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬';
 
     return (
-      <div className={`fallback-gradient ${gradClass}`} style={{ width: 80, height: 60, borderRadius: 6, flexShrink: 0, padding: 0 }}>
+      <div className={`fallback-gradient ${gradClass}`} style={{ width: 80, height: 60, borderRadius: 6, flexShrink: 0, padding: 0, border: '1px solid rgba(0,0,0,0.08)' }}>
         <span style={{ fontSize: 18, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>{platformEmoji}</span>
       </div>
     );
@@ -152,18 +185,21 @@ export default function Dashboard() {
         <p>Overview of your content approval workflow.</p>
       </div>
 
-
-
-      <div className="stats-grid">
-        <div className="stat-card" style={{cursor:'pointer'}} onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
+      <div style={{ position: 'relative' }}>
+        <div className="dashboard-glow-blob"></div>
+        <div className="stats-grid" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="stat-card" style={{cursor:'pointer', position: 'relative'}} onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
+          <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           <div className="stat-card-value">{data.total}</div>
           <div className="stat-card-label">Total posts</div>
         </div>
-        <div className="stat-card" style={{cursor:'pointer'}} onClick={() => { setStatusFilter('pending'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
+        <div className="stat-card" style={{cursor:'pointer', position: 'relative'}} onClick={() => { setStatusFilter('pending'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
+          <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <div className="stat-card-value">{data.byStatus.pending || 0}</div>
           <div className="stat-card-label">Awaiting review</div>
         </div>
-        <div className="stat-card" style={{cursor:'pointer'}} onClick={() => { setStatusFilter('approved'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
+        <div className="stat-card" style={{cursor:'pointer', position: 'relative'}} onClick={() => { setStatusFilter('approved'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
+          <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <div className="stat-card-value">{data.byStatus.approved || 0}</div>
           <div className="stat-card-label">Approved</div>
         </div>
@@ -179,7 +215,8 @@ export default function Dashboard() {
           };
           const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
           return (
-            <div className="stat-card">
+            <div className="stat-card" style={{position: 'relative'}}>
+              <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
               <div className="stat-card-value" style={{fontSize:20}}>{formatSize(usedBytes)}</div>
               <div style={{width:'100%',height:4,background:'var(--border)',borderRadius:2,marginTop:8,marginBottom:6,overflow:'hidden'}}>
                 <div style={{width:`${pct}%`,height:'100%',background:barColor,borderRadius:2,transition:'width 0.5s ease'}}></div>
@@ -191,6 +228,7 @@ export default function Dashboard() {
             </div>
           );
         })()}
+      </div>
       </div>
 
       <div className="dashboard-content-grid">
@@ -274,10 +312,10 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                       <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColors[item.action] || 'var(--accent)', flexShrink: 0 }}></div>
                       <div className="truncate" style={{ fontSize: '13px', fontFamily: 'var(--sans)', color: 'var(--text-secondary)' }}>
-                        <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.user_name || 'System'}</strong> <span style={{ opacity: 0.3, margin: '0 4px' }}>/</span> {actionLabels[item.action] || item.action}
+                        <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.user_name || 'System'}</strong> <span style={{ opacity: 0.3, margin: '0 12px' }}>/</span> {actionLabels[item.action] || item.action}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginLeft: 'auto' }}>
                       <div style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontWeight: 400 }}>
                         {new Date(item.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
@@ -316,7 +354,7 @@ export default function Dashboard() {
           </div>
 
           {/* Search & Filter Bar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', padding: '12px 16px', background: 'var(--bg-layer)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
+          <div className="posts-filter-bar">
             <div style={{ position: 'relative', width: '100%' }}>
               <input 
                 type="text" 
@@ -326,71 +364,91 @@ export default function Dashboard() {
                 className="form-input"
               />
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-              {authorFilter !== 'all' && (
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 8, 
-                  padding: '5px 12px', 
-                  background: 'rgba(229,72,77,0.1)', 
-                  color: 'var(--accent)', 
-                  border: '1px solid rgba(229,72,77,0.2)',
-                  borderRadius: 'var(--radius-pill)', 
-                  fontSize: '12px', 
-                  fontWeight: 500 
-                }}>
-                  <span>Author: <strong>{posts.find(p => p.created_by === authorFilter)?.users?.name || 'Team Member'}</strong></span>
-                  <button 
-                    onClick={clearAuthorFilter} 
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      color: 'var(--accent)', 
-                      cursor: 'pointer', 
-                      padding: '0 2px', 
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    aria-label="Clear author filter"
-                  >
-                    ✕
-                  </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', minWidth: 0, flex: 1 }}>
+                {authorFilter !== 'all' && (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 8, 
+                    padding: '5px 12px', 
+                    background: 'rgba(229,72,77,0.1)', 
+                    color: 'var(--accent)', 
+                    border: '1px solid rgba(229,72,77,0.2)',
+                    borderRadius: 'var(--radius-pill)', 
+                    fontSize: '12px', 
+                    fontWeight: 500 
+                  }}>
+                    <span>Author: <strong>{posts.find(p => p.created_by === authorFilter)?.users?.name || 'Team Member'}</strong></span>
+                    <button 
+                      onClick={clearAuthorFilter} 
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: 'var(--accent)', 
+                        cursor: 'pointer', 
+                        padding: '0 2px', 
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      aria-label="Clear author filter"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 2, position: 'relative' }}>
+                  {['all', 'pending', 'approved', 'draft', 'rejected'].map(status => {
+                    const isSelected = statusFilter === status;
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
+                        style={{
+                          padding: '6px 14px',
+                          fontSize: '12px',
+                          fontFamily: 'var(--sans)',
+                          fontWeight: 500,
+                          borderRadius: 'var(--radius-pill)',
+                          border: 'none',
+                          background: 'transparent',
+                          color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          textTransform: 'capitalize',
+                          whiteSpace: 'nowrap',
+                          position: 'relative'
+                        }}
+                      >
+                        {isSelected && (
+                          <motion.div
+                            layoutId="active-status-tab"
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              background: 'var(--bg-card)',
+                              borderRadius: '9999px',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+                              border: '1px solid rgba(0,0,0,0.06)',
+                              zIndex: 0
+                            }}
+                            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                          />
+                        )}
+                        <span style={{ position: 'relative', zIndex: 1 }}>{status}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-              <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 2 }}>
-                {['all', 'pending', 'approved', 'draft', 'rejected'].map(status => (
-                  <button
-                    key={status}
-                    onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
-                    style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      fontFamily: 'var(--sans)',
-                      fontWeight: 500,
-                      borderRadius: 'var(--radius-pill)',
-                      border: '1px solid transparent',
-                      background: statusFilter === status ? 'var(--bg-card)' : 'transparent',
-                      color: statusFilter === status ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      boxShadow: statusFilter === status ? '0 1px 2px rgba(0,0,0,0.2)' : 'none',
-                      cursor: 'pointer',
-                      textTransform: 'capitalize',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {status}
-                  </button>
-                ))}
               </div>
               {uniqueClients.length > 0 && (
                 <select
                   value={clientFilter}
                   onChange={e => { setClientFilter(e.target.value); setCurrentPage(1); }}
                   className="form-select"
-                  style={{ width: 'auto', minWidth: 0 }}
+                  style={{ width: 'auto', minWidth: 120 }}
                 >
                   <option value="all">All clients</option>
                   {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
@@ -410,7 +468,7 @@ export default function Dashboard() {
                     <div className="mobile-post-card-thumb">
                       {post.media_url ? (
                         post.media_type === 'video' ? (
-                          <video src={post.media_url} preload="none" playsInline muted />
+                          <video src={post.media_url} preload="metadata" playsInline muted />
                         ) : (
                           <img src={post.media_url} alt="" loading="lazy" />
                         )
@@ -431,6 +489,14 @@ export default function Dashboard() {
                         <PlatformBadge platform={post.platform} />
                         <StatusBadge status={post.status} />
                         <span>{post.clients?.company_name}</span>
+                        {(() => {
+                          const details = getExpiryDetails(post.created_at);
+                          return (
+                            <span style={{ color: details.color, fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '2px', fontWeight: 500 }}>
+                              ⏰ {details.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
@@ -448,13 +514,14 @@ export default function Dashboard() {
                     <th>Project</th>
                     <th>Client</th>
                     <th>Status</th>
+                    <th>Auto-Deletes</th>
                     <th>Updated</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedPosts.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--sans)', color: 'var(--text-muted)' }}>
+                      <td colSpan="7" style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--sans)', color: 'var(--text-muted)' }}>
                         No matching posts found
                       </td>
                     </tr>
@@ -476,6 +543,26 @@ export default function Dashboard() {
                           </div>
                         </td>
                         <td><StatusBadge status={post.status} /></td>
+                        <td>
+                          {(() => {
+                            const details = getExpiryDetails(post.created_at);
+                            return (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: details.bg !== 'transparent' ? '4px 8px' : '0',
+                                borderRadius: 'var(--radius-pill)',
+                                fontSize: '11px',
+                                fontWeight: 500,
+                                color: details.color,
+                                backgroundColor: details.bg
+                              }}>
+                                ⏰ {details.label}
+                              </span>
+                            );
+                          })()}
+                        </td>
                         <td style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:12}}>{new Date(post.updated_at).toLocaleDateString()}</td>
                       </tr>
                     ))

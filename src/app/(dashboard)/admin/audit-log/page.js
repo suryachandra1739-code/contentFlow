@@ -22,8 +22,8 @@ export default async function AuditLogPage({ searchParams }) {
     <div className="fade-in">
       <div className="audit-header-container">
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)' }}>Audit Log</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>System-wide chronological activity log.</p>
+          <h1>Audit Log</h1>
+          <p>System-wide chronological activity log.</p>
         </div>
         <form style={{ display: 'flex', gap: 12 }}>
           <select 

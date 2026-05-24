@@ -199,9 +199,39 @@ export default function PostDetail() {
       <div className="page-header">
         <Link href={`/projects/${post.project_id}`} style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← {post.projects?.name || 'Project'}</Link>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-12">
+          <div className="flex items-center gap-12" style={{ flexWrap: 'wrap' }}>
             <PlatformBadge platform={post.platform} />
             <StatusBadge status={post.status} />
+            {(() => {
+              const created = new Date(post.created_at);
+              const expiry = new Date(created.getTime() + 7 * 24 * 60 * 60 * 1000);
+              const diffMs = expiry - Date.now();
+              
+              if (diffMs > 0) {
+                const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+                const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                const label = diffDays > 0 ? `${diffDays}d ${diffHours}h remaining` : `${diffHours}h remaining`;
+                const isUrgent = diffMs < 24 * 60 * 60 * 1000;
+                
+                return (
+                  <span style={{
+                    fontSize: 12,
+                    fontFamily: 'var(--sans)',
+                    color: isUrgent ? 'var(--red)' : 'var(--text-muted)',
+                    backgroundColor: isUrgent ? 'rgba(229,72,77,0.1)' : 'rgba(255,255,255,0.05)',
+                    padding: '4px 10px',
+                    borderRadius: 'var(--radius-pill)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontWeight: 500
+                  }}>
+                    ⏰ Auto-deletes in {label}
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </div>
           <div className="flex gap-8">
             {post.status === 'draft' && <button className="btn btn-primary btn-sm" onClick={() => updateStatus('pending')}>Send for review</button>}
@@ -245,7 +275,7 @@ export default function PostDetail() {
                         }}
                       >
                         {ver.metadata.previous_media_type === 'video' ? (
-                          <video src={ver.metadata.previous_media_url} preload="none" playsInline muted style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                          <video src={ver.metadata.previous_media_url} preload="metadata" playsInline muted style={{width:'100%',height:'100%',objectFit:'cover'}} />
                         ) : (
                           <img src={ver.metadata.previous_media_url} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}} />
                         )}
@@ -389,7 +419,7 @@ export default function PostDetail() {
                 {newMedia.media_url ? (
                   <div style={{position:'relative', padding:'8px', background:'var(--bg-layer)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', display:'flex', alignItems:'center', gap:12}}>
                     {newMedia.media_type === 'video' ? (
-                      <video src={newMedia.media_url} preload="none" playsInline muted style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
+                      <video src={newMedia.media_url} preload="metadata" playsInline muted style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
                     ) : (
                       <img src={newMedia.media_url} alt="Uploaded thumbnail" loading="lazy" style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
                     )}

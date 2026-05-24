@@ -14,9 +14,6 @@ export default function RootLayout({ children }) {
         <meta name="color-scheme" content="light dark" />
       </head>
       <body>
-        <div className="bg-grid-glow">
-          <div className="glow-orb orb-1"></div>
-        </div>
         <ToastProvider>
           {children}
         </ToastProvider>

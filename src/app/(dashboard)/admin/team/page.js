@@ -107,12 +107,14 @@ export default function TeamManagementPage() {
 
   return (
     <div className="fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)' }}>Team Management</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>Manage admin and team access.</p>
+      <div className="page-header">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1>Team Management</h1>
+            <p>Manage admin and team access.</p>
+          </div>
+          <InviteTeamModal onInviteSuccess={fetchTeam} />
         </div>
-        <InviteTeamModal onInviteSuccess={fetchTeam} />
       </div>
 
       {isMobile ? (
@@ -321,7 +323,7 @@ export default function TeamManagementPage() {
             </div>
             <div className="modal-body" style={{ padding: '20px 24px' }}>
               <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-                Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.email}</strong>? This will revoke their access to the workspace.
+                Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.email}</strong>? Their posts will be reassigned to you and their access will be revoked.
               </p>
             </div>
             <div className="modal-footer">

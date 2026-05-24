@@ -92,7 +92,7 @@ export default function NewPost() {
       <div className="page-header">
         <h1>Create new post</h1>
         <p>Step {step} of 3</p>
-        <div style={{display:'flex',gap:4,marginTop:12}}>
+        <div style={{display:'flex',gap:8,marginTop:12}}>
           {[1,2,3].map(s => (
             <div key={s} style={{flex:1,height:4,borderRadius:2,background:s <= step ? 'var(--accent)' : 'var(--border)',transition:'all 0.3s ease'}} />
           ))}

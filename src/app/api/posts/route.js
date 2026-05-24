@@ -1,10 +1,58 @@
 import { createClientServer } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { r2Client, BUCKET_NAME } from '@/lib/r2';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+
+async function cleanExpiredPosts(supabase) {
+  try {
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    // Fetch expired posts
+    const { data: expiredPosts, error: fetchError } = await supabase
+      .from('posts')
+      .select('id, media_key')
+      .lt('created_at', oneWeekAgo);
+
+    if (fetchError) throw fetchError;
+
+    if (expiredPosts && expiredPosts.length > 0) {
+      const expiredIds = expiredPosts.map(p => p.id);
+
+      // 1. Delete R2 files
+      for (const post of expiredPosts) {
+        if (post.media_key) {
+          try {
+            await r2Client.send(new DeleteObjectCommand({
+              Bucket: BUCKET_NAME,
+              Key: post.media_key,
+            }));
+          } catch (r2Err) {
+            console.error('R2 auto-deletion failed for:', post.media_key, r2Err);
+          }
+        }
+      }
+
+      // 2. Delete comments of these posts
+      await supabase.from('comments').delete().in('post_id', expiredIds);
+
+      // 3. Delete from public.posts
+      await supabase.from('posts').delete().in('id', expiredIds);
+
+      console.log(`Successfully auto-deleted ${expiredIds.length} expired posts.`);
+    }
+  } catch (err) {
+    console.error('Error during auto-cleanup:', err);
+  }
+}
 
 export async function GET(request) {
   try {
     const supabase = await createClientServer();
+    
+    // Run automated cleanup of expired posts (older than 7 days)
+    await cleanExpiredPosts(supabase);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

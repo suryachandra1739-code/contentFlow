@@ -59,33 +59,10 @@ export default async function PublicReviewPage({ params }) {
       {/* Realtime channel refreshing */}
       <AutoRefresh postId={post.id} />
 
-      {/* Floating sharp foliage cube background asset in center-left background */}
-      <div style={{
-        position: 'absolute',
-        top: '35%',
-        left: '45%',
-        transform: 'translate(-50%, -50%)',
-        width: '650px',
-        height: '650px',
-        backgroundImage: "url('/images/post-driftwood.jpg')",
-        backgroundSize: 'contain',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        opacity: 0.35,
-        zIndex: 0,
-        pointerEvents: 'none',
-      }} />
-
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         
         {/* Header Section matching reference image style */}
-        <header style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1.5fr',
-          gap: '40px',
-          alignItems: 'start',
-          marginBottom: '50px'
-        }}>
+        <header className="review-header-grid">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
               <h1 style={{
@@ -116,6 +93,33 @@ export default async function PublicReviewPage({ params }) {
             <div style={{ fontSize: '14px', color: '#88888b', fontWeight: '500' }}>
               Project: <span style={{ color: '#ffffff' }}>{post.projects?.name || 'General'}</span>
             </div>
+            {(() => {
+              const created = new Date(post.created_at);
+              const expiry = new Date(created.getTime() + 7 * 24 * 60 * 60 * 1000);
+              const diffMs = expiry - Date.now();
+              
+              if (diffMs > 0) {
+                const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+                const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                const label = diffDays > 0 ? `${diffDays}d ${diffHours}h remaining` : `${diffHours}h remaining`;
+                const isUrgent = diffMs < 24 * 60 * 60 * 1000;
+                
+                return (
+                  <div style={{
+                    marginTop: '8px',
+                    fontSize: '12px',
+                    color: isUrgent ? '#ef4444' : '#88888b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: '500'
+                  }}>
+                    ⏰ This review portal auto-deletes in {label}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
           <div style={{
             fontSize: '15px',
@@ -131,12 +135,7 @@ export default async function PublicReviewPage({ params }) {
         </header>
 
         {/* Content Layout Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1.2fr 1fr',
-          gap: '32px',
-          alignItems: 'start'
-        }}>
+        <div className="review-content-grid">
           
           {/* Left Column: Preview of the Post */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -227,96 +226,6 @@ export default async function PublicReviewPage({ params }) {
                 </span>
               </div>
               <PostReviewActions post={post} token={token} />
-            </div>
-
-            {/* Premium Metrics Card (Inspired by reference widgets) */}
-            <div style={glassCardStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(255, 255, 255, 0.4)'
-                }}>
-                  Optimization Insights
-                </span>
-                <span style={{
-                  fontSize: '11px',
-                  color: '#f5a623',
-                  background: 'rgba(245, 166, 35, 0.1)',
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  fontWeight: '500'
-                }}>
-                  AI Assisted
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {/* 1. Expected Reach Widget */}
-                <div style={{
-                  padding: '16px',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255, 255, 255, 0.05)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '13px', color: '#a1a1aa' }}>Expected Reach</span>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#30a46c' }}>{reachText}</span>
-                  </div>
-                  <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '999px', overflow: 'hidden' }}>
-                    <div style={{ width: '75%', height: '100%', background: 'linear-gradient(90deg, #30a46c, #a3e635)', borderRadius: '999px' }}></div>
-                  </div>
-                </div>
-
-                {/* 2. Engagement Projection Widget */}
-                <div style={{
-                  padding: '16px',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255, 255, 255, 0.05)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '13px', color: '#a1a1aa' }}>Engagement Index</span>
-                    <span style={{ fontSize: '16px', fontWeight: '800', color: '#f5a623' }}>{engagementText}</span>
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#71717a' }}>Excellent platform alignment</div>
-                </div>
-
-                {/* 3. Recommendations list widget */}
-                <div>
-                  <div style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: '500', marginBottom: '10px' }}>Optimization Suggestions</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '10px 14px',
-                      background: 'rgba(48, 164, 108, 0.05)',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(48, 164, 108, 0.1)',
-                      fontSize: '12px'
-                    }}>
-                      <span style={{ color: '#e4e4e7' }}>Add high-relevance tags</span>
-                      <span style={{ color: '#30a46c', fontWeight: '600' }}>+3.5%</span>
-                    </div>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '10px 14px',
-                      background: 'rgba(245, 166, 35, 0.05)',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(245, 166, 35, 0.1)',
-                      fontSize: '12px'
-                    }}>
-                      <span style={{ color: '#e4e4e7' }}>Optimize post timing</span>
-                      <span style={{ color: '#f5a623', fontWeight: '600' }}>+5.2%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Comments List Feed */}

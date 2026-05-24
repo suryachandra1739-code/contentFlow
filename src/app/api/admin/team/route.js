@@ -126,25 +126,58 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'You cannot delete your own admin account.' }, { status: 400 });
     }
 
-    // Delete from public.users table
-    const { error: dbError } = await supabase
+    // Use admin client to bypass RLS for cleanup operations
+    const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+      : supabase;
+
+    // 1. Delete comments by this user
+    const { error: commentsError } = await supabaseAdmin
+      .from('comments')
+      .delete()
+      .eq('user_id', userId);
+    if (commentsError) console.error('Error deleting comments:', commentsError);
+
+    // 2. Reassign posts from this user to the current admin
+    const { error: postsError } = await supabaseAdmin
+      .from('posts')
+      .update({ created_by: user.id })
+      .eq('created_by', userId);
+    if (postsError) console.error('Error reassigning posts:', postsError);
+
+    // 3. Reassign projects created by this user
+    const { error: projectsError } = await supabaseAdmin
+      .from('projects')
+      .update({ created_by: user.id })
+      .eq('created_by', userId);
+    if (projectsError) console.error('Error reassigning projects:', projectsError);
+
+    // 4. Reassign clients created by this user
+    const { error: clientsError } = await supabaseAdmin
+      .from('clients')
+      .update({ created_by: user.id })
+      .eq('created_by', userId);
+    if (clientsError) console.error('Error reassigning clients:', clientsError);
+
+    // 5. Reassign audit_log entries
+    const { error: auditError } = await supabaseAdmin
+      .from('audit_log')
+      .update({ user_id: user.id })
+      .eq('user_id', userId);
+    if (auditError) console.error('Error reassigning audit logs:', auditError);
+
+    // 6. Delete from public.users table
+    const { error: dbError } = await supabaseAdmin
       .from('users')
       .delete()
       .eq('id', userId);
 
     if (dbError) {
-      if (dbError.code === '23503') {
-        return NextResponse.json({ error: 'Cannot delete this team member because they have associated posts or comments.' }, { status: 400 });
-      }
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
-    // Delete from auth.users using admin client if service role key is available
+    // Delete from auth.users using admin client
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      );
       const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
       if (authError) {
         console.error('Error deleting user from Supabase Auth:', authError);

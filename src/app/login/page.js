@@ -62,95 +62,96 @@ function LoginForm() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
-      <div className="card fade-in" style={{ width: '100%', maxWidth: '400px', padding: '40px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 40, height: 40, background: 'var(--accent)', borderRadius: 8, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>
+    <div className="login-split-container">
+      {/* Sky Clouds Background (Login Page Only) */}
+      <div className="sky-cloud sky-cloud-1"></div>
+      <div className="sky-cloud sky-cloud-2"></div>
+      <div className="sky-cloud sky-cloud-3"></div>
+
+      {/* Stacked Pills Form Container */}
+      <form onSubmit={handleLogin} className="showcase-pills-stack" style={{ width: '100%', padding: '0 20px', boxSizing: 'border-box' }}>
+        
+        {/* Mockup Header Info */}
+        <div style={{ textAlign: 'center', marginBottom: '16px', zIndex: 10 }}>
+          <div style={{ width: 44, height: 44, background: 'rgba(255, 255, 255, 0.25)', border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '12px', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e3a6c', fontSize: 22, boxShadow: '0 8px 32px rgba(0,0,0,0.04)', backdropFilter: 'blur(8px)' }}>
             📦
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 8 }}>Sign in to your workspace</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Welcome back to ContentFlow</p>
+          <h1 style={{ fontSize: 24, fontWeight: 600, color: '#1e3a6c', margin: '0 0 4px 0', fontFamily: 'var(--sans)' }}>Sign in to workspace</h1>
+          <p style={{ color: 'rgba(30, 58, 108, 0.75)', fontSize: 13, margin: 0, fontWeight: 500 }}>Welcome back to ContentFlow</p>
         </div>
 
         {redirectMessage && (
-          <div style={{ padding: '12px 16px', background: 'var(--amber-soft)', border: '1px solid var(--amber)', borderRadius: 'var(--radius-sm)', marginBottom: 20, fontSize: 13, color: 'var(--amber)', lineHeight: 1.5 }}>
+          <div style={{ zIndex: 10, padding: '10px 20px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '100px', fontSize: 12, color: '#b45309', fontWeight: 600, textAlign: 'center', maxWidth: '320px', backdropFilter: 'blur(8px)' }}>
             {redirectMessage}
           </div>
         )}
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="form-group">
-            <label className="form-label">Email address</label>
-            <input 
-              type="email" 
-              className="form-input" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
-              placeholder="name@company.com"
-            />
-          </div>
-          
-          <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label className="form-label" style={{ margin: 0 }}>Password</label>
-              <button 
-                type="button" 
-                onClick={handleResetPassword} 
-                disabled={resetLoading}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', padding: 0 }}
-              >
-                {resetLoading ? 'Sending...' : 'Forgot password?'}
-              </button>
-            </div>
-            <div style={{ position: 'relative' }}>
-              <input 
-                type={showPassword ? 'text' : 'password'} 
-                className="form-input" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                required 
-                style={{ width: '100%', paddingRight: '40px' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? (
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
+        {/* Row 1: Email Input */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center' }}>
+          <input 
+            type="email" 
+            className="pill-glassmorphic-input" 
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            required 
+            placeholder="Email Address"
+            style={{ width: '100%', maxWidth: '100%' }}
+          />
+        </div>
 
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
+        {/* Row 2: Password Input & Show/Hide Toggle */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', gap: '12px' }}>
+          <input 
+            type={showPassword ? 'text' : 'password'} 
+            className="pill-solid-white-input" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            required 
+            placeholder="Password"
+            style={{ flex: 1, letterSpacing: showPassword ? 'normal' : '0.12em', paddingRight: '20px', minWidth: 0, width: 'auto' }}
+          />
+          <button
+            type="button"
+            className="pill-floating-icon"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            style={{ border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}
+          >
+            {showPassword ? (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1e3a6c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1e3a6c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            )}
           </button>
-        </form>
-      </div>
+        </div>
+
+        {/* Row 3: Submit Button */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center' }}>
+          <button type="submit" className="pill-native-backend-btn" disabled={loading} style={{ width: '100%', maxWidth: '100%' }}>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </div>
+
+        {/* Row 4: Forgot Password Button */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', marginTop: '4px' }}>
+          <button 
+            type="button" 
+            className="pill-glassmorphic-btn"
+            onClick={handleResetPassword} 
+            disabled={resetLoading}
+            style={{ padding: '12px 24px', fontSize: '14px', background: 'transparent', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.3)' }}
+          >
+            {resetLoading ? 'Sending...' : 'Forgot password?'}
+          </button>
+        </div>
+
+      </form>
     </div>
   );
 }

@@ -106,7 +106,7 @@ export default async function ClientPortalHistory({ searchParams }) {
                       <td style={{ padding: '16px 24px' }}>
                         <div style={{ width: 40, height: 40, borderRadius: 6, background: '#000', overflow: 'hidden' }}>
                           {post.media_type === 'video' ? (
-                            <video src={post.media_url} preload="none" playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <video src={post.media_url} preload="metadata" playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <img src={post.media_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           )}
