@@ -668,6 +668,38 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   letter-spacing: 0.1em;
 }
 
+/* Cloud Storage Stat Card */
+.cloud-storage-card .stat-card-value {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.cloud-storage-bar-container {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.cloud-storage-label-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.cloud-storage-pct {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -1224,6 +1256,24 @@ tr:hover td {
     margin-top: 8px;
   }
 
+  .cloud-storage-card .stat-card-value {
+    font-size: 17px;
+  }
+  .cloud-storage-bar-container {
+    margin-top: 12px;
+    margin-bottom: 10px;
+  }
+  .cloud-storage-label-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .cloud-storage-pct {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
   /* ── Dashboard Content Grid ── */
   .dashboard-content-grid {
     grid-template-columns: 1fr;
@@ -1517,6 +1567,23 @@ tr:hover td {
   .stat-card-label {
     font-size: 9px;
     margin-top: 4px;
+  }
+
+  .cloud-storage-card .stat-card-value {
+    font-size: 15px;
+  }
+  .cloud-storage-bar-container {
+    margin-top: 10px;
+    margin-bottom: 8px;
+  }
+  .cloud-storage-label-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .cloud-storage-pct {
+    font-size: 9px;
   }
 
   .page-header h1 {
