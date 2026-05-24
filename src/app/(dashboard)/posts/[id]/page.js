@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
@@ -10,11 +10,15 @@ import { useToast } from '@/components/Toast';
 export default function PostDetail() {
   const { id } = useParams();
   const addToast = useToast();
+  const router = useRouter();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState('');
   const [authorName, setAuthorName] = useState('Creative Team');
   const [aspectRatio, setAspectRatio] = useState('original');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [statusTransition, setStatusTransition] = useState(null);
 
   // Local editing states
   const [editTitle, setEditTitle] = useState('');
@@ -166,9 +170,27 @@ export default function PostDetail() {
   }, [id]);
 
   const updateStatus = async (status) => {
+    setStatusTransition(status);
     await fetch(`/api/posts/${id}/status`, { method: 'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
     addToast(`Status updated to ${status}`, 'success');
     load();
+    // Keep highlight for 2 seconds to give visual feedback
+    setTimeout(() => setStatusTransition(null), 2000);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      addToast('Post deleted successfully', 'success');
+      router.push('/');
+    } catch (err) {
+      addToast(err.message || 'Failed to delete post', 'error');
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   const addCommentHandler = async (e) => {
@@ -233,9 +255,16 @@ export default function PostDetail() {
               return null;
             })()}
           </div>
-          <div className="flex gap-8">
+          <div className="flex gap-8" style={{flexWrap:'wrap'}}>
             {post.status === 'draft' && <button className="btn btn-primary btn-sm" onClick={() => updateStatus('pending')}>Send for review</button>}
             <button className="btn btn-secondary btn-sm" onClick={copyReviewLink}>Copy review link</button>
+            <button 
+              className="btn btn-sm" 
+              style={{background:'var(--red-soft)',color:'var(--red)',border:'1px solid rgba(229,72,77,0.2)',fontWeight:500}}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>
@@ -323,11 +352,35 @@ export default function PostDetail() {
               <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:4}}>Status actions</h2>
               <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:16}}>Update the approval status</p>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <button className="btn btn-secondary btn-sm" onClick={() => updateStatus('draft')}>Draft</button>
-                <button className="btn btn-sm" style={{background:'var(--amber-soft)',color:'var(--amber)',border:'none',borderRadius:'var(--radius-sm)',fontWeight:500}} onClick={() => updateStatus('pending')}>Pending</button>
-                <button className="btn btn-sm" style={{background:'var(--green-soft)',color:'var(--green)',border:'none',borderRadius:'var(--radius-sm)',fontWeight:500}} onClick={() => updateStatus('approved')}>Approve</button>
-                <button className="btn btn-sm" style={{background:'var(--cyan-soft)',color:'var(--cyan)',border:'none',borderRadius:'var(--radius-sm)',fontWeight:500}} onClick={() => updateStatus('revision')}>Revision</button>
-                <button className="btn btn-sm" style={{background:'var(--red-soft)',color:'var(--red)',border:'none',borderRadius:'var(--radius-sm)',fontWeight:500}} onClick={() => updateStatus('rejected')}>Reject</button>
+                {[
+                  { status: 'draft', label: 'Draft', bg: 'var(--bg-input)', color: 'var(--text-secondary)', activeBg: 'var(--border)', activeColor: 'var(--text-primary)' },
+                  { status: 'pending', label: 'Pending', bg: 'var(--amber-soft)', color: 'var(--amber)', activeBg: 'var(--amber)', activeColor: '#fff' },
+                  { status: 'approved', label: 'Approve', bg: 'var(--green-soft)', color: 'var(--green)', activeBg: 'var(--green)', activeColor: '#fff' },
+                  { status: 'revision', label: 'Revision', bg: 'var(--cyan-soft)', color: 'var(--cyan)', activeBg: 'var(--cyan)', activeColor: '#fff' },
+                  { status: 'rejected', label: 'Reject', bg: 'var(--red-soft)', color: 'var(--red)', activeBg: 'var(--red)', activeColor: '#fff' },
+                ].map(item => {
+                  const isActive = post.status === item.status;
+                  const isTransitioning = statusTransition === item.status;
+                  return (
+                    <button 
+                      key={item.status}
+                      className="btn btn-sm" 
+                      style={{
+                        background: isActive ? item.activeBg : item.bg,
+                        color: isActive ? item.activeColor : item.color,
+                        border: isActive ? `2px solid ${item.color}` : 'none',
+                        borderRadius:'var(--radius-sm)',
+                        fontWeight: isActive ? 700 : 500,
+                        transform: isTransitioning ? 'scale(1.08)' : 'scale(1)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: isActive ? `0 2px 8px ${item.color}40` : 'none',
+                      }} 
+                      onClick={() => updateStatus(item.status)}
+                    >
+                      {isActive && '✓ '}{item.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -569,6 +622,44 @@ export default function PostDetail() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:9999,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)'
+        }} onClick={() => !deleting && setShowDeleteConfirm(false)}>
+          <div style={{
+            background:'var(--bg-card)', border:'1px solid var(--border)',
+            borderRadius:'var(--radius)', padding:32, maxWidth:400, width:'90%',
+            boxShadow:'0 20px 60px rgba(0,0,0,0.3)'
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{fontSize:32, marginBottom:12, textAlign:'center'}}>🗑️</div>
+            <h3 style={{fontSize:18,fontWeight:700,fontFamily:'var(--sans)',textAlign:'center',color:'var(--text-primary)',marginBottom:8}}>Delete this post?</h3>
+            <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',textAlign:'center',marginBottom:24,lineHeight:1.5}}>
+              This action cannot be undone. The media file will also be removed from cloud storage.
+            </p>
+            <div style={{display:'flex',gap:8,justifyContent:'center'}}>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-sm" 
+                style={{background:'var(--red)',color:'#fff',border:'none',fontWeight:600,opacity:deleting?0.6:1}}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

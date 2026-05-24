@@ -216,13 +216,15 @@ export default function Dashboard() {
           const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
           return (
             <div className="stat-card cloud-storage-card" style={{position: 'relative'}}>
-              <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              <div className="cloud-storage-icon-row">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-muted)' }}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                <span className="cloud-storage-title" style={{fontSize:10,fontWeight:500,textTransform:'uppercase',letterSpacing:'0.1em',color:'var(--text-muted)'}}>Cloud storage</span>
+              </div>
               <div className="stat-card-value cloud-storage-value">{formatSize(usedBytes)}</div>
               <div className="cloud-storage-bar-container">
                 <div style={{width:`${pct}%`,height:'100%',background:barColor,borderRadius:2,transition:'width 0.5s ease'}}></div>
               </div>
               <div className="stat-card-label cloud-storage-label-container">
-                <span className="cloud-storage-title">Cloud storage</span>
                 <span className="cloud-storage-pct">{pct.toFixed(1)}% of 10 GB</span>
               </div>
             </div>
@@ -480,23 +482,10 @@ export default function Dashboard() {
                     </div>
                     <div className="mobile-post-card-info">
                       <div className="mobile-post-card-title" style={{fontWeight:600}}>{parsePostCaption(post.caption).title}</div>
-                      {parsePostCaption(post.caption).description && (
-                        <div style={{fontSize:12, color:'var(--text-secondary)', marginBottom:4}} className="truncate">
-                          {parsePostCaption(post.caption).description}
-                        </div>
-                      )}
                       <div className="mobile-post-card-meta">
                         <PlatformBadge platform={post.platform} />
                         <StatusBadge status={post.status} />
                         <span>{post.clients?.company_name}</span>
-                        {(() => {
-                          const details = getExpiryDetails(post.created_at);
-                          return (
-                            <span style={{ color: details.color, fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '2px', fontWeight: 500 }}>
-                              ⏰ {details.label}
-                            </span>
-                          );
-                        })()}
                       </div>
                     </div>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
@@ -531,9 +520,6 @@ export default function Dashboard() {
                         <td><PlatformBadge platform={post.platform} /></td>
                         <td>
                           <div style={{fontFamily:'var(--sans)',fontWeight:500, color:'var(--text-primary)'}}>{parsePostCaption(post.caption).title}</div>
-                          {parsePostCaption(post.caption).description && (
-                            <div className="truncate" style={{maxWidth:240, fontSize:12, color:'var(--text-muted)'}}>{parsePostCaption(post.caption).description}</div>
-                          )}
                         </td>
                         <td style={{fontFamily:'var(--sans)',fontSize:14,color:'var(--text-secondary)'}}>{post.projects?.name}</td>
                         <td>

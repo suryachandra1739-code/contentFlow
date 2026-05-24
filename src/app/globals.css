@@ -700,6 +700,13 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   opacity: 0.85;
 }
 
+.cloud-storage-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -1273,6 +1280,9 @@ tr:hover td {
     font-size: 10px;
     margin-top: 2px;
   }
+  .cloud-storage-icon-row {
+    margin-bottom: 6px;
+  }
 
   /* ── Dashboard Content Grid ── */
   .dashboard-content-grid {
@@ -1584,6 +1594,14 @@ tr:hover td {
   }
   .cloud-storage-pct {
     font-size: 9px;
+  }
+  .cloud-storage-icon-row {
+    margin-bottom: 4px;
+    gap: 6px;
+  }
+  .cloud-storage-icon-row svg {
+    width: 16px;
+    height: 16px;
   }
 
   .page-header h1 {

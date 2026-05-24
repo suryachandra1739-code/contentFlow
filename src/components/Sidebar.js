@@ -8,12 +8,12 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [userRole, setUserRole] = useState('team');
   const supabase = createClientBrowser();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('contentflow-theme') || 'dark';
+    const savedTheme = localStorage.getItem('contentflow-theme') || 'light';
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.body.classList.toggle('light', savedTheme === 'light');
