@@ -700,11 +700,22 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   opacity: 0.85;
 }
 
-.cloud-storage-icon-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+.cloud-storage-icon {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  color: var(--text-muted);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.cloud-storage-title {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* Buttons */
@@ -1280,8 +1291,14 @@ tr:hover td {
     font-size: 10px;
     margin-top: 2px;
   }
-  .cloud-storage-icon-row {
-    margin-bottom: 6px;
+  .cloud-storage-icon {
+    top: 18px;
+    right: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  .cloud-storage-title {
+    font-size: 10px;
   }
 
   /* ── Dashboard Content Grid ── */
@@ -1595,13 +1612,14 @@ tr:hover td {
   .cloud-storage-pct {
     font-size: 9px;
   }
-  .cloud-storage-icon-row {
-    margin-bottom: 4px;
-    gap: 6px;
+  .cloud-storage-icon {
+    top: 12px;
+    right: 12px;
+    width: 14px;
+    height: 14px;
   }
-  .cloud-storage-icon-row svg {
-    width: 16px;
-    height: 16px;
+  .cloud-storage-title {
+    font-size: 9px;
   }
 
   .page-header h1 {

@@ -215,16 +215,14 @@ export default function Dashboard() {
           };
           const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
           return (
-            <div className="stat-card cloud-storage-card" style={{position: 'relative'}}>
-              <div className="cloud-storage-icon-row">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-muted)' }}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                <span className="cloud-storage-title" style={{fontSize:10,fontWeight:500,textTransform:'uppercase',letterSpacing:'0.1em',color:'var(--text-muted)'}}>Cloud storage</span>
-              </div>
+            <div className="stat-card cloud-storage-card">
+              <svg className="cloud-storage-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
               <div className="stat-card-value cloud-storage-value">{formatSize(usedBytes)}</div>
               <div className="cloud-storage-bar-container">
                 <div style={{width:`${pct}%`,height:'100%',background:barColor,borderRadius:2,transition:'width 0.5s ease'}}></div>
               </div>
               <div className="stat-card-label cloud-storage-label-container">
+                <span className="cloud-storage-title">Cloud storage</span>
                 <span className="cloud-storage-pct">{pct.toFixed(1)}% of 10 GB</span>
               </div>
             </div>
