@@ -80,33 +80,66 @@ export default function PostDetail() {
     setUploadProgress(0);
 
     try {
-      const presignRes = await fetch('/api/upload/presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          clientId: 'upload',
-          projectId: post?.project_id || 'unknown',
-        }),
-      });
-      const presignData = await presignRes.json();
-      if (presignData.error) { addToast(presignData.error, 'error'); setUploading(false); return; }
+      // Try presigned URL upload first (direct to R2, bypasses Vercel limits)
+      let uploadSuccess = false;
+      let presignData = null;
 
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', presignData.presignedUrl);
-        xhr.setRequestHeader('Content-Type', file.type);
-        xhr.upload.onprogress = (ev) => {
-          if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+      try {
+        const presignRes = await fetch('/api/upload/presign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            clientId: 'upload',
+            projectId: post?.project_id || 'unknown',
+          }),
+        });
+        presignData = await presignRes.json();
+        
+        if (!presignData.error && presignData.presignedUrl) {
+          await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', presignData.presignedUrl);
+            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.upload.onprogress = (ev) => {
+              if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+            };
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) resolve();
+              else reject(new Error(`Direct upload failed: ${xhr.status}`));
+            };
+            xhr.onerror = () => reject(new Error('CORS or network error during direct upload'));
+            xhr.send(file);
+          });
+          uploadSuccess = true;
+        }
+      } catch (directErr) {
+        console.warn('Presigned upload failed, falling back to server upload:', directErr.message);
+      }
+
+      // Fallback: upload through our server API
+      if (!uploadSuccess) {
+        setUploadProgress(0);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('clientId', 'upload');
+        formData.append('projectId', post?.project_id || 'unknown');
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.error) throw new Error(uploadData.error);
+
+        presignData = {
+          publicUrl: uploadData.url,
+          mediaType: uploadData.type,
+          key: uploadData.key,
         };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error(`Upload failed: ${xhr.status}`));
-        };
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.send(file);
-      });
+        setUploadProgress(100);
+      }
 
       setNewMedia({
         media_url: presignData.publicUrl,

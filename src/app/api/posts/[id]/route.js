@@ -70,7 +70,15 @@ export async function PATCH(request, { params }) {
     }
 
     const body = await request.json();
-    const { data, error } = await supabase.from('posts').update(body).eq('id', id).select().single();
+    
+    // Whitelist only known post columns to prevent Supabase errors
+    const allowedFields = ['caption', 'media_url', 'media_type', 'media_key', 'media_size', 'platform', 'thumbnail_url', 'status', 'scheduled_date'];
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
+    
+    const { data, error } = await supabase.from('posts').update(updateData).eq('id', id).select().single();
     if (error) throw error;
 
     // Determine what changed for version history
