@@ -89,11 +89,11 @@ export default function Sidebar() {
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <span className="mobile-header-title" style={{ fontWeight: 700, letterSpacing: '-0.2px', marginLeft: 8, flexGrow: 1 }}>ContentFlow</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <NotificationBell role="team" />
-          <div className="mobile-header-logo">{'//'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 8, flexGrow: 1 }}>
+          <ClaudeLogo size={24} />
+          <span className="mobile-header-title" style={{ fontWeight: 700, letterSpacing: '-0.2px' }}>ContentFlow</span>
         </div>
+        <NotificationBell role="team" />
       </div>
 
       {/* Glassmorphic Mobile Backdrop Overlay */}
