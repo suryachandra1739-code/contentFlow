@@ -2551,63 +2551,39 @@ html[data-theme="light"] .dashboard-content-grid .card .card-body {
   display: block !important;
   background-color: var(--bg-base);
   overflow: hidden;
-}
 
-.glass-grid-overlay::before {
-  content: '';
-  position: absolute;
-  width: calc(100% + 128px);
-  height: calc(100% + 128px);
-  top: -64px;
-  left: -64px;
-
-  /* Multi-scale nested grid: Large, Medium, Small */
+  /* Static multi-scale nested grid: 64px -> 16px -> 4px with extremely subtle opacity */
   background-image:
     /* Large Grid */
-    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1.2px, transparent 1.2px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1.2px, transparent 1.2px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
     /* Medium Grid */
-    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    /* Fine/Small Grid */
     linear-gradient(to right, rgba(255, 255, 255, 0.006) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.006) 1px, transparent 1px);
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.006) 1px, transparent 1px),
+    /* Fine/Small Grid */
+    linear-gradient(to right, rgba(255, 255, 255, 0.002) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.002) 1px, transparent 1px);
   background-size:
-    128px 128px,
-    128px 128px,
-    32px 32px,
-    32px 32px,
-    8px 8px,
-    8px 8px;
-
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  animation: gridShiftGPU 45s linear infinite;
-  pointer-events: none;
+    64px 64px,
+    64px 64px,
+    16px 16px,
+    16px 16px,
+    4px 4px,
+    4px 4px;
 }
 
-body.light .glass-grid-overlay::before,
-html[data-theme="light"] .glass-grid-overlay::before {
+body.light .glass-grid-overlay,
+html[data-theme="light"] .glass-grid-overlay {
   background-image:
     /* Large Grid */
-    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1.2px, transparent 1.2px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1.2px, transparent 1.2px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.015) 1px, transparent 1px),
     /* Medium Grid */
-    linear-gradient(to right, rgba(0, 0, 0, 0.012) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.012) 1px, transparent 1px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.004) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.004) 1px, transparent 1px),
     /* Fine/Small Grid */
-    linear-gradient(to right, rgba(0, 0, 0, 0.005) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.005) 1px, transparent 1px);
-}
-
-@keyframes gridShiftGPU {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-
-  to {
-    transform: translate3d(128px, 128px, 0);
-  }
+    linear-gradient(to right, rgba(0, 0, 0, 0.001) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.001) 1px, transparent 1px);
 }
 
 .glass-orb-container {
@@ -3813,10 +3789,5 @@ html[data-theme="light"] .logo-container {
   .ambient-glow-1,
   .ambient-glow-2 {
     display: none !important;
-  }
-
-  /* Keep mobile animations short and fast */
-  * {
-    transition-duration: 0.15s !important;
   }
 }
