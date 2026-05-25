@@ -4,6 +4,8 @@ import { createClientBrowser } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 
+import ClaudeLogo from '@/components/ClaudeLogo';
+
 function LoginForm() {
   const searchParams = useSearchParams();
   const redirectMessage = searchParams.get('message');
@@ -19,7 +21,7 @@ function LoginForm() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -40,7 +42,7 @@ function LoginForm() {
       addToast('Please enter your email first', 'error');
       return;
     }
-    
+
     setResetLoading(true);
     try {
       const res = await fetch('/api/auth/reset-password', {
@@ -70,12 +72,10 @@ function LoginForm() {
 
       {/* Stacked Pills Form Container */}
       <form onSubmit={handleLogin} className="showcase-pills-stack" style={{ width: '100%', padding: '0 20px', boxSizing: 'border-box' }}>
-        
+
         {/* Mockup Header Info */}
         <div style={{ textAlign: 'center', marginBottom: '16px', zIndex: 10 }}>
-          <div style={{ width: 44, height: 44, background: 'rgba(255, 255, 255, 0.25)', border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '12px', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e3a6c', fontSize: 22, boxShadow: '0 8px 32px rgba(0,0,0,0.04)', backdropFilter: 'blur(8px)' }}>
-            📦
-          </div>
+          <ClaudeLogo size={44} circleColor="rgba(218, 119, 86, 0.15)" iconColor="#da7756" style={{ margin: '0 auto 12px', border: '1px solid rgba(218, 119, 86, 0.3)', backdropFilter: 'blur(8px)' }} />
           <h1 style={{ fontSize: 24, fontWeight: 600, color: '#1e3a6c', margin: '0 0 4px 0', fontFamily: 'var(--sans)' }}>Sign in to workspace</h1>
           <p style={{ color: 'rgba(30, 58, 108, 0.75)', fontSize: 13, margin: 0, fontWeight: 500 }}>Welcome back to ContentFlow</p>
         </div>
@@ -88,12 +88,12 @@ function LoginForm() {
 
         {/* Row 1: Email Input */}
         <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center' }}>
-          <input 
-            type="email" 
-            className="pill-glassmorphic-input" 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
-            required 
+          <input
+            type="email"
+            className="pill-glassmorphic-input"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
             placeholder="Email Address"
             style={{ width: '100%', maxWidth: '100%' }}
           />
@@ -101,12 +101,12 @@ function LoginForm() {
 
         {/* Row 2: Password Input & Show/Hide Toggle */}
         <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', gap: '12px' }}>
-          <input 
-            type={showPassword ? 'text' : 'password'} 
-            className="pill-solid-white-input" 
-            value={password} 
-            onChange={e => setPassword(e.target.value)} 
-            required 
+          <input
+            type={showPassword ? 'text' : 'password'}
+            className="pill-solid-white-input"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
             placeholder="Password"
             style={{ flex: 1, letterSpacing: showPassword ? 'normal' : '0.12em', paddingRight: '20px', minWidth: 0, width: 'auto' }}
           />
@@ -140,10 +140,10 @@ function LoginForm() {
 
         {/* Row 4: Forgot Password Button */}
         <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', marginTop: '4px' }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="pill-glassmorphic-btn"
-            onClick={handleResetPassword} 
+            onClick={handleResetPassword}
             disabled={resetLoading}
             style={{ padding: '12px 24px', fontSize: '14px', background: 'transparent', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.3)' }}
           >

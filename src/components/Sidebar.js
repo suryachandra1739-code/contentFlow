@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClientBrowser } from '@/lib/supabase';
 import NotificationBell from './NotificationBell';
 
+import ClaudeLogo from './ClaudeLogo';
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -63,19 +65,36 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header Bar — full-width frosted bar with hamburger + title + logo */}
-      <button
-        className="mobile-toggle-btn"
-        onClick={() => setIsOpen(true)}
-        aria-label="Open navigation menu"
-      >
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-        <span className="mobile-header-title" style={{ fontWeight: 700, letterSpacing: '-0.2px' }}>ContentFlow</span>
-        <div className="mobile-header-logo">{'//'}</div>
-      </button>
+      <div className="mobile-toggle-btn">
+        <button
+          onClick={() => setIsOpen(true)}
+          aria-label="Open navigation menu"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'inherit',
+            padding: '8px',
+            margin: '-8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '50%',
+          }}
+          className="nav-btn-hover"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <span className="mobile-header-title" style={{ fontWeight: 700, letterSpacing: '-0.2px', marginLeft: 8, flexGrow: 1 }}>ContentFlow</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <NotificationBell role="team" />
+          <div className="mobile-header-logo">{'//'}</div>
+        </div>
+      </div>
 
       {/* Glassmorphic Mobile Backdrop Overlay */}
       {isOpen && <div className="sidebar-backdrop" onClick={closeSidebar} />}
@@ -95,29 +114,15 @@ export default function Sidebar() {
 
         <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div className="sidebar-logo-icon" style={{
-              width: 36,
-              height: 36,
-              background: 'var(--accent)',
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: 18,
-              fontWeight: 700,
-              fontFamily: 'var(--mono)',
-              letterSpacing: '-1px',
-              boxShadow: '0 4px 10px var(--accent-glow)'
-            }}>
-              {'//'}
-            </div>
+            <ClaudeLogo size={36} />
             <div>
               <h1>ContentFlow</h1>
               <span>Approval Platform</span>
             </div>
           </div>
-          <NotificationBell role="team" />
+          <div className="hide-on-mobile">
+            <NotificationBell role="team" />
+          </div>
         </div>
         <nav className="sidebar-nav">
           <div className="sidebar-section">Main</div>

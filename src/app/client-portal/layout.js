@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClientBrowser } from '@/lib/supabase';
 import NotificationBell from '@/components/NotificationBell';
+import ClaudeLogo from '@/components/ClaudeLogo';
 
 export default function ClientPortalLayout({ children }) {
   const pathname = usePathname();
@@ -38,9 +39,7 @@ export default function ClientPortalLayout({ children }) {
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 32, height: 32, background: 'var(--accent)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16 }}>
-              📦
-            </div>
+            <ClaudeLogo size={32} />
             <span style={{ fontWeight: 600, fontSize: 15 }}>ContentFlow</span>
           </div>
 

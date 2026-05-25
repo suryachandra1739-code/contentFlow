@@ -45,10 +45,10 @@ const getExpiryDetails = (createdAt) => {
   const expiry = new Date(new Date(createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
   const diffMs = expiry - Date.now();
   if (diffMs <= 0) return { label: 'Expired', color: 'var(--red)', bg: 'rgba(229,72,77,0.1)' };
-  
+
   const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
   const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-  
+
   let label = '';
   if (diffDays > 0) {
     label = `${diffDays}d ${diffHours}h left`;
@@ -123,14 +123,14 @@ export default function Dashboard() {
   const filteredPosts = posts.filter(post => {
     const clientName = post.clients?.company_name || '';
     const projectName = post.projects?.name || '';
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = searchQuery === '' ||
       post.caption?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       clientName.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
     const matchesClient = clientFilter === 'all' || clientName === clientFilter;
-    
+
     return matchesSearch && matchesStatus && matchesClient;
   });
 
@@ -151,7 +151,7 @@ export default function Dashboard() {
           <div style={{ width: 80, height: 60, position: 'relative', borderRadius: 6, overflow: 'hidden', backgroundColor: '#000', flexShrink: 0, border: '1px solid rgba(0,0,0,0.08)' }}>
             <video src={post.media_url} preload="metadata" playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#fff' }}><path d="M8 5v14l11-7z"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#fff' }}><path d="M8 5v14l11-7z" /></svg>
             </div>
           </div>
         );
@@ -163,12 +163,12 @@ export default function Dashboard() {
       );
     }
 
-    const gradClass = post.platform === 'instagram' 
-      ? 'fallback-instagram' 
-      : post.platform === 'facebook' 
-      ? 'fallback-facebook' 
-      : 'fallback-shorts';
-    
+    const gradClass = post.platform === 'instagram'
+      ? 'fallback-instagram'
+      : post.platform === 'facebook'
+        ? 'fallback-facebook'
+        : 'fallback-shorts';
+
     const platformEmoji = post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬';
 
     return (
@@ -188,72 +188,72 @@ export default function Dashboard() {
       <div style={{ position: 'relative' }}>
         <div className="dashboard-glow-blob"></div>
         <div className="stats-grid" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="stat-card" style={{cursor:'pointer', position: 'relative'}} onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
-          <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-          <div className="stat-card-value">{data.total}</div>
-          <div className="stat-card-label">Total posts</div>
-        </div>
-        <div className="stat-card" style={{cursor:'pointer', position: 'relative'}} onClick={() => { setStatusFilter('pending'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
-          <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <div className="stat-card-value">{data.byStatus.pending || 0}</div>
-          <div className="stat-card-label">Awaiting review</div>
-        </div>
-        <div className="stat-card" style={{cursor:'pointer', position: 'relative'}} onClick={() => { setStatusFilter('approved'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({behavior:'smooth',block:'start'}); }}>
-          <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <div className="stat-card-value">{data.byStatus.approved || 0}</div>
-          <div className="stat-card-label">Approved</div>
-        </div>
-        {(() => {
-          const usedBytes = data.storageUsedBytes || 0;
-          const limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB free tier
-          const pct = Math.min((usedBytes / limitBytes) * 100, 100);
-          const formatSize = (bytes) => {
-            if (bytes < 1024) return `${bytes} B`;
-            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-            if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-            return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-          };
-          const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
-          return (
-            <div className="stat-card cloud-storage-card">
-              <svg className="cloud-storage-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-              <div className="stat-card-value cloud-storage-value">{formatSize(usedBytes)}</div>
-              <div className="cloud-storage-bar-container">
-                <div style={{width:`${pct}%`,height:'100%',background:barColor,borderRadius:2,transition:'width 0.5s ease'}}></div>
+          <div className="stat-card" style={{ cursor: 'pointer', position: 'relative' }} onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+            <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
+            <div className="stat-card-value">{data.total}</div>
+            <div className="stat-card-label">Total posts</div>
+          </div>
+          <div className="stat-card" style={{ cursor: 'pointer', position: 'relative' }} onClick={() => { setStatusFilter('pending'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+            <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            <div className="stat-card-value">{data.byStatus.pending || 0}</div>
+            <div className="stat-card-label">Awaiting review</div>
+          </div>
+          <div className="stat-card" style={{ cursor: 'pointer', position: 'relative' }} onClick={() => { setStatusFilter('approved'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+            <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            <div className="stat-card-value">{data.byStatus.approved || 0}</div>
+            <div className="stat-card-label">Approved</div>
+          </div>
+          {(() => {
+            const usedBytes = data.storageUsedBytes || 0;
+            const limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB free tier
+            const pct = Math.min((usedBytes / limitBytes) * 100, 100);
+            const formatSize = (bytes) => {
+              if (bytes < 1024) return `${bytes} B`;
+              if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+              if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+              return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+            };
+            const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
+            return (
+              <div className="stat-card cloud-storage-card">
+                <svg className="cloud-storage-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
+                <div className="stat-card-value cloud-storage-value">{formatSize(usedBytes)}</div>
+                <div className="cloud-storage-bar-container">
+                  <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 2, transition: 'width 0.5s ease' }}></div>
+                </div>
+                <div className="stat-card-label cloud-storage-label-container">
+                  <span className="cloud-storage-title">Cloud storage</span>
+                  <span className="cloud-storage-pct">{pct.toFixed(1)}% of 10 GB</span>
+                </div>
               </div>
-              <div className="stat-card-label cloud-storage-label-container">
-                <span className="cloud-storage-title">Cloud storage</span>
-                <span className="cloud-storage-pct">{pct.toFixed(1)}% of 10 GB</span>
-              </div>
-            </div>
-          );
-        })()}
-      </div>
+            );
+          })()}
+        </div>
       </div>
 
       <div className="dashboard-content-grid">
         <div className="card">
           <div className="card-body">
             <div className="flex items-center justify-between mb-16">
-              <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)'}}>Pending approvals</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)' }}>Pending approvals</h2>
               <span className="badge badge-pending">{pendingPosts.length}</span>
             </div>
             {pendingPosts.length === 0 ? (
-              <div className="empty-state" style={{padding:'40px 0'}}>No pending posts to review</div>
+              <div className="empty-state" style={{ padding: '40px 0' }}>No pending posts to review</div>
             ) : (
               <div className="segmented-list">
                 {pendingPosts.slice(0, 5).map(post => (
                   <Link href={`/posts/${post.id}`} key={post.id} className="segmented-list-item">
                     {renderPostThumbnail(post)}
-                    <div style={{flex:1,minWidth:0}}>
-                      <div className="truncate" style={{fontSize:14,fontWeight:500,color:'var(--text-primary)'}}>{post.caption || 'Untitled post'}</div>
-                      <div style={{fontSize:12,fontFamily:'var(--sans)',color:'var(--text-muted)',marginTop:2}}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="truncate" style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{post.caption || 'Untitled post'}</div>
+                      <div style={{ fontSize: 12, fontFamily: 'var(--sans)', color: 'var(--text-muted)', marginTop: 2 }}>
                         <PlatformBadge platform={post.platform} />
-                        <span style={{opacity:0.4, margin:'0 4px'}}>·</span>
+                        <span style={{ opacity: 0.4, margin: '0 4px' }}>·</span>
                         {post.clients?.company_name}
                       </div>
                     </div>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
                   </Link>
                 ))}
               </div>
@@ -263,7 +263,7 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="card-body">
-            <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:20}}>Recent activity</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 20 }}>Recent activity</h2>
             <div className="segmented-list">
               {data.recentActivity?.slice(0, 8).map((item, i) => {
                 const actionLabels = {
@@ -319,7 +319,7 @@ export default function Dashboard() {
                       <div style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontWeight: 400 }}>
                         {new Date(item.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
-                      {activityLink && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>}
+                      {activityLink && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>}
                     </div>
                   </>
                 );
@@ -339,26 +339,26 @@ export default function Dashboard() {
                 }
               })}
               {(!data.recentActivity || data.recentActivity.length === 0) && (
-                <div className="empty-state" style={{padding:'40px 0'}}>No recent activity</div>
+                <div className="empty-state" style={{ padding: '40px 0' }}>No recent activity</div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card" ref={postsTableRef} style={{marginTop:32, scrollMarginTop: '24px'}}>
+      <div className="card" ref={postsTableRef} style={{ marginTop: 32, scrollMarginTop: '24px' }}>
         <div className="card-body">
           <div className="flex items-center justify-between mb-16">
-            <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)'}}>All posts</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)' }}>All posts</h2>
             <Link href="/posts/new" className="btn btn-primary btn-sm">New post</Link>
           </div>
 
           {/* Search & Filter Bar */}
           <div className="posts-filter-bar">
             <div style={{ position: 'relative', width: '100%' }}>
-              <input 
-                type="text" 
-                placeholder="Search captions, projects..." 
+              <input
+                type="text"
+                placeholder="Search captions, projects..."
                 value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="form-input"
@@ -367,27 +367,27 @@ export default function Dashboard() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', minWidth: 0, flex: 1 }}>
                 {authorFilter !== 'all' && (
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 8, 
-                    padding: '5px 12px', 
-                    background: 'rgba(229,72,77,0.1)', 
-                    color: 'var(--accent)', 
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '5px 12px',
+                    background: 'rgba(229,72,77,0.1)',
+                    color: 'var(--accent)',
                     border: '1px solid rgba(229,72,77,0.2)',
-                    borderRadius: 'var(--radius-pill)', 
-                    fontSize: '12px', 
-                    fontWeight: 500 
+                    borderRadius: 'var(--radius-pill)',
+                    fontSize: '12px',
+                    fontWeight: 500
                   }}>
                     <span>Author: <strong>{posts.find(p => p.created_by === authorFilter)?.users?.name || 'Team Member'}</strong></span>
-                    <button 
-                      onClick={clearAuthorFilter} 
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
-                        color: 'var(--accent)', 
-                        cursor: 'pointer', 
-                        padding: '0 2px', 
+                    <button
+                      onClick={clearAuthorFilter}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent)',
+                        cursor: 'pointer',
+                        padding: '0 2px',
                         fontSize: '11px',
                         fontWeight: 'bold',
                         display: 'flex',
@@ -479,14 +479,14 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="mobile-post-card-info">
-                      <div className="mobile-post-card-title" style={{fontWeight:600}}>{parsePostCaption(post.caption).title}</div>
+                      <div className="mobile-post-card-title" style={{ fontWeight: 600 }}>{parsePostCaption(post.caption).title}</div>
                       <div className="mobile-post-card-meta">
                         <PlatformBadge platform={post.platform} />
                         <StatusBadge status={post.status} />
                         <span>{post.clients?.company_name}</span>
                       </div>
                     </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
                   </Link>
                 ))
               )}
@@ -514,14 +514,14 @@ export default function Dashboard() {
                     </tr>
                   ) : (
                     paginatedPosts.map(post => (
-                      <tr key={post.id} style={{cursor:'pointer'}} onClick={() => window.location.href = `/posts/${post.id}`}>
+                      <tr key={post.id} style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/posts/${post.id}`}>
                         <td><PlatformBadge platform={post.platform} /></td>
                         <td>
-                          <div style={{fontFamily:'var(--sans)',fontWeight:500, color:'var(--text-primary)'}}>{parsePostCaption(post.caption).title}</div>
+                          <div style={{ fontFamily: 'var(--sans)', fontWeight: 500, color: 'var(--text-primary)' }}>{parsePostCaption(post.caption).title}</div>
                         </td>
-                        <td style={{fontFamily:'var(--sans)',fontSize:14,color:'var(--text-secondary)'}}>{post.projects?.name}</td>
+                        <td style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'var(--text-secondary)' }}>{post.projects?.name}</td>
                         <td>
-                          <div className="flex items-center gap-8" style={{fontFamily:'var(--sans)',fontSize:14}}>
+                          <div className="flex items-center gap-8" style={{ fontFamily: 'var(--sans)', fontSize: 14 }}>
                             <div className="avatar avatar-sm">{post.clients?.company_name?.[0]}</div>
                             {post.clients?.company_name}
                           </div>
@@ -547,7 +547,7 @@ export default function Dashboard() {
                             );
                           })()}
                         </td>
-                        <td style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:12}}>{new Date(post.updated_at).toLocaleDateString()}</td>
+                        <td style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontSize: 12 }}>{new Date(post.updated_at).toLocaleDateString()}</td>
                       </tr>
                     ))
                   )}
@@ -559,11 +559,11 @@ export default function Dashboard() {
           {/* Pagination */}
           <div className={isMobile ? 'mobile-pagination' : ''} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)', fontFamily: 'var(--sans)', fontSize: '13px', color: 'var(--text-secondary)' }}>
             <div>
-              Showing <strong style={{color:'var(--text-primary)', fontWeight:500}}>{filteredPosts.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</strong> to <strong style={{color:'var(--text-primary)', fontWeight:500}}>{Math.min(currentPage * itemsPerPage, filteredPosts.length)}</strong> of <strong style={{color:'var(--text-primary)', fontWeight:500}}>{filteredPosts.length}</strong> results
+              Showing <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{filteredPosts.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</strong> to <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredPosts.length)}</strong> of <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{filteredPosts.length}</strong> results
             </div>
             {totalPages > 1 && (
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
+                <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   className="btn btn-secondary btn-sm"
@@ -571,7 +571,7 @@ export default function Dashboard() {
                 >
                   Previous
                 </button>
-                <button 
+                <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   className="btn btn-secondary btn-sm"
