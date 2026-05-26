@@ -54,33 +54,33 @@ export default async function ClientPortalHistory({ searchParams }) {
 
   return (
     <div className="fade-in">
-      <div className="flex items-center justify-between mb-24">
-        <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)' }}>Post History</h1>
+      <div className="page-header mb-24">
+        <h1>Post History</h1>
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, justifyContent: 'flex-end' }}>
+        <select 
+          className="form-select" 
+          defaultValue={filter}
+          onChange={`window.location.href='?filter='+this.value+'&sort=${sort}'`}
+          style={{ width: 'auto' }}
+        >
+          <option value="all">All statuses</option>
+          <option value="approved">Approved</option>
+          <option value="pending">Pending</option>
+          <option value="revision">Revision</option>
+          <option value="rejected">Rejected</option>
+        </select>
         
-        <div style={{ display: 'flex', gap: 12 }}>
-          <select 
-            className="form-select" 
-            defaultValue={filter}
-            onChange={`window.location.href='?filter='+this.value+'&sort=${sort}'`}
-            style={{ width: 'auto' }}
-          >
-            <option value="all">All statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="revision">Revision</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          
-          <select 
-            className="form-select" 
-            defaultValue={sort}
-            onChange={`window.location.href='?filter=${filter}&sort='+this.value`}
-            style={{ width: 'auto' }}
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
-        </div>
+        <select 
+          className="form-select" 
+          defaultValue={sort}
+          onChange={`window.location.href='?filter=${filter}&sort='+this.value`}
+          style={{ width: 'auto' }}
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
       </div>
 
       <div className="card">
@@ -91,7 +91,7 @@ export default async function ClientPortalHistory({ searchParams }) {
             <div className="table-wrapper">
               <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: 12, textTransform: 'uppercase' }}>
+                  <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: 13, textTransform: 'uppercase' }}>
                     <th style={{ padding: '16px 24px', fontWeight: 500 }}>Media</th>
                     <th style={{ padding: '16px 24px', fontWeight: 500 }}>Caption</th>
                     <th style={{ padding: '16px 24px', fontWeight: 500 }}>Platform</th>
@@ -112,21 +112,21 @@ export default async function ClientPortalHistory({ searchParams }) {
                           )}
                         </div>
                       </td>
-                      <td style={{ padding: '16px 24px', fontSize: 14, color: 'var(--text-primary)', maxWidth: 300 }}>
+                      <td style={{ padding: '16px 24px', fontSize: 16, color: 'var(--text-primary)', maxWidth: 300 }}>
                         <div style={{ fontWeight: 600 }}>{parsePostCaption(post.caption).title}</div>
                         {parsePostCaption(post.caption).description && (
-                          <div className="truncate" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                          <div className="truncate" style={{ fontSize: 14, color: 'var(--text-muted)' }}>
                             {parsePostCaption(post.caption).description}
                           </div>
                         )}
                       </td>
-                      <td style={{ padding: '16px 24px', fontSize: 13, textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '16px 24px', fontSize: 15, textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
                         {post.platform}
                       </td>
                       <td style={{ padding: '16px 24px' }}>
                         <span className={`badge badge-${post.status}`}>{post.status}</span>
                       </td>
-                      <td style={{ padding: '16px 24px', fontSize: 13, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
+                      <td style={{ padding: '16px 24px', fontSize: 14, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
                         {new Date(post.created_at).toLocaleDateString()}
                       </td>
                       <td style={{ padding: '16px 24px', textAlign: 'right' }}>

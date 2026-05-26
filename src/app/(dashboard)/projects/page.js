@@ -1,4 +1,5 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -58,7 +59,7 @@ export default function ProjectsPage() {
   if (loading) return <div className="empty-state">Loading projects...</div>;
 
   return (
-    <div className="fade-in">
+    <PageTransition><div className="fade-in">
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div>
@@ -164,5 +165,6 @@ export default function ProjectsPage() {
         </div>
       )}
     </div>
+  </PageTransition>
   );
 }

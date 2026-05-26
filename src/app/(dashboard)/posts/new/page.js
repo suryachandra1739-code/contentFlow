@@ -1,4 +1,5 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PlatformPreview from '@/components/PlatformPreview';

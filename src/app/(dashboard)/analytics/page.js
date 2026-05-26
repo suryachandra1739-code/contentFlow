@@ -1,4 +1,5 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -13,7 +14,7 @@ export default function AnalyticsPage() {
   const maxPlatform = Math.max(...Object.values(data.byPlatform || {}), 1);
 
   return (
-    <div className="fade-in">
+    <PageTransition><div className="fade-in">
       <div className="page-header">
         <h1>Analytics</h1>
         <p>Insights and data across your content workflow.</p>
@@ -80,5 +81,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
     </div>
+  </PageTransition>
   );
 }

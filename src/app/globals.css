@@ -43,7 +43,7 @@ textarea {
   --text-primary: #e8e4dc;
   --text-secondary: #9e9a92;
   --text-muted: #7a766f;
-  --bg-card-glass: rgba(43, 42, 39, 0.45);
+  --bg-card-glass: rgba(43, 42, 39, 0.78);
   --border-card-glass: rgba(255, 255, 255, 0.08);
 
   /* Primary Accents (Claude Orange) */
@@ -263,7 +263,7 @@ body {
   font-family: var(--sans);
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
   min-height: 100vh;
@@ -372,8 +372,8 @@ html[data-theme="light"] .ambient-glow-2 {
   bottom: 16px;
   width: var(--sidebar-w);
   background-color: rgba(43, 42, 39, 0.7);
-  backdrop-filter: blur(24px) saturate(145%);
-  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  backdrop-filter: blur(80px) saturate(145%);
+  -webkit-backdrop-filter: blur(80px) saturate(145%);
   border: 1px solid var(--border);
   border-radius: 24px;
   display: flex;
@@ -463,11 +463,11 @@ html[data-theme="light"] .sidebar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   color: var(--text-secondary);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
   transition: all 0.3s var(--ease);
   position: relative;
@@ -516,9 +516,10 @@ html[data-theme="light"] .sidebar {
   position: relative;
 }
 
-.page-header h1 {
+.page-header h1,
+.audit-header-container h1 {
   font-family: var(--sans);
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 700;
   background: var(--h1-gradient);
   -webkit-background-clip: text;
@@ -527,25 +528,29 @@ html[data-theme="light"] .sidebar {
   line-height: 1.2;
 }
 
-.page-header p {
+.page-header p,
+.audit-header-container p {
   font-family: var(--sans);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 15px;
   margin-top: 4px;
 }
 
 /* Cards */
 .card {
   background-color: var(--bg-card-glass);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(80px) saturate(180%);
+  -webkit-backdrop-filter: blur(80px) saturate(180%);
   border: 1px solid var(--border-card-glass);
   border-radius: 20px;
   box-shadow: var(--shadow);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 0;
   position: relative;
   overflow: hidden;
+  will-change: transform;
 }
 
 .card::after {
@@ -674,8 +679,8 @@ html[data-theme="light"] .posts-filter-bar .form-select {
 
 .stat-card {
   background-color: var(--bg-card-glass);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(80px) saturate(180%);
+  -webkit-backdrop-filter: blur(80px) saturate(180%);
   border: 1px solid var(--border-card-glass);
   border-radius: 16px;
   padding: 20px 24px;
@@ -698,12 +703,14 @@ html[data-theme="light"] .posts-filter-bar .form-select {
 
 .stat-card:hover {
   border-color: var(--accent);
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(1.012);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.22), 0 0 0 1px var(--accent-glow);
+  will-change: transform;
 }
 
 .stat-card-value {
   font-family: var(--mono);
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1;
@@ -713,7 +720,7 @@ html[data-theme="light"] .posts-filter-bar .form-select {
 
 .stat-card-label {
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
   margin-top: 6px;
   font-weight: 500;
@@ -723,7 +730,7 @@ html[data-theme="light"] .posts-filter-bar .form-select {
 
 /* Cloud Storage Stat Card */
 .cloud-storage-card .stat-card-value {
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1.2;
 }
 
@@ -853,7 +860,7 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   padding: 4px 8px;
   border-radius: var(--radius-pill);
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   background-color: var(--bg-input);
   color: var(--text-primary);
@@ -980,7 +987,7 @@ html[data-theme="light"] .form-select {
 .form-label {
   display: block;
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -1025,7 +1032,7 @@ th {
   text-align: left;
   padding: 16px 24px;
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   opacity: 0.85;
@@ -1036,8 +1043,8 @@ th {
 }
 
 td {
-  padding: 16px 24px;
-  font-size: 14px;
+  padding: 18px 24px;
+  font-size: 16px;
   border-bottom: 1px solid var(--border);
   color: var(--text-secondary);
 }
@@ -1199,10 +1206,6 @@ tr:hover td {
 
 @media (max-width: 768px) {
 
-  .glass-grid-overlay {
-    display: none !important;
-  }
-
   .hide-on-mobile {
     display: none !important;
   }
@@ -1222,7 +1225,7 @@ tr:hover td {
     transform: translateX(-100%);
     transition: transform 0.3s var(--ease);
     box-shadow: none;
-    background-color: #1a1917 !important;
+    background-color: var(--bg-base);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     z-index: 150 !important;
@@ -1264,9 +1267,9 @@ tr:hover td {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 95;
     animation: fadeIn 0.2s ease;
   }
@@ -1337,20 +1340,20 @@ tr:hover td {
   }
 
   .stat-card {
-    padding: 16px;
+    padding: 20px 16px;
   }
 
   .stat-card-value {
-    font-size: 22px;
+    font-size: 28px !important;
   }
 
   .stat-card-label {
-    font-size: 10px;
+    font-size: 13px !important;
     margin-top: 8px;
   }
 
   .cloud-storage-card .stat-card-value {
-    font-size: 17px;
+    font-size: 20px !important;
   }
 
   .cloud-storage-bar-container {
@@ -1366,7 +1369,7 @@ tr:hover td {
   }
 
   .cloud-storage-pct {
-    font-size: 10px;
+    font-size: 13px !important;
     margin-top: 2px;
   }
 
@@ -1378,7 +1381,7 @@ tr:hover td {
   }
 
   .cloud-storage-title {
-    font-size: 10px;
+    font-size: 13px !important;
   }
 
   /* ── Dashboard Content Grid ── */
@@ -1392,12 +1395,14 @@ tr:hover td {
     margin-bottom: 16px;
   }
 
-  .page-header h1 {
-    font-size: 20px;
+  .page-header h1,
+  .audit-header-container h1 {
+    font-size: 26px !important;
   }
 
-  .page-header p {
-    font-size: 12px;
+  .page-header p,
+  .audit-header-container p {
+    font-size: 15px !important;
     margin-top: 3px;
   }
 
@@ -1420,13 +1425,13 @@ tr:hover td {
   }
 
   th {
-    padding: 10px 12px;
-    font-size: 10px;
+    padding: 14px 16px !important;
+    font-size: 13px !important;
   }
 
   td {
-    padding: 12px;
-    font-size: 13px;
+    padding: 16px !important;
+    font-size: 17px !important;
   }
 
   /* ── Post detail / analytics 2-col → 1-col ── */
@@ -1443,13 +1448,21 @@ tr:hover td {
 
   /* ── Buttons ── */
   .btn {
-    padding: 8px 16px !important;
-    font-size: 13px;
+    padding: 12px 20px !important;
+    font-size: 17px !important;
+    min-height: 44px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .btn-sm {
-    padding: 5px 12px !important;
-    font-size: 11px !important;
+    padding: 10px 16px !important;
+    font-size: 15px !important;
+    min-height: 40px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* ── Flex header wrapping ── */
@@ -1480,14 +1493,15 @@ tr:hover td {
   /* ── Empty state ── */
   .empty-state {
     padding: 32px 16px;
-    font-size: 13px;
+    font-size: 15px !important;
   }
 
   /* ── Interactive rows ── */
   .interactive-row {
     margin: 2px 0;
-    padding: 10px 8px !important;
+    padding: 14px 12px !important;
     gap: 12px;
+    min-height: 48px !important;
   }
 
   /* ── Post Cards ── */
@@ -1546,27 +1560,27 @@ tr:hover td {
   }
 
   .mobile-post-card-title {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 17px !important;
+    font-weight: 600 !important;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
 
   .mobile-post-card-meta {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
+    gap: 8px;
+    font-size: 14px !important;
     color: var(--text-muted);
     flex-wrap: wrap;
   }
 
   .mobile-post-card-meta .badge {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 13px !important;
+    padding: 4px 8px !important;
   }
 
   /* ── Mobile Client Card ── */
@@ -1664,20 +1678,20 @@ tr:hover td {
   }
 
   .stat-card {
-    padding: 12px;
+    padding: 16px 12px;
   }
 
   .stat-card-value {
-    font-size: 18px;
+    font-size: 24px !important;
   }
 
   .stat-card-label {
-    font-size: 9px;
+    font-size: 12px !important;
     margin-top: 4px;
   }
 
   .cloud-storage-card .stat-card-value {
-    font-size: 15px;
+    font-size: 18px !important;
   }
 
   .cloud-storage-bar-container {
@@ -1693,7 +1707,7 @@ tr:hover td {
   }
 
   .cloud-storage-pct {
-    font-size: 9px;
+    font-size: 12px !important;
   }
 
   .cloud-storage-icon {
@@ -1704,11 +1718,12 @@ tr:hover td {
   }
 
   .cloud-storage-title {
-    font-size: 9px;
+    font-size: 12px !important;
   }
 
-  .page-header h1 {
-    font-size: 17px;
+  .page-header h1,
+  .audit-header-container h1 {
+    font-size: 22px !important;
   }
 
   .page-header {
@@ -1716,17 +1731,17 @@ tr:hover td {
   }
 
   .mobile-post-card {
-    padding: 12px;
-    gap: 10px;
+    padding: 14px 12px;
+    gap: 12px;
   }
 
   .mobile-post-card-thumb {
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
   }
 
   .mobile-post-card-title {
-    font-size: 12px;
+    font-size: 16px !important;
   }
 }
 
@@ -2061,19 +2076,21 @@ html[data-theme="light"] .post-card-pill:hover {
 /* Framed image container matching flight card split image */
 .post-card-media {
   aspect-ratio: 1;
-  padding: 0.375em;
+  padding: 0;
   width: 100%;
   position: relative;
   overflow: hidden;
   background-color: transparent;
   border-bottom: none;
   flex-shrink: 0;
+  border-top-left-radius: 19px;
+  border-top-right-radius: 19px;
 }
 
 .post-card-media img,
 .post-card-media video,
 .post-card-media .fallback-gradient {
-  border-radius: 1.625em;
+  border-radius: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2320,8 +2337,8 @@ html[data-theme="light"] .post-card-pill:hover {
 .card {
   position: relative;
   background-color: var(--bg-card-glass);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(80px) saturate(180%);
+  -webkit-backdrop-filter: blur(80px) saturate(180%);
   border: 1px solid var(--border-card-glass);
   box-shadow: var(--shadow);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2406,7 +2423,7 @@ html[data-theme="light"] .post-card-pill:hover {
   gap: 16px;
   padding: 16px 12px !important;
   background: transparent;
-  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+  transition: background-color 0.15s ease;
   text-decoration: none;
   color: var(--text-primary);
   border: none !important;
@@ -2414,6 +2431,8 @@ html[data-theme="light"] .post-card-pill:hover {
   position: relative;
   z-index: 1;
   margin-bottom: 2px;
+  will-change: background-color;
+  isolation: isolate;
 }
 
 .segmented-list-item:hover {
@@ -2423,7 +2442,6 @@ html[data-theme="light"] .post-card-pill:hover {
 .segmented-list-item:not(:last-child) {
   border-bottom: 1px solid var(--border) !important;
   margin-bottom: 0;
-  border-radius: 0 !important;
 }
 
 body.light .dashboard-content-grid .card .card-body,
@@ -2555,39 +2573,63 @@ html[data-theme="light"] .dashboard-content-grid .card .card-body {
   display: block !important;
   background-color: var(--bg-base);
   overflow: hidden;
-
-  /* Static multi-scale nested grid: 64px -> 16px -> 4px with extremely subtle opacity */
-  background-image:
-    /* Large Grid */
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    /* Medium Grid */
-    linear-gradient(to right, rgba(255, 255, 255, 0.006) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.006) 1px, transparent 1px),
-    /* Fine/Small Grid */
-    linear-gradient(to right, rgba(255, 255, 255, 0.002) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.002) 1px, transparent 1px);
-  background-size:
-    64px 64px,
-    64px 64px,
-    16px 16px,
-    16px 16px,
-    4px 4px,
-    4px 4px;
 }
 
-body.light .glass-grid-overlay,
-html[data-theme="light"] .glass-grid-overlay {
+.glass-grid-overlay::before {
+  content: '';
+  position: absolute;
+  width: calc(100% + 128px);
+  height: calc(100% + 128px);
+  top: -64px;
+  left: -64px;
+
+  /* Multi-scale nested grid: Large, Medium, Small */
   background-image:
     /* Large Grid */
-    linear-gradient(to right, rgba(0, 0, 0, 0.015) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.015) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1.2px, transparent 1.2px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1.2px, transparent 1.2px),
     /* Medium Grid */
-    linear-gradient(to right, rgba(0, 0, 0, 0.004) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.004) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
     /* Fine/Small Grid */
-    linear-gradient(to right, rgba(0, 0, 0, 0.001) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.001) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.006) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.006) 1px, transparent 1px);
+  background-size:
+    128px 128px,
+    128px 128px,
+    32px 32px,
+    32px 32px,
+    8px 8px,
+    8px 8px;
+
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  animation: gridShiftGPU 45s linear infinite;
+  pointer-events: none;
+}
+
+body.light .glass-grid-overlay::before,
+html[data-theme="light"] .glass-grid-overlay::before {
+  background-image:
+    /* Large Grid */
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1.2px, transparent 1.2px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1.2px, transparent 1.2px),
+    /* Medium Grid */
+    linear-gradient(to right, rgba(0, 0, 0, 0.012) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.012) 1px, transparent 1px),
+    /* Fine/Small Grid */
+    linear-gradient(to right, rgba(0, 0, 0, 0.005) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.005) 1px, transparent 1px);
+}
+
+@keyframes gridShiftGPU {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(128px, 128px, 0);
+  }
 }
 
 .glass-orb-container {
@@ -3438,8 +3480,8 @@ html[data-theme="light"] .segmented-btn.active {
 /* ── Flight Card CSS Styles ── */
 .flight-card {
   background-color: var(--bg-card-glass);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(80px) saturate(180%);
+  -webkit-backdrop-filter: blur(80px) saturate(180%);
   border: 1px solid var(--border-card-glass);
   border-radius: 20px;
   position: relative;
@@ -3488,29 +3530,30 @@ body.light .flight-card:hover {
 
 .flight-card__image-container {
   aspect-ratio: 1;
-  padding: 0.375em;
+  padding: 0;
   width: 100%;
   position: relative;
   flex-shrink: 0;
+  overflow: hidden;
+  border-top-left-radius: 19px;
+  border-top-right-radius: 19px;
 }
 
 .flight-card__image {
   object-fit: cover;
   width: 100%;
   height: 100%;
-  border-radius: 1.625em;
+  border-radius: 0;
   display: block;
 }
 
 .flight-card__overlay {
-  border-radius: 1.625em;
-  inset: 0.375em;
+  border-radius: 19px 19px 0 0;
+  inset: 0;
   position: absolute;
   background: linear-gradient(to top,
-      hsl(0 0% 0% / 0.9),
-      hsl(0 0% 0% / 0.3) 50%,
-      transparent);
-  box-shadow: 0 -0.375em 0.75em light-dark(hsl(0 0% 100% / 0.5), hsl(223 10% 15% / 0.5)) inset;
+      rgba(0, 0, 0, 0.4),
+      transparent 40%);
   transition: box-shadow var(--trans-dur);
 }
 
@@ -3793,5 +3836,189 @@ html[data-theme="light"] .logo-container {
   .ambient-glow-1,
   .ambient-glow-2 {
     display: none !important;
+  }
+
+  /* Keep mobile animations short and fast */
+  * {
+    transition-duration: 0.15s !important;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────── */
+/* ── Premium Glassmorphic Floating Mobile Bottom Navigation ── */
+/* ───────────────────────────────────────────────────────────── */
+
+/* Floating Bottom Navigation Bar */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom, 16px));
+  left: 0;
+  right: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 16px;
+  z-index: 1000 !important;
+  pointer-events: none;
+}
+
+.mobile-bottom-nav-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex: 1;
+  max-width: 290px;
+  height: 56px;
+  background: rgba(15, 15, 15, 0.88) !important;
+  backdrop-filter: blur(32px) !important;
+  -webkit-backdrop-filter: blur(32px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  pointer-events: auto;
+  padding: 4px 6px;
+  transition: all 0.3s var(--ease) !important;
+}
+
+body.light .mobile-bottom-nav-pill,
+html[data-theme="light"] .mobile-bottom-nav-pill {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s var(--ease);
+  border-radius: 20px;
+  gap: 2px;
+  position: relative;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.mobile-bottom-nav-item span {
+  font-size: 10px;
+  font-family: var(--sans);
+  font-weight: 500;
+  color: inherit;
+}
+
+.mobile-bottom-nav-item .icon {
+  width: 17px;
+  height: 17px;
+  stroke: var(--text-secondary);
+  transition: stroke 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.mobile-bottom-nav-item:hover,
+.mobile-bottom-nav-item.active {
+  color: var(--text-primary) !important;
+}
+
+.mobile-bottom-nav-item.active .icon {
+  stroke: var(--accent) !important;
+  transform: translateY(-1px);
+}
+
+/* Active Highlight Pill Background styling (capsule behind active item) */
+.mobile-bottom-nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  z-index: -1;
+  transition: all 0.2s var(--ease);
+}
+
+body.light .mobile-bottom-nav-item.active::after,
+html[data-theme="light"] .mobile-bottom-nav-item.active::after {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.mobile-bottom-fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 50% !important;
+  background: var(--accent) !important;
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(229, 72, 77, 0.35) !important;
+  pointer-events: auto;
+  transition: all 0.2s var(--ease) !important;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mobile-bottom-fab svg {
+  width: 20px;
+  height: 20px;
+  stroke: #fff !important;
+  transition: transform 0.2s var(--ease);
+}
+
+.mobile-bottom-fab:hover,
+.mobile-bottom-fab:active {
+  transform: scale(1.05) !important;
+  box-shadow: 0 8px 28px rgba(229, 72, 77, 0.5) !important;
+}
+
+.mobile-bottom-fab:active svg {
+  transform: rotate(90deg);
+}
+
+@media (max-width: 360px) {
+  .mobile-bottom-nav {
+    gap: 8px !important;
+    padding: 0 8px !important;
+  }
+  .mobile-bottom-nav-pill {
+    max-width: 240px !important;
+    height: 52px !important;
+    padding: 2px 4px !important;
+    border-radius: 26px !important;
+  }
+  .mobile-bottom-nav-item span {
+    font-size: 9px !important;
+  }
+  .mobile-bottom-nav-item .icon {
+    width: 15px !important;
+    height: 15px !important;
+  }
+  .mobile-bottom-fab {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .mobile-bottom-fab svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+
+  /* Add safe-area margin to main-content bottom so floating bar never covers scrollable content */
+  .main-content {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 16px)) !important;
   }
 }

@@ -1,4 +1,5 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
@@ -117,7 +118,7 @@ export default function ClientsPage() {
   if (loading) return <div className="fade-in empty-state">Loading clients...</div>;
 
   return (
-    <div className="fade-in">
+    <PageTransition><div className="fade-in">
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div><h1>Clients</h1><p>Manage your client contacts</p></div>
@@ -303,5 +304,6 @@ export default function ClientsPage() {
         </div>
       )}
     </div>
+  </PageTransition>
   );
 }

@@ -19,7 +19,7 @@ export default async function AuditLogPage({ searchParams }) {
   const { data: logs } = await query;
 
   return (
-    <div className="fade-in">
+    <PageTransition><div className="fade-in">
       <div className="audit-header-container">
         <div>
           <h1>Audit Log</h1>
@@ -48,7 +48,7 @@ export default async function AuditLogPage({ searchParams }) {
           <div className="table-wrapper">
             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: 12, textTransform: 'uppercase' }}>
+                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: 13, textTransform: 'uppercase' }}>
                   <th style={{ padding: '16px 24px', fontWeight: 500 }}>Date & Time</th>
                   <th style={{ padding: '16px 24px', fontWeight: 500 }}>User</th>
                   <th style={{ padding: '16px 24px', fontWeight: 500 }}>Action</th>
@@ -64,19 +64,19 @@ export default async function AuditLogPage({ searchParams }) {
                 )}
                 {logs?.map(log => (
                   <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '16px 24px', fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '16px 24px', fontSize: 14, color: 'var(--text-muted)', fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
                       {new Date(log.created_at).toLocaleString()}
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>
+                    <td style={{ padding: '16px 24px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)' }}>
                       {log.user_name || 'System / Anonymous'}
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: 13 }}>
+                    <td style={{ padding: '16px 24px', fontSize: 15 }}>
                       <span className="badge" style={{ background: 'var(--bg-layer)' }}>{log.action}</span>
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: 13, color: 'var(--text-secondary)' }}>
+                    <td style={{ padding: '16px 24px', fontSize: 15, color: 'var(--text-secondary)' }}>
                       {log.clients?.company_name || '—'}
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={{ padding: '16px 24px', fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--mono)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {log.metadata ? JSON.stringify(log.metadata) : '—'}
                     </td>
                   </tr>
@@ -98,20 +98,20 @@ export default async function AuditLogPage({ searchParams }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--accent)' }}></div>
-                    <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
+                    <span style={{ fontWeight: 600, fontSize: 16, color: 'var(--text-primary)' }}>
                       {log.user_name || 'System / Anonymous'}
                     </span>
                   </div>
-                  <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: 13, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
                     {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 4 }}>
-                  <span className="badge" style={{ background: 'var(--bg-layer)', textTransform: 'capitalize', fontSize: 11 }}>
+                  <span className="badge" style={{ background: 'var(--bg-layer)', textTransform: 'capitalize', fontSize: 13 }}>
                     {log.action}
                   </span>
                   {log.clients?.company_name && (
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
                       Client: <strong>{log.clients.company_name}</strong>
                     </span>
                   )}
@@ -122,7 +122,7 @@ export default async function AuditLogPage({ searchParams }) {
                     padding: 8, 
                     background: 'rgba(255,255,255,0.02)', 
                     borderRadius: 6, 
-                    fontSize: 11, 
+                    fontSize: 13, 
                     fontFamily: 'var(--mono)', 
                     color: 'var(--text-muted)',
                     wordBreak: 'break-all',
@@ -138,5 +138,6 @@ export default async function AuditLogPage({ searchParams }) {
         )}
       </div>
     </div>
+  </PageTransition>
   );
 }

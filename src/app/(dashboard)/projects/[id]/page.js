@@ -1,4 +1,5 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -72,7 +73,7 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="fade-in">
+    <PageTransition><div className="fade-in">
       <div className="page-header">
         <Link href="/projects" style={{fontSize:13,color:'var(--text-muted)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← Back to Projects</Link>
         <div className="flex items-center gap-16">
@@ -141,9 +142,8 @@ export default function ProjectDetail() {
               </div>
               <div className="flight-card__content">
                 <div>
-                  <h2 className="flight-card__title">{titleText}</h2>
-                  <div className="flight-card__class" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                    <PlatformBadge platform={post.platform} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '8px', marginBottom: '8px' }}>
+                    <h2 className="flight-card__title" style={{ margin: 0 }}>{titleText}</h2>
                     <StatusBadge status={post.status} />
                   </div>
                   <div className="flight-card__details">
@@ -215,5 +215,6 @@ export default function ProjectDetail() {
         </div>
       )}
     </div>
+  </PageTransition>
   );
 }

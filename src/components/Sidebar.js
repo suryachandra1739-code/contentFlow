@@ -7,7 +7,7 @@ import NotificationBell from './NotificationBell';
 
 import ClaudeLogo from './ClaudeLogo';
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenNewPost }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -64,40 +64,74 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Header Bar — full-width frosted bar with hamburger + title + logo */}
+      {/* Mobile Header Bar — full-width frosted bar with logo + title + notification bell */}
       <div className="mobile-toggle-btn">
-        <button
-          onClick={() => setIsOpen(true)}
-          aria-label="Open navigation menu"
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'inherit',
-            padding: '8px',
-            margin: '-8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '50%',
-          }}
-          className="nav-btn-hover"
-        >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 8, flexGrow: 1 }}>
-          <ClaudeLogo size={24} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <ClaudeLogo size={28} />
           <span className="mobile-header-title" style={{ fontWeight: 700, letterSpacing: '-0.2px' }}>ContentFlow</span>
         </div>
-        <NotificationBell role="team" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
+          <NotificationBell role="team" />
+        </div>
       </div>
 
       {/* Glassmorphic Mobile Backdrop Overlay */}
       {isOpen && <div className="sidebar-backdrop" onClick={closeSidebar} />}
+
+      {/* Floating Bottom Nav Bar for Mobile */}
+      <div className="mobile-bottom-nav">
+        <div className="mobile-bottom-nav-pill">
+          <Link href="/" className={`mobile-bottom-nav-item ${pathname === '/' ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+              <rect x="3" y="3" width="7" height="9" rx="1" />
+              <rect x="14" y="3" width="7" height="5" rx="1" />
+              <rect x="14" y="12" width="7" height="9" rx="1" />
+              <rect x="3" y="16" width="7" height="5" rx="1" />
+            </svg>
+            <span>Overview</span>
+          </Link>
+          
+          <Link href="/projects" className={`mobile-bottom-nav-item ${pathname.startsWith('/projects') ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <span>Projects</span>
+          </Link>
+
+          <Link href="/clients" className={`mobile-bottom-nav-item ${pathname.startsWith('/clients') ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+            </svg>
+            <span>Clients</span>
+          </Link>
+
+          <button onClick={() => setIsOpen(true)} className={`mobile-bottom-nav-item ${isOpen ? 'active' : ''}`} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="19" cy="12" r="1.5" />
+              <circle cx="5" cy="12" r="1.5" />
+            </svg>
+            <span>More</span>
+          </button>
+        </div>
+
+        <Link 
+          href="/posts/new" 
+          className="mobile-bottom-fab"
+          onClick={(e) => {
+            if (onOpenNewPost && window.innerWidth <= 768) {
+              e.preventDefault();
+              onOpenNewPost();
+            }
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </Link>
+      </div>
 
       <aside className={`sidebar ${isOpen ? 'open' : ''}`} id="sidebar">
         {/* Close button — positioned top-right inside sidebar, separate from logo */}

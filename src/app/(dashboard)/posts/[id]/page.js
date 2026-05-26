@@ -1,4 +1,5 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -250,7 +251,7 @@ export default function PostDetail() {
   ];
 
   return (
-    <div className="fade-in">
+    <PageTransition><div className="fade-in">
       <div className="page-header">
         <Link href={`/projects/${post.project_id}`} style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← {post.projects?.name || 'Project'}</Link>
         <div className="flex items-center justify-between">
@@ -642,7 +643,7 @@ export default function PostDetail() {
                   return (
                     <div className="timeline-item" key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:13}}>
                       <div style={{display:'flex',alignItems:'center',gap:12}}>
-                        <div className="timeline-dot" style={{width:8,height:8,borderRadius:'50%',background:dotColor,boxShadow:dotColor !== 'var(--text-muted)' ? `0 0 8px ${dotColor}` : 'none'}}></div>
+                        <div className="timeline-dot" style={{width:8,height:8,borderRadius:'50%',background:dotColor,boxShadow:dotColor !== 'var(--text-muted)' ? `0 0 8px ${dotColor}` : 'none',flexShrink:0,flexGrow:0}}></div>
                         <div className="timeline-content" style={{color:'var(--text-primary)', fontWeight:500}}>{label}</div>
                       </div>
                       <div className="timeline-time" style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:11}}>{new Date(item.created_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
@@ -694,5 +695,6 @@ export default function PostDetail() {
         </div>
       )}
     </div>
+  </PageTransition>
   );
 }

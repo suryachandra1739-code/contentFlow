@@ -1,4 +1,5 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import InviteTeamModal from './InviteTeamModal';
@@ -106,7 +107,7 @@ export default function TeamManagementPage() {
   if (loading) return <div className="fade-in empty-state">Loading team...</div>;
 
   return (
-    <div className="fade-in">
+    <PageTransition><div className="fade-in">
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div>
@@ -336,5 +337,6 @@ export default function TeamManagementPage() {
         </div>
       )}
     </div>
+  </PageTransition>
   );
 }

@@ -51,33 +51,33 @@ export default async function ClientPortalOverview() {
 
   return (
     <div className="fade-in">
-      <h1 style={{ fontSize: 24, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 24 }}>
-        Hello {profile?.name?.split(' ')[0] || 'there'},
-      </h1>
+      <div className="page-header">
+        <h1>Hello {profile?.name?.split(' ')[0] || 'there'},</h1>
+      </div>
 
       <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <div className="card">
-          <div className="card-body" style={{ padding: '20px' }}>
-            <div style={{ fontSize: 28, fontFamily: 'var(--mono)', fontWeight: 600 }}>{stats.total}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Total posts submitted</div>
+        <div className="card stat-card">
+          <div className="card-body">
+            <div className="stat-card-value">{stats.total}</div>
+            <div className="stat-card-label">Total posts submitted</div>
           </div>
         </div>
-        <div className="card" style={{ borderTop: '2px solid var(--amber)' }}>
-          <div className="card-body" style={{ padding: '20px' }}>
-            <div style={{ fontSize: 28, fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--amber)' }}>{stats.pending}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Awaiting your review</div>
+        <div className="card stat-card" style={{ borderTop: '2px solid var(--amber)' }}>
+          <div className="card-body">
+            <div className="stat-card-value" style={{ color: 'var(--amber)' }}>{stats.pending}</div>
+            <div className="stat-card-label">Awaiting your review</div>
           </div>
         </div>
-        <div className="card" style={{ borderTop: '2px solid var(--green)' }}>
-          <div className="card-body" style={{ padding: '20px' }}>
-            <div style={{ fontSize: 28, fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--green)' }}>{stats.approved}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Approved by you</div>
+        <div className="card stat-card" style={{ borderTop: '2px solid var(--green)' }}>
+          <div className="card-body">
+            <div className="stat-card-value" style={{ color: 'var(--green)' }}>{stats.approved}</div>
+            <div className="stat-card-label">Approved by you</div>
           </div>
         </div>
-        <div className="card" style={{ borderTop: '2px solid var(--cyan)' }}>
-          <div className="card-body" style={{ padding: '20px' }}>
-            <div style={{ fontSize: 28, fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--cyan)' }}>{stats.revision}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Revision requested</div>
+        <div className="card stat-card" style={{ borderTop: '2px solid var(--cyan)' }}>
+          <div className="card-body">
+            <div className="stat-card-value" style={{ color: 'var(--cyan)' }}>{stats.revision}</div>
+            <div className="stat-card-label">Revision requested</div>
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default async function ClientPortalOverview() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {pendingPosts.map(post => (
-                <div key={post.id} className="interactive-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--bg-layer)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                <div key={post.id} className="interactive-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{ width: 48, height: 48, borderRadius: 8, background: '#000', overflow: 'hidden' }}>
                       {post.media_type === 'video' ? (
@@ -103,18 +103,18 @@ export default async function ClientPortalOverview() {
                       )}
                     </div>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{parsePostCaption(post.caption).title}</div>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{parsePostCaption(post.caption).title}</div>
                       {parsePostCaption(post.caption).description && (
-                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {parsePostCaption(post.caption).description}
                         </div>
                       )}
-                      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>
                         <span style={{ textTransform: 'capitalize' }}>{post.platform}</span> • {post.projects?.name} • {new Date(post.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
-                  <Link href={`/client-portal/review/${post.id}`} className="btn btn-primary" style={{ padding: '8px 24px' }}>
+                  <Link href={`/client-portal/review/${post.id}`} className="btn btn-primary">
                     Review
                   </Link>
                 </div>
