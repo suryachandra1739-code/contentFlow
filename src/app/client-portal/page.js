@@ -41,7 +41,7 @@ export default async function ClientPortalOverview() {
     .order('created_at', { ascending: false });
 
   const pendingPosts = posts?.filter(p => p.status === 'pending') || [];
-  
+
   const stats = {
     total: posts?.length || 0,
     pending: pendingPosts.length,
@@ -85,7 +85,7 @@ export default async function ClientPortalOverview() {
       <div className="card">
         <div className="card-body">
           <h2 style={{ fontSize: 18, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 16 }}>Pending review</h2>
-          
+
           {pendingPosts.length === 0 ? (
             <div className="empty-state" style={{ padding: '40px 0' }}>
               You&apos;re all caught up ✓

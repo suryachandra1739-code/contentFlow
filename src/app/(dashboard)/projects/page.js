@@ -1,11 +1,20 @@
 'use client';
 import PageTransition from '@/components/PageTransition';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
+import { createClientBrowser } from '@/lib/supabase';
 
 export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<div className="empty-state">Loading projects...</div>}>
+      <ProjectsContent />
+    </Suspense>
+  );
+}
+
+function ProjectsContent() {
   const [projects, setProjects] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [clients, setClients] = useState([]);
@@ -13,11 +22,17 @@ export default function ProjectsPage() {
   const [form, setForm] = useState({ client_id: '', name: '', description: '' });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const clientIdFilter = searchParams.get('clientId');
   const addToast = useToast();
 
+  const [userRole, setUserRole] = useState('team');
+  const supabase = createClientBrowser();
+
   const load = () => {
+    const projectsUrl = clientIdFilter ? `/api/projects?clientId=${clientIdFilter}` : '/api/projects';
     Promise.all([
-      fetch('/api/projects').then(r => r.json()),
+      fetch(projectsUrl).then(r => r.json()),
       fetch('/api/clients').then(r => r.json()),
     ]).then(([p, c]) => {
       setProjects(Array.isArray(p) ? p : []);
@@ -25,14 +40,39 @@ export default function ProjectsPage() {
       setLoading(false);
     }).catch(() => { setProjects([]); setClients([]); setLoading(false); });
   };
-  useEffect(load, []);
+
+  useEffect(() => {
+    if (clientIdFilter) {
+      setForm(prev => ({ ...prev, client_id: clientIdFilter }));
+    } else {
+      setForm(prev => ({ ...prev, client_id: '' }));
+    }
+  }, [clientIdFilter]);
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile?.role) {
+          setUserRole(profile.role);
+        }
+      }
+    }
+    loadUser();
+    load();
+  }, [clientIdFilter]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     const res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     const result = await res.json();
     setShowModal(false);
-    setForm({ client_id: '', name: '', description: '' });
+    setForm({ client_id: clientIdFilter || '', name: '', description: '' });
     if (!result.error) {
       setProjects(prev => [result, ...prev]); // instantly update UI
       addToast('Project created', 'success');
@@ -61,12 +101,28 @@ export default function ProjectsPage() {
   return (
     <PageTransition><div className="fade-in">
       <div className="page-header">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1>Projects</h1>
-            <p>Manage your content projects</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0 }}>Projects</h1>
+              {clientIdFilter && clients.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--accent-soft)', color: 'var(--accent)', padding: '4px 12px', borderRadius: 99, fontSize: 13, fontWeight: 600 }}>
+                  Client: {clients.find(c => c.id === clientIdFilter)?.company_name || 'Filtered'}
+                  <button 
+                    onClick={() => router.push('/projects')} 
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '0 2px', fontSize: 14, fontWeight: 700 }}
+                    title="Clear filter"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+            <p style={{ marginTop: 4 }}>Manage your content projects</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>New project</button>
+          {userRole !== 'client' && (
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>New project</button>
+          )}
         </div>
       </div>
 
@@ -76,7 +132,16 @@ export default function ProjectsPage() {
             <Link href={`/projects/${project.id}`} style={{display:'block', width:'100%', height:'100%', textDecoration:'none', color:'inherit'}}>
               <div className="card-body">
                 <div className="flex items-center gap-12 mb-16" style={{ paddingRight: 24 }}>
-                  <div className="avatar" style={{background: project.clients?.avatar_color || '#161616'}}>{project.clients?.company_name?.[0] || '?'}</div>
+                  <div 
+                    className="avatar" 
+                    style={{
+                      background: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? project.clients.avatar_color : 'var(--accent-soft)',
+                      color: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? '#ffffff' : 'var(--accent)',
+                      fontWeight: 700
+                    }}
+                  >
+                    {project.clients?.company_name?.[0]?.toUpperCase() || '?'}
+                  </div>
                   <div>
                     <div style={{fontSize:15,fontWeight:600}}>{project.name}</div>
                     <div style={{fontSize:13,color:'var(--text-muted)'}}>{project.clients?.company_name || 'No client'}</div>
@@ -88,19 +153,21 @@ export default function ProjectsPage() {
                 </div>
               </div>
             </Link>
-            <button 
-              className="btn-delete" 
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteTarget(project); }}
-              title="Delete project"
-              style={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                zIndex: 10
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-            </button>
+            {userRole !== 'client' && (
+              <button 
+                className="btn-delete" 
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteTarget(project); }}
+                title="Delete project"
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  zIndex: 10
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
+            )}
           </div>
         ))}
       </div>

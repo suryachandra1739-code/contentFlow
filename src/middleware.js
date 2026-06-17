@@ -59,6 +59,17 @@ export async function middleware(request) {
       return NextResponse.redirect(url);
     }
 
+    // Redirection of deprecated client-portal routes to unified dashboard
+    if (path.startsWith('/client-portal')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    if (!user) {
+      return supabaseResponse;
+    }
+
     // User exists — try to get role from metadata first to avoid db query
     let role = user.user_metadata?.role;
 
@@ -75,18 +86,19 @@ export async function middleware(request) {
       }
     }
 
-    // Client trying to access admin dashboard
-    if (!path.startsWith('/client-portal') && role === 'client') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/client-portal';
-      return NextResponse.redirect(url);
-    }
-
-    // Non-client trying to access client portal
-    if (path.startsWith('/client-portal') && role !== 'client') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      return NextResponse.redirect(url);
+    // Client trying to access team/admin specific routes
+    if (role === 'client') {
+      if (
+        path.startsWith('/clients') ||
+        path.startsWith('/posts/new') ||
+        path.startsWith('/analytics') ||
+        path.startsWith('/admin') ||
+        path.startsWith('/automations')
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/';
+        return NextResponse.redirect(url);
+      }
     }
 
     // Non-admin trying to access admin routes

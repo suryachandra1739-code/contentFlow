@@ -36,7 +36,7 @@ function rewriteActionLink(actionLink, nextPath = '/update-password') {
 
 export async function POST(request) {
   try {
-    const { email, role, name, client_id } = await request.json();
+    const { email, role, name, client_id, contractUrl, contractName, roadmapUrl } = await request.json();
 
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is required to send invites.' }, { status: 500 });
@@ -66,7 +66,13 @@ export async function POST(request) {
       type: 'invite',
       email: email,
       options: {
-        data: { role, name },
+        data: { 
+          role, 
+          name,
+          contract_url: contractUrl || '',
+          contract_name: contractName || '',
+          roadmap_url: roadmapUrl || 'https://greymatterx.io/hemvedh/day-32?fbclid=PAVERFWASCRaFleHRuA2FlbQIxMABzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAae_DKePFp1_l2tPV3shETWq66KGb2U0g9UkPcAL-1wxg-Zx0JExs8iFQZzEYQ_aem_eCHTAzeXo97I5cpwhfyHzg'
+        },
         redirectTo: redirectTo,
       },
     });
@@ -90,7 +96,13 @@ export async function POST(request) {
 
         // Update metadata
         await supabaseAdmin.auth.admin.updateUserById(userId, {
-          user_metadata: { name, role },
+          user_metadata: { 
+            name, 
+            role,
+            contract_url: contractUrl || '',
+            contract_name: contractName || '',
+            roadmap_url: roadmapUrl || 'https://greymatterx.io/hemvedh/day-32?fbclid=PAVERFWASCRaFleHRuA2FlbQIxMABzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAae_DKePFp1_l2tPV3shETWq66KGb2U0g9UkPcAL-1wxg-Zx0JExs8iFQZzEYQ_aem_eCHTAzeXo97I5cpwhfyHzg'
+          },
         });
 
         const { data: recoveryData, error: recoveryError } = await supabaseAdmin.auth.admin.generateLink({
@@ -141,7 +153,7 @@ export async function POST(request) {
           ? 'A password reset has been requested for your account. Click the button below to set a new password.'
           : `You've been invited to join ContentFlow as a <strong>${roleLabel}</strong>. Click the button below to set your password and get started.`;
 
-        const { data: emailData, error: emailError } = await resend.emails.send({
+        const emailPayload = {
           from: 'ContentFlow <onboarding@resend.dev>',
           to: [email],
           subject,
@@ -157,8 +169,23 @@ export async function POST(request) {
         <tr><td style="padding:32px;">
           <h1 style="margin:0 0 8px;font-size:22px;color:#111;">${headline}</h1>
           <p style="margin:0 0 24px;color:#555;font-size:14px;line-height:1.6;">${body}</p>
-          <a href="${directLink}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">
-            Set Your Password →
+          
+          ${contractUrl ? `
+          <div style="margin: 0 0 24px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;">
+            <strong style="color: #1e293b; display: block; margin-bottom: 4px;">📝 Client Agreement Attached</strong>
+            <span style="color: #64748b;">We have attached <strong>${contractName || 'your services contract'}</strong> to this email. You can also view and sign it directly on the onboarding page.</span>
+          </div>
+          ` : ''}
+
+          ${roadmapUrl ? `
+          <div style="margin: 0 0 24px; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 13px;">
+            <strong style="color: #15803d; display: block; margin-bottom: 4px;">🚀 Custom AI Growth Roadmap</strong>
+            <span style="color: #166534;">We have prepared a custom growth roadmap for your business. <a href="${roadmapUrl}" style="color: #15803d; text-decoration: underline; font-weight: 600;">Click here to preview the strategy sheet</a>.</span>
+          </div>
+          ` : ''}
+
+          <a href="${directLink}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;margin-bottom:12px;">
+            Set Your Password & Onboard →
           </a>
           <p style="margin:24px 0 0;color:#999;font-size:12px;line-height:1.5;">
             This link will expire in 24 hours. If you didn't expect this email, you can safely ignore it.
@@ -171,7 +198,18 @@ export async function POST(request) {
     </td></tr>
   </table>
 </body></html>`,
-        });
+        };
+
+        if (contractUrl) {
+          emailPayload.attachments = [
+            {
+              filename: contractName || 'Client_Agreement.pdf',
+              path: contractUrl,
+            }
+          ];
+        }
+
+        const { data: emailData, error: emailError } = await resend.emails.send(emailPayload);
 
         if (emailError) {
           console.error('Resend email error:', emailError);

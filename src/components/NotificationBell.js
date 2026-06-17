@@ -70,11 +70,7 @@ export default function NotificationBell({ role = 'team' }) {
 
   const handleNotificationClick = (postId) => {
     setIsOpen(false);
-    if (role === 'client') {
-      router.push(`/client-portal/review/${postId}`);
-    } else {
-      router.push(`/posts/${postId}`);
-    }
+    router.push(`/posts/${postId}`);
   };
 
   const parseCaption = (captionText) => {

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
 import { useToast } from '@/components/Toast';
+import { createClientBrowser } from '@/lib/supabase';
 
 const parsePostCaption = (caption) => {
   if (!caption) return { title: 'Untitled', description: '' };
@@ -58,8 +59,26 @@ export default function ProjectDetail() {
   const [project, setProject] = useState(null);
   const [filter, setFilter] = useState('all');
   const addToast = useToast();
+  const [userRole, setUserRole] = useState('team');
+  const supabase = createClientBrowser();
 
-  useEffect(() => { fetch(`/api/projects/${id}`).then(r => r.json()).then(setProject); }, [id]);
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile?.role) {
+          setUserRole(profile.role);
+        }
+      }
+    }
+    loadUser();
+    fetch(`/api/projects/${id}`).then(r => r.json()).then(setProject);
+  }, [id]);
 
   if (!project) return <div style={{padding:60,textAlign:'center',color:'var(--text-muted)'}}>Loading...</div>;
 
@@ -77,7 +96,16 @@ export default function ProjectDetail() {
       <div className="page-header">
         <Link href="/projects" style={{fontSize:13,color:'var(--text-muted)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← Back to Projects</Link>
         <div className="flex items-center gap-16">
-          <div className="avatar avatar-lg" style={{background:project.clients?.avatar_color || '#161616'}}>{project.clients?.company_name?.[0] || '?'}</div>
+          <div 
+            className="avatar avatar-lg" 
+            style={{
+              background: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? project.clients.avatar_color : 'var(--accent-soft)',
+              color: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? '#ffffff' : 'var(--accent)',
+              fontWeight: 700
+            }}
+          >
+            {project.clients?.company_name?.[0]?.toUpperCase() || '?'}
+          </div>
           <div>
             <h1>{project.name}</h1>
             <p>{project.clients?.company_name || 'No client'} · {posts.length} posts</p>
@@ -176,7 +204,7 @@ export default function ProjectDetail() {
                   >
                     View Details
                   </Link>
-                  {post.status === 'draft' && (
+                  {userRole !== 'client' && post.status === 'draft' && (
                     <button 
                       className="flight-card__favorite-btn" 
                       onClick={() => sendForReview(post.id)}
@@ -186,7 +214,7 @@ export default function ProjectDetail() {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                     </button>
                   )}
-                  {post.review_token && post.status !== 'draft' && (
+                  {userRole !== 'client' && post.review_token && post.status !== 'draft' && (
                     <button 
                       className="flight-card__favorite-btn" 
                       onClick={() => { 
@@ -210,8 +238,12 @@ export default function ProjectDetail() {
         <div className="empty-state">
           <div className="empty-state-icon">📭</div>
           <h3>No posts found</h3>
-          <p>Create a new post for this project</p>
-          <Link href="/posts/new" className="btn btn-primary">+ New Post</Link>
+          {userRole !== 'client' && (
+            <>
+              <p>Create a new post for this project</p>
+              <Link href="/posts/new" className="btn btn-primary">+ New Post</Link>
+            </>
+          )}
         </div>
       )}
     </div>

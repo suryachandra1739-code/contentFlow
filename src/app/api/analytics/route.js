@@ -11,21 +11,28 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch user role
+    // Fetch user role and client_id
     const { data: profile } = await supabase
       .from('users')
-      .select('role')
+      .select('role, client_id')
       .eq('id', user.id)
       .single();
 
     const role = profile?.role || 'team';
+    const client_id = profile?.client_id;
 
     const { searchParams } = new URL(request.url);
     const authorId = searchParams.get('authorId');
 
     // Fetch posts: scope to user if not admin
     let postsQuery = supabase.from('posts').select('status, platform, client_id, media_size, clients(company_name)');
-    if (role === 'admin') {
+    if (role === 'client') {
+      if (client_id) {
+        postsQuery = postsQuery.eq('client_id', client_id);
+      } else {
+        postsQuery = postsQuery.eq('client_id', '00000000-0000-0000-0000-000000000000');
+      }
+    } else if (role === 'admin') {
       if (authorId) {
         postsQuery = postsQuery.eq('created_by', authorId);
       }
@@ -57,7 +64,13 @@ export async function GET(request) {
       .order('created_at', { ascending: false })
       .limit(15);
 
-    if (role === 'admin') {
+    if (role === 'client') {
+      if (client_id) {
+        activityQuery = activityQuery.eq('client_id', client_id);
+      } else {
+        activityQuery = activityQuery.eq('client_id', '00000000-0000-0000-0000-000000000000');
+      }
+    } else if (role === 'admin') {
       if (authorId) {
         activityQuery = activityQuery.eq('user_id', authorId);
       }

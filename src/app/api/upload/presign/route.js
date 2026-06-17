@@ -18,17 +18,22 @@ export async function POST(request) {
 
     const allowedImages = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const allowedVideos = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+    const allowedDocs = ['application/pdf'];
 
     let mediaType = 'image';
+    let folder = 'images';
     if (allowedVideos.includes(contentType)) {
       mediaType = 'video';
+      folder = 'videos';
+    } else if (allowedDocs.includes(contentType)) {
+      mediaType = 'pdf';
+      folder = 'documents';
     } else if (!allowedImages.includes(contentType)) {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
 
     const timestamp = Date.now();
     const cleanFileName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const folder = mediaType === 'video' ? 'videos' : 'images';
     const fileKey = `clients/${clientId}/${projectId}/${folder}/${timestamp}-${cleanFileName}`;
 
     const command = new PutObjectCommand({

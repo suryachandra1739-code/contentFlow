@@ -10,10 +10,11 @@ export async function GET(request, { params }) {
 
     const { data: profile } = await supabase
       .from('users')
-      .select('role')
+      .select('role, client_id')
       .eq('id', user.id)
       .single();
     const role = profile?.role || 'team';
+    const client_id = profile?.client_id;
 
     const { data: project, error } = await supabase
       .from('projects')
@@ -25,13 +26,21 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
+    // Client role authorization: ensure the project belongs to the client's company
+    if (role === 'client' && project.client_id !== client_id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     let postsQuery = supabase
       .from('posts')
       .select('*')
       .eq('project_id', id)
       .order('created_at', { ascending: false });
 
-    if (role !== 'admin') {
+    if (role === 'admin' || role === 'client') {
+      // Admins and clients can see all posts under this project
+    } else {
+      // 'team' role
       postsQuery = postsQuery.eq('created_by', user.id);
     }
 

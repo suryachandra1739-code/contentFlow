@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
 import PageTransition from '@/components/PageTransition';
+import { createClientBrowser } from '@/lib/supabase';
 
 // ── Shared animation variants ──────────────────────────────────
 const fadeUp = {
@@ -105,6 +106,8 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [authorFilter, setAuthorFilter] = useState('all');
   const [allClientsList, setAllClientsList] = useState([]);
+  const [userRole, setUserRole] = useState('team');
+  const [clientCompany, setClientCompany] = useState('');
 
   const fetchDashboardData = (authorId) => {
     setLoading(true);
@@ -130,6 +133,33 @@ export default function Dashboard() {
     const urlParams = new URLSearchParams(window.location.search);
     const authorId = urlParams.get('authorId') || 'all';
     setAuthorFilter(authorId);
+    
+    async function loadUser() {
+      const supabase = createClientBrowser();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role, client_id')
+          .eq('id', user.id)
+          .single();
+        if (profile) {
+          setUserRole(profile.role);
+          if (profile.role === 'client' && profile.client_id) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('company_name')
+              .eq('id', profile.client_id)
+              .single();
+            if (client) {
+              setClientCompany(client.company_name);
+              setClientFilter(client.company_name);
+            }
+          }
+        }
+      }
+    }
+    loadUser();
     fetchDashboardData(authorId);
   }, []);
 
@@ -265,7 +295,7 @@ export default function Dashboard() {
             <div className="stat-card-value">{data.byStatus.approved || 0}</div>
             <div className="stat-card-label">Approved</div>
           </motion.div>
-          {(() => {
+          {userRole !== 'client' && (() => {
             const usedBytes = data.storageUsedBytes || 0;
             const limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB free tier
             const pct = Math.min((usedBytes / limitBytes) * 100, 100);
@@ -433,7 +463,7 @@ export default function Dashboard() {
         <div className="card-body">
           <div className="flex items-center justify-between mb-16">
             <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)' }}>All posts</h2>
-            <Link href="/posts/new" className="btn btn-primary btn-sm">New post</Link>
+            {userRole !== 'client' && <Link href="/posts/new" className="btn btn-primary btn-sm">New post</Link>}
           </div>
 
           {/* Search & Filter Bar */}
@@ -526,17 +556,17 @@ export default function Dashboard() {
                   })}
                 </div>
               </div>
-              {uniqueClients.length > 0 && (
+              {userRole !== 'client' && uniqueClients.length > 0 && (
                 <select
-                  value={clientFilter}
-                  onChange={e => { setClientFilter(e.target.value); setCurrentPage(1); }}
-                  className="form-select"
-                  style={{ width: 'auto', minWidth: 120 }}
-                >
-                  <option value="all">All clients</option>
-                  {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              )}
+                   value={clientFilter}
+                   onChange={e => { setClientFilter(e.target.value); setCurrentPage(1); }}
+                   className="form-select"
+                   style={{ width: 'auto', minWidth: 120 }}
+                 >
+                   <option value="all">All clients</option>
+                   {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
+                 </select>
+               )}
             </div>
           </div>
 
@@ -582,7 +612,7 @@ export default function Dashboard() {
                     <th>Platform</th>
                     <th>Caption</th>
                     <th>Project</th>
-                    <th>Client</th>
+                    {userRole !== 'client' && <th>Client</th>}
                     <th>Status</th>
                     <th>Auto-Deletes</th>
                     <th>Updated</th>
@@ -603,12 +633,14 @@ export default function Dashboard() {
                           <div style={{ fontFamily: 'var(--sans)', fontWeight: 500, color: 'var(--text-primary)', fontSize: 15 }}>{parsePostCaption(post.caption).title}</div>
                         </td>
                         <td style={{ fontFamily: 'var(--sans)', fontSize: 15, color: 'var(--text-secondary)' }}>{post.projects?.name}</td>
-                        <td>
-                          <div className="flex items-center gap-8" style={{ fontFamily: 'var(--sans)', fontSize: 15 }}>
-                            <div className="avatar avatar-sm">{post.clients?.company_name?.[0]}</div>
-                            {post.clients?.company_name}
-                          </div>
-                        </td>
+                        {userRole !== 'client' && (
+                          <td>
+                            <div className="flex items-center gap-8" style={{ fontFamily: 'var(--sans)', fontSize: 15 }}>
+                              <div className="avatar avatar-sm">{post.clients?.company_name?.[0]}</div>
+                              {post.clients?.company_name}
+                            </div>
+                          </td>
+                        )}
                         <td><StatusBadge status={post.status} /></td>
                         <td>
                           {(() => {

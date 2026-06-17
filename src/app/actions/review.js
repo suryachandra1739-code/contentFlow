@@ -113,6 +113,11 @@ export async function submitReview(postId, action, comment, token = null) {
     metadata: { comment, token_used: !!token }
   });
 
+  revalidatePath('/');
+  revalidatePath(`/posts/${postId}`);
+  if (post && post.project_id) {
+    revalidatePath(`/projects/${post.project_id}`);
+  }
   revalidatePath('/client-portal');
   revalidatePath(`/client-portal/review/${postId}`);
   if (token) revalidatePath(`/review/${token}`);

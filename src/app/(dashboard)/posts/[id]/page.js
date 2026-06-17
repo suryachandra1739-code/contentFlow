@@ -7,6 +7,7 @@ import StatusBadge from '@/components/StatusBadge';
 import PlatformBadge from '@/components/PlatformBadge';
 import PlatformPreview from '@/components/PlatformPreview';
 import { useToast } from '@/components/Toast';
+import { createClientBrowser } from '@/lib/supabase';
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -197,7 +198,24 @@ export default function PostDetail() {
       addToast(err.message || 'Failed to update post details', 'error');
     }
   };
+  const [userRole, setUserRole] = useState('team');
+  const supabase = createClientBrowser();
+
   useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile?.role) {
+          setUserRole(profile.role);
+        }
+      }
+    }
+    loadUser();
     load();
     const interval = setInterval(load, 4000);
     return () => clearInterval(interval);
@@ -289,17 +307,19 @@ export default function PostDetail() {
               return null;
             })()}
           </div>
-          <div className="flex gap-8" style={{flexWrap:'wrap'}}>
-            {post.status === 'draft' && <button className="btn btn-primary btn-sm" onClick={() => updateStatus('pending')}>Send for review</button>}
-            <button className="btn btn-secondary btn-sm" onClick={copyReviewLink}>Copy review link</button>
-            <button 
-              className="btn btn-sm" 
-              style={{background:'var(--red-soft)',color:'var(--red)',border:'1px solid rgba(229,72,77,0.2)',fontWeight:500}}
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              Delete
-            </button>
-          </div>
+          {userRole !== 'client' && (
+            <div className="flex gap-8" style={{flexWrap:'wrap'}}>
+              {post.status === 'draft' && <button className="btn btn-primary btn-sm" onClick={() => updateStatus('pending')}>Send for review</button>}
+              <button className="btn btn-secondary btn-sm" onClick={copyReviewLink}>Copy review link</button>
+              <button 
+                className="btn btn-sm" 
+                style={{background:'var(--red-soft)',color:'var(--red)',border:'1px solid rgba(229,72,77,0.2)',fontWeight:500}}
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -492,118 +512,120 @@ export default function PostDetail() {
             </div>
           </div>
 
-          <div className="card" style={{marginBottom:24}}>
-            <div className="card-body">
-              <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:4}}>Edit post details</h2>
-              <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:20}}>
-                Replace the post image/video or update caption and hashtag contents.
-              </p>
+          {userRole !== 'client' && (
+            <div className="card" style={{marginBottom:24}}>
+              <div className="card-body">
+                <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:4}}>Edit post details</h2>
+                <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:20}}>
+                  Replace the post image/video or update caption and hashtag contents.
+                </p>
 
-              {/* Media Replacement Upload Zone */}
-              <div className="form-group" style={{marginBottom:16}}>
-                <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Media Asset</label>
-                
-                {newMedia.media_url ? (
-                  <div style={{position:'relative', padding:'8px', background:'var(--bg-layer)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', display:'flex', alignItems:'center', gap:12}}>
-                    {newMedia.media_type === 'video' ? (
-                      <video src={newMedia.media_url} preload="metadata" playsInline muted style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
-                    ) : (
-                      <img src={newMedia.media_url} alt="Uploaded thumbnail" loading="lazy" style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
-                    )}
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:13, fontWeight:500, color:'var(--text-primary)'}}>New media loaded</div>
-                      <div style={{fontSize:11, color:'var(--text-muted)'}}>Ready to save</div>
-                    </div>
-                    <button className="btn btn-secondary btn-xs" style={{padding:'4px 8px', fontSize:11}} onClick={() => setNewMedia({media_url:'',media_type:'image',media_key:'',media_size:0})}>Remove</button>
-                  </div>
-                ) : (
-                  <label style={{
-                    display:'flex',
-                    flexDirection:'column',
-                    alignItems:'center',
-                    justifyContent:'center',
-                    padding:'20px 16px',
-                    border:'1px dashed var(--border)',
-                    borderRadius:'var(--radius)',
-                    cursor: uploading ? 'default' : 'pointer',
-                    backgroundColor:'var(--bg-layer)',
-                    transition:'all 0.2s'
-                  }}>
-                    {!uploading && <input type="file" accept="image/*,video/*" onChange={handleUpload} style={{display:'none'}} />}
-                    <div style={{fontSize:20,marginBottom:4}}>{uploading ? '⏳' : '📁'}</div>
-                    <div style={{fontSize:13,color:'var(--text-primary)',fontWeight:500}}>
-                      {uploading ? `Uploading… ${uploadProgress}%` : 'Replace image / video'}
-                    </div>
-                    <div style={{fontSize:11,color:'var(--text-muted)',marginTop:2}}>Click to select a new file</div>
-                    {uploading && (
-                      <div style={{width:'100%',marginTop:12,background:'var(--border)',borderRadius:99,height:4}}>
-                        <div style={{width:`${uploadProgress}%`,height:'100%',background:'var(--accent)',borderRadius:99,transition:'width 0.2s'}} />
+                {/* Media Replacement Upload Zone */}
+                <div className="form-group" style={{marginBottom:16}}>
+                  <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Media Asset</label>
+                  
+                  {newMedia.media_url ? (
+                    <div style={{position:'relative', padding:'8px', background:'var(--bg-layer)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', display:'flex', alignItems:'center', gap:12}}>
+                      {newMedia.media_type === 'video' ? (
+                        <video src={newMedia.media_url} preload="metadata" playsInline muted style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
+                      ) : (
+                        <img src={newMedia.media_url} alt="Uploaded thumbnail" loading="lazy" style={{width:48,height:48,borderRadius:'var(--radius-sm)',objectFit:'cover'}} />
+                      )}
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13, fontWeight:500, color:'var(--text-primary)'}}>New media loaded</div>
+                        <div style={{fontSize:11, color:'var(--text-muted)'}}>Ready to save</div>
                       </div>
-                    )}
-                  </label>
-                )}
-              </div>
+                      <button className="btn btn-secondary btn-xs" style={{padding:'4px 8px', fontSize:11}} onClick={() => setNewMedia({media_url:'',media_type:'image',media_key:'',media_size:0})}>Remove</button>
+                    </div>
+                  ) : (
+                    <label style={{
+                      display:'flex',
+                      flexDirection:'column',
+                      alignItems:'center',
+                      justifyContent:'center',
+                      padding:'20px 16px',
+                      border:'1px dashed var(--border)',
+                      borderRadius:'var(--radius)',
+                      cursor: uploading ? 'default' : 'pointer',
+                      backgroundColor:'var(--bg-layer)',
+                      transition:'all 0.2s'
+                    }}>
+                      {!uploading && <input type="file" accept="image/*,video/*" onChange={handleUpload} style={{display:'none'}} />}
+                      <div style={{fontSize:20,marginBottom:4}}>{uploading ? '⏳' : '📁'}</div>
+                      <div style={{fontSize:13,color:'var(--text-primary)',fontWeight:500}}>
+                        {uploading ? `Uploading… ${uploadProgress}%` : 'Replace image / video'}
+                      </div>
+                      <div style={{fontSize:11,color:'var(--text-muted)',marginTop:2}}>Click to select a new file</div>
+                      {uploading && (
+                        <div style={{width:'100%',marginTop:12,background:'var(--border)',borderRadius:99,height:4}}>
+                          <div style={{width:`${uploadProgress}%`,height:'100%',background:'var(--accent)',borderRadius:99,transition:'width 0.2s'}} />
+                        </div>
+                      )}
+                    </label>
+                  )}
+                </div>
 
-              {/* Title field */}
-              <div className="form-group" style={{marginBottom:16}}>
-                <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Post Title</label>
-                <input 
-                  type="text"
-                  className="form-input" 
-                  value={editTitle} 
-                  onChange={e => setEditTitle(e.target.value)} 
-                  placeholder="Enter post title (visible in list view only)..." 
-                  style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13, color:'var(--text-primary)', fontFamily:'var(--sans)'}}
-                />
-              </div>
+                {/* Title field */}
+                <div className="form-group" style={{marginBottom:16}}>
+                  <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Post Title</label>
+                  <input 
+                    type="text"
+                    className="form-input" 
+                    value={editTitle} 
+                    onChange={e => setEditTitle(e.target.value)} 
+                    placeholder="Enter post title (visible in list view only)..." 
+                    style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13, color:'var(--text-primary)', fontFamily:'var(--sans)'}}
+                  />
+                </div>
 
-              {/* Caption field */}
-              <div className="form-group" style={{marginBottom:16}}>
-                <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Caption</label>
-                <textarea 
-                  className="form-textarea" 
-                  value={editCaption} 
-                  onChange={e => setEditCaption(e.target.value)} 
-                  placeholder="Write post caption..." 
-                  rows={4}
-                  style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13, color:'var(--text-primary)', fontFamily:'var(--sans)'}}
-                />
-              </div>
+                {/* Caption field */}
+                <div className="form-group" style={{marginBottom:16}}>
+                  <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Caption</label>
+                  <textarea 
+                    className="form-textarea" 
+                    value={editCaption} 
+                    onChange={e => setEditCaption(e.target.value)} 
+                    placeholder="Write post caption..." 
+                    rows={4}
+                    style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13, color:'var(--text-primary)', fontFamily:'var(--sans)'}}
+                  />
+                </div>
 
-              {/* Hashtags field */}
-              <div className="form-group" style={{marginBottom:20}}>
-                <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Hashtags</label>
-                <input 
-                  className="form-input" 
-                  value={editHashtags} 
-                  onChange={e => setEditHashtags(e.target.value)} 
-                  placeholder="#brand, #marketing" 
-                  style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13, color:'var(--text-primary)', fontFamily:'var(--sans)'}}
-                />
-              </div>
+                {/* Hashtags field */}
+                <div className="form-group" style={{marginBottom:20}}>
+                  <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Hashtags</label>
+                  <input 
+                    className="form-input" 
+                    value={editHashtags} 
+                    onChange={e => setEditHashtags(e.target.value)} 
+                    placeholder="#brand, #marketing" 
+                    style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13, color:'var(--text-primary)', fontFamily:'var(--sans)'}}
+                  />
+                </div>
 
-              {/* Actions */}
-              <div style={{display:'flex', justifyContent:'flex-end'}}>
-                <button 
-                  className="btn btn-primary" 
-                  disabled={uploading} 
-                  onClick={saveChanges}
-                  style={{
-                    padding:'8px 20px',
-                    borderRadius:'var(--radius-pill)',
-                    fontWeight:600,
-                    fontSize:13,
-                    background:'linear-gradient(135deg, var(--accent) 0%, #c12d32 100%)',
-                    color:'#fff',
-                    border:'none',
-                    cursor: uploading ? 'default' : 'pointer'
-                  }}
-                >
-                  Save Changes
-                </button>
+                {/* Actions */}
+                <div style={{display:'flex', justifyContent:'flex-end'}}>
+                  <button 
+                    className="btn btn-primary" 
+                    disabled={uploading} 
+                    onClick={saveChanges}
+                    style={{
+                      padding:'8px 20px',
+                      borderRadius:'var(--radius-pill)',
+                      fontWeight:600,
+                      fontSize:13,
+                      background:'linear-gradient(135deg, var(--accent) 0%, #c12d32 100%)',
+                      color:'#fff',
+                      border:'none',
+                      cursor: uploading ? 'default' : 'pointer'
+                    }}
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="card">
             <div className="card-body">

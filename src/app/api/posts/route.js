@@ -56,13 +56,14 @@ export async function GET(request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Fetch user role
+    // Fetch user profile (role and client_id)
     const { data: profile } = await supabase
       .from('users')
-      .select('role')
+      .select('role, client_id')
       .eq('id', user.id)
       .single();
     const role = profile?.role || 'team';
+    const client_id = profile?.client_id;
 
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
@@ -74,13 +75,22 @@ export async function GET(request) {
       .select('*, clients(company_name), projects(name), users:created_by(name)')
       .order('created_at', { ascending: false });
 
-    if (clientId) query = query.eq('client_id', clientId);
     if (projectId) query = query.eq('project_id', projectId);
 
-    if (role === 'admin') {
-      if (authorId) query = query.eq('created_by', authorId);
+    if (role === 'client') {
+      if (client_id) {
+        query = query.eq('client_id', client_id);
+      } else {
+        query = query.eq('client_id', '00000000-0000-0000-0000-000000000000');
+      }
     } else {
-      query = query.eq('created_by', user.id);
+      if (clientId) query = query.eq('client_id', clientId);
+      
+      if (role === 'admin') {
+        if (authorId) query = query.eq('created_by', authorId);
+      } else {
+        query = query.eq('created_by', user.id);
+      }
     }
 
     const { data, error } = await query;
