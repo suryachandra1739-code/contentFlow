@@ -43,7 +43,7 @@ textarea {
   --text-primary: #e8e4dc;
   --text-secondary: #9e9a92;
   --text-muted: #7a766f;
-  --bg-card-glass: rgba(43, 42, 39, 0.45);
+  --bg-card-glass: rgba(43, 42, 39, 0.72);
   --border-card-glass: rgba(255, 255, 255, 0.12);
 
   /* Primary Accents (Claude Orange) */
