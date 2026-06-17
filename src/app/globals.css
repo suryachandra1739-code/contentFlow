@@ -2841,7 +2841,6 @@ html[data-theme="light"] .sidebar {
 body.light .nav-item,
 html[data-theme="light"] .nav-item {
   color: rgba(0, 0, 0, 0.5) !important;
-  font-size: 13px !important;
   font-weight: 400 !important;
   transition: all 0.2s ease !important;
 }
@@ -2864,7 +2863,6 @@ body.light .sidebar-section,
 body.light .form-label,
 html[data-theme="light"] .sidebar-section,
 html[data-theme="light"] .form-label {
-  font-size: 11px !important;
   font-weight: 500 !important;
   letter-spacing: 0.06em !important;
   color: rgba(0, 0, 0, 0.4) !important;
@@ -2879,9 +2877,6 @@ html[data-theme="light"] .badge {
   justify-content: center !important;
   gap: 6px !important;
   padding: 4px 10px !important;
-  height: 22px !important;
-  min-width: 72px !important;
-  font-size: 11px !important;
   font-weight: 500 !important;
   text-transform: capitalize !important;
   border-radius: var(--radius-pill) !important;
@@ -3080,7 +3075,6 @@ html[data-theme="light"] .segmented-control {
 body.light .segmented-btn,
 html[data-theme="light"] .segmented-btn {
   border-radius: 9999px !important;
-  font-size: 12px !important;
   font-weight: 600 !important;
   color: rgba(0, 0, 0, 0.6) !important;
 }
