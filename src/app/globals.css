@@ -2952,12 +2952,8 @@ html[data-theme="light"] .badge-rejected::before {
 /* Form input elements */
 body.light .form-input,
 body.light .form-textarea,
-body.light input,
-body.light textarea,
 html[data-theme="light"] .form-input,
-html[data-theme="light"] .form-textarea,
-html[data-theme="light"] input,
-html[data-theme="light"] textarea {
+html[data-theme="light"] .form-textarea {
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   border-radius: 100px !important;
   padding: 14px 20px !important;
@@ -2999,15 +2995,9 @@ html[data-theme="light"] select {
 body.light .form-input:focus,
 body.light .form-textarea:focus,
 body.light .form-select:focus,
-body.light input:focus,
-body.light select:focus,
-body.light textarea:focus,
 html[data-theme="light"] .form-input:focus,
 html[data-theme="light"] .form-textarea:focus,
-html[data-theme="light"] .form-select:focus,
-html[data-theme="light"] input:focus,
-html[data-theme="light"] select:focus,
-html[data-theme="light"] textarea:focus {
+html[data-theme="light"] .form-select:focus {
   border-color: #3B5BDB !important;
   box-shadow: 0 6px 24px rgba(59, 91, 219, 0.12) !important;
   background-color: #ffffff !important;
@@ -3015,12 +3005,8 @@ html[data-theme="light"] textarea:focus {
 
 body.light .form-input::placeholder,
 body.light .form-textarea::placeholder,
-body.light input::placeholder,
-body.light textarea::placeholder,
 html[data-theme="light"] .form-input::placeholder,
-html[data-theme="light"] .form-textarea::placeholder,
-html[data-theme="light"] input::placeholder,
-html[data-theme="light"] textarea::placeholder {
+html[data-theme="light"] .form-textarea::placeholder {
   color: rgba(0, 0, 0, 0.3) !important;
 }
 

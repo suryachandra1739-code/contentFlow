@@ -172,10 +172,11 @@ export default function ClientsPage() {
             margin-top: 28px;
           }
           .workspace-card {
-            background: rgba(30, 41, 59, 0.45);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
             padding: 24px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -184,12 +185,12 @@ export default function ClientsPage() {
             flex-direction: column;
             justify-content: space-between;
             min-height: 220px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow-sm);
           }
           .workspace-card:hover {
             transform: translateY(-5px);
             border-color: rgba(37, 99, 235, 0.3);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25), 0 0 20px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.1), 0 0 20px rgba(37, 99, 235, 0.05);
           }
           .workspace-card::before {
             content: '';
@@ -207,14 +208,15 @@ export default function ClientsPage() {
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
           }
           .stat-glow-card {
-            background: rgba(30, 41, 59, 0.35);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
             padding: 20px 24px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-sm);
           }
           .stat-glow-card::after {
             content: '';
@@ -302,11 +304,24 @@ export default function ClientsPage() {
         </div>
 
         {/* Search & Filter Pill Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: 12, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', background: 'var(--bg-card-glass)', border: '1px solid var(--border)', borderRadius: 16, padding: 12, marginBottom: 24 }}>
           
           {/* Custom Glassmorphic Search */}
           <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
-            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: 14 }}>🔍</span>
+            <svg 
+              width="15" 
+              height="15" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
             <input 
               type="text" 
               placeholder="Search partner, contact name, or email..." 
@@ -315,8 +330,8 @@ export default function ClientsPage() {
               style={{
                 width: '100%',
                 padding: '10px 16px 10px 38px',
-                background: 'rgba(15,23,42,0.4)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--bg-layer)',
+                border: '1px solid var(--border)',
                 borderRadius: 10,
                 color: 'var(--text-primary)',
                 fontSize: 14,
@@ -343,8 +358,8 @@ export default function ClientsPage() {
         
         {/* Dynamic Empty State */}
         {filteredClients.length === 0 ? (
-          <div className="empty-state" style={{ padding: '60px 24px', background: 'rgba(30,41,59,0.2)', border: '1px dashed rgba(255,255,255,0.06)', borderRadius: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: 44, marginBottom: 12 }}>💼</span>
+          <div className="empty-state" style={{ padding: '60px 24px', background: 'var(--bg-card-glass)', border: '1px dashed var(--border)', borderRadius: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)', marginBottom: 16 }}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
             <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>No workspaces found</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, textAlign: 'center', maxWidth: 320 }}>
               Try adjusting your filters, searching for a different keyword, or add a new workspace to get started.
@@ -406,20 +421,20 @@ export default function ClientsPage() {
                   </div>
 
                   {/* Card Metadata / Body */}
-                  <div style={{ background: 'rgba(0,0,0,0.15)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 8, margin: '8px 0 20px' }}>
+                  <div style={{ background: 'var(--bg-layer)', border: '1px solid var(--border)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 8, margin: '8px 0 20px' }}>
                     
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>👤 Contact:</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Contact:</span>
                       <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{c.contact_name || 'Not assigned'}</span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>✉️ Email:</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Email:</span>
                       <span style={{ fontWeight: 500, color: 'var(--text-primary)', wordBreak: 'break-all' }}>{c.email || 'No portal email'}</span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>📅 Created:</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Created:</span>
                       <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
                         {c.created_at ? new Date(c.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recently'}
                       </span>
@@ -445,7 +460,7 @@ export default function ClientsPage() {
                         border: '1px solid rgba(255,255,255,0.06)'
                       }}
                     >
-                      📁 Projects
+                      Projects
                     </button>
                     <button
                       className="btn btn-sm btn-secondary"
@@ -644,7 +659,7 @@ export default function ClientsPage() {
                           {inviteForm.contractUrl ? (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ fontSize: 24 }}>📄</span>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)' }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                                 <div>
                                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', wordBreak: 'break-all' }}>
                                     {inviteForm.contractName || 'contract.pdf'}
@@ -728,7 +743,7 @@ export default function ClientsPage() {
                                   gap: 6
                                 }}
                               >
-                                <span style={{ fontSize: 24 }}>📤</span>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)', marginBottom: 6 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                                   {inviteForm.contractName === 'Uploading...' ? 'Uploading contract...' : 'Upload Contract PDF'}
                                 </span>
