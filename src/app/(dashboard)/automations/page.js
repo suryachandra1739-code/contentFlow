@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from '@/components/PageTransition';
 import { useToast } from '@/components/Toast';
-import SetupGuidePage from './setup/page';
+
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -113,7 +113,6 @@ export default function AutomationsPage() {
   const tabs = [
     { key: 'publisher', label: 'Social Publisher', icon: '🚀' },
     { key: 'dmbot', label: 'Instagram DM Bot', icon: '💬' },
-    { key: 'setup', label: 'Setup Guide', icon: '📖' },
     { key: 'activity', label: 'Activity', icon: '📊' },
   ];
 
@@ -126,10 +125,6 @@ export default function AutomationsPage() {
             <p>Manage your n8n-powered social media workflows</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={() => setActiveTab('setup')} style={{ fontSize: 13, padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-              Setup Guide
-            </button>
             <button className="btn btn-primary" onClick={saveAll} style={{ fontSize: 13, padding: '8px 16px' }}>Save Config</button>
           </div>
         </div>
@@ -332,19 +327,13 @@ export default function AutomationsPage() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     Download Workflow
                   </a>
-                  <button className="btn btn-primary" onClick={() => setActiveTab('setup')} style={{ fontSize: 13, padding: '8px 16px' }}>View Setup Guide →</button>
                 </div>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* ─── SETUP GUIDE TAB ─── */}
-        {activeTab === 'setup' && (
-          <motion.div key="setup" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-            <SetupGuidePage embedded={true} />
-          </motion.div>
-        )}
+
 
         {/* ─── ACTIVITY TAB ─── */}
         {activeTab === 'activity' && (
