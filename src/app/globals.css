@@ -59,8 +59,8 @@ textarea {
   --amber-soft: rgba(224, 92, 54, 0.08);
   --red: #e5484d;
   --red-soft: rgba(229, 72, 77, 0.12);
-  --cyan: #10b981;
-  --cyan-soft: rgba(16, 185, 129, 0.12);
+  --cyan: #0ea5e9;
+  --cyan-soft: rgba(14, 165, 233, 0.12);
 
   /* SaaS Layout Boundaries */
   --radius: 20px;
@@ -139,8 +139,8 @@ html[data-theme="light"] {
   --amber-soft: rgba(224, 92, 54, 0.06);
   --red: #ef4444;
   --red-soft: #fef2f2;
-  --cyan: #10b981;
-  --cyan-soft: #ecfdf5;
+  --cyan: #0ea5e9;
+  --cyan-soft: #f0f9ff;
 
   --radius: 20px;
   --radius-sm: 12px;
@@ -211,8 +211,8 @@ html[data-theme="light"] {
     --amber-soft: rgba(224, 92, 54, 0.06);
     --red: #ef4444;
     --red-soft: #fef2f2;
-    --cyan: #10b981;
-    --cyan-soft: #ecfdf5;
+    --cyan: #0ea5e9;
+    --cyan-soft: #f0f9ff;
 
     --radius: 20px;
     --radius-sm: 12px;

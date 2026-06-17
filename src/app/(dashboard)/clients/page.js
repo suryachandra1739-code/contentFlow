@@ -231,7 +231,7 @@ export default function ClientsPage() {
             pointer-events: none;
           }
           .stat-blue::after { background: var(--accent); }
-          .stat-green::after { background: #10b981; }
+          .stat-green::after { background: #3b82f6; }
           .stat-amber::after { background: #f59e0b; }
           
           .search-pill-btn {
@@ -291,8 +291,8 @@ export default function ClientsPage() {
 
           <div className="stat-glow-card stat-green">
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Client Portals</div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: '#10b981', marginTop: 8 }}>{activePortals}</div>
-            <div style={{ width: '100%', height: 3, background: '#10b981', borderRadius: 2, marginTop: 12, opacity: 0.6 }} />
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#3b82f6', marginTop: 8 }}>{activePortals}</div>
+            <div style={{ width: '100%', height: 3, background: '#3b82f6', borderRadius: 2, marginTop: 12, opacity: 0.6 }} />
           </div>
 
           <div className="stat-glow-card stat-amber">
@@ -374,8 +374,18 @@ export default function ClientsPage() {
               
               // Generate highly bespoke avatar gradient based on initials/ID
               const hash = c.company_name?.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0;
-              const hue = hash % 360;
-              const avatarGrad = `linear-gradient(135deg, hsl(${hue}, 80%, 45%), hsl(${(hue + 60) % 360}, 80%, 35%))`;
+              const gradients = [
+                'linear-gradient(135deg, #4f46e5, #3730a3)', // Indigo
+                'linear-gradient(135deg, #2563eb, #1d4ed8)', // Blue
+                'linear-gradient(135deg, #7c3aed, #5b21b6)', // Violet
+                'linear-gradient(135deg, #db2777, #9d174d)', // Pink
+                'linear-gradient(135deg, #0ea5e9, #0369a1)', // Sky
+                'linear-gradient(135deg, #0d9488, #115e59)'  // Teal
+              ];
+              const gradIndex = hash % gradients.length;
+              const avatarGrad = c.avatar_color && c.avatar_color !== '#161616' 
+                ? c.avatar_color 
+                : gradients[gradIndex];
 
               return (
                 <div className="workspace-card" key={c.id}>
@@ -399,10 +409,10 @@ export default function ClientsPage() {
                             width: 6, 
                             height: 6, 
                             borderRadius: '50%', 
-                            background: isPortalActive ? '#10b981' : '#f59e0b',
-                            boxShadow: isPortalActive ? '0 0 8px #10b981' : '0 0 8px #f59e0b'
+                            background: isPortalActive ? '#3b82f6' : '#f59e0b',
+                            boxShadow: isPortalActive ? '0 0 8px #3b82f6' : '0 0 8px #f59e0b'
                           }} />
-                          <span style={{ fontSize: 11, fontWeight: 600, color: isPortalActive ? '#10b981' : '#f59e0b' }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: isPortalActive ? '#3b82f6' : '#f59e0b' }}>
                             {isPortalActive ? 'Active Workspace' : 'Setup Pending'}
                           </span>
                         </div>

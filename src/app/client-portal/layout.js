@@ -47,7 +47,7 @@ export default function ClientPortalLayout({ children }) {
       
       {/* Background ambient light gradients */}
       <div style={{ position: 'absolute', top: 0, left: '20%', width: 400, height: 400, background: 'rgba(37,99,235,0.06)', filter: 'blur(130px)', pointerEvents: 'none', borderRadius: '50%' }} />
-      <div style={{ position: 'absolute', bottom: '10%', right: '15%', width: 500, height: 500, background: 'rgba(16,185,129,0.03)', filter: 'blur(160px)', pointerEvents: 'none', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', bottom: '10%', right: '15%', width: 500, height: 500, background: 'rgba(37,99,235,0.03)', filter: 'blur(160px)', pointerEvents: 'none', borderRadius: '50%' }} />
 
       <header style={{ 
         background: 'rgba(15, 23, 42, 0.65)', 
@@ -86,14 +86,14 @@ export default function ClientPortalLayout({ children }) {
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>
-            🏢 {profile?.company_name || 'WORKSPACE'}
+            {profile?.company_name || 'WORKSPACE'}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <NotificationBell role="client" />
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="hide-on-mobile">
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }} />
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>{profile?.name}</span>
             </div>
 
