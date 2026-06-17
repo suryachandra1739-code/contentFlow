@@ -1,0 +1,188 @@
+{
+  "name": "ContentFlow — Instagram DM Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "=GET",
+        "path": "instagram-webhook",
+        "responseMode": "onReceived",
+        "responseData": "={{ $json.query['hub.challenge'] || 'ok' }}",
+        "options": {}
+      },
+      "id": "webhook-verify",
+      "name": "Webhook Verify (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 100],
+      "notes": "This handles Meta's webhook verification challenge. Meta sends a GET request with hub.challenge that must be echoed back."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "instagram-webhook",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-events",
+      "name": "Webhook Events (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 350],
+      "notes": "Receives comment and messaging events from Instagram via Meta Webhooks."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.object }}",
+              "rightValue": "instagram",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "is-instagram",
+      "name": "Is Instagram Event?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 350]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract comment data from Meta webhook payload\nconst entries = $input.first().json.body.entry || [];\nconst comments = [];\n\nfor (const entry of entries) {\n  const changes = entry.changes || [];\n  for (const change of changes) {\n    if (change.field === 'comments') {\n      const value = change.value;\n      comments.push({\n        commentId: value.id,\n        commentText: value.text,\n        commenterId: value.from?.id,\n        commenterName: value.from?.username || 'Unknown',\n        mediaId: value.media?.id,\n        timestamp: value.created_time\n      });\n    }\n  }\n}\n\nreturn comments.map(c => ({ json: c }));"
+      },
+      "id": "extract-comments",
+      "name": "Extract Comments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 350]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.commentText.toLowerCase() }}",
+              "rightValue": "dm",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "keyword-filter",
+      "name": "Contains Keyword?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 350],
+      "notes": "Edit the keyword here. Default triggers on 'dm'. You can add more conditions like 'link', 'free', 'guide', etc."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/me/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "access_token", "value": "={{$credentials.facebookGraphApi.accessToken}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recipient\": {\n    \"id\": \"{{ $json.commenterId }}\"\n  },\n  \"message\": {\n    \"text\": \"Hey {{ $json.commenterName }}! 👋\\n\\nThanks for your interest! Here are the links you requested:\\n\\n🔗 Link 1: https://your-link-1.com\\n🔗 Link 2: https://your-link-2.com\\n📄 PDF Guide: https://your-pdf-link.com\\n\\nFeel free to reply if you have any questions!\"\n  }\n}"
+      },
+      "id": "send-dm",
+      "name": "Send Instagram DM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 300],
+      "notes": "⚠️ Customize the message template above with your actual links and PDFs. The commenter's name is automatically inserted."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.commentId }}/replies",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "message", "value": "Sent you a DM! 📩 Check your inbox." },
+            { "name": "access_token", "value": "={{$credentials.facebookGraphApi.accessToken}}" }
+          ]
+        }
+      },
+      "id": "reply-comment",
+      "name": "Reply to Comment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 500],
+      "notes": "Optional: Replies to the comment letting them know a DM was sent."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log the DM activity\nconst now = new Date().toISOString();\nconsole.log(`[${now}] DM sent to ${$json.commenterName} (${$json.commenterId}) triggered by comment: \"${$json.commentText}\"`);\nreturn [{ json: { status: 'dm_sent', to: $json.commenterName, timestamp: now } }];"
+      },
+      "id": "log-activity",
+      "name": "Log Activity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Events (POST)": {
+      "main": [
+        [{ "node": "Is Instagram Event?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Instagram Event?": {
+      "main": [
+        [{ "node": "Extract Comments", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Extract Comments": {
+      "main": [
+        [{ "node": "Contains Keyword?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Contains Keyword?": {
+      "main": [
+        [
+          { "node": "Send Instagram DM", "type": "main", "index": 0 },
+          { "node": "Reply to Comment", "type": "main", "index": 0 }
+        ],
+        []
+      ]
+    },
+    "Send Instagram DM": {
+      "main": [
+        [{ "node": "Log Activity", "type": "main", "index": 0 }]
+      ]
+    },
+    "Reply to Comment": {
+      "main": [
+        [{ "node": "Log Activity", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "contentflow-instagram-dm-bot"
+  },
+  "tags": [
+    { "name": "instagram" },
+    { "name": "dm-automation" },
+    { "name": "contentflow" }
+  ]
+}

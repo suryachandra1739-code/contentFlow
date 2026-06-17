@@ -59,6 +59,8 @@ export default function Sidebar({ onOpenNewPost }) {
     if (pathname.startsWith('/analytics')) return 'Analytics';
     if (pathname.startsWith('/admin/team')) return 'Team';
     if (pathname.startsWith('/admin/audit-log')) return 'Audit Log';
+    if (pathname.startsWith('/automations/setup')) return 'Setup Guide';
+    if (pathname.startsWith('/automations')) return 'Automations';
     return 'ContentFlow';
   };
 
@@ -98,13 +100,15 @@ export default function Sidebar({ onOpenNewPost }) {
             <span>Projects</span>
           </Link>
 
-          <Link href="/clients" className={`mobile-bottom-nav-item ${pathname.startsWith('/clients') ? 'active' : ''}`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-            </svg>
-            <span>Clients</span>
-          </Link>
+          {userRole !== 'client' && (
+            <Link href="/clients" className={`mobile-bottom-nav-item ${pathname.startsWith('/clients') ? 'active' : ''}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+              <span>Clients</span>
+            </Link>
+          )}
 
           <button onClick={() => setIsOpen(true)} className={`mobile-bottom-nav-item ${isOpen ? 'active' : ''}`} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0 }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
@@ -116,21 +120,23 @@ export default function Sidebar({ onOpenNewPost }) {
           </button>
         </div>
 
-        <Link 
-          href="/posts/new" 
-          className="mobile-bottom-fab"
-          onClick={(e) => {
-            if (onOpenNewPost && window.innerWidth <= 768) {
-              e.preventDefault();
-              onOpenNewPost();
-            }
-          }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </Link>
+        {userRole !== 'client' && (
+          <Link 
+            href="/posts/new" 
+            className="mobile-bottom-fab"
+            onClick={(e) => {
+              if (onOpenNewPost && window.innerWidth <= 768) {
+                e.preventDefault();
+                onOpenNewPost();
+              }
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </Link>
+        )}
       </div>
 
       <aside className={`sidebar ${isOpen ? 'open' : ''}`} id="sidebar">
@@ -168,19 +174,27 @@ export default function Sidebar({ onOpenNewPost }) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
             Projects
           </Link>
-          <Link href="/posts/new" onClick={closeSidebar} className={`nav-item ${isActive('/posts/new') ? 'active' : ''}`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
-            New Post
-          </Link>
+          {userRole !== 'client' && (
+            <Link href="/posts/new" onClick={closeSidebar} className={`nav-item ${isActive('/posts/new') ? 'active' : ''}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+              New Post
+            </Link>
+          )}
 
           <div className="sidebar-section">Manage</div>
-          <Link href="/clients" onClick={closeSidebar} className={`nav-item ${isActive('/clients') ? 'active' : ''}`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-            Clients
-          </Link>
+          {userRole !== 'client' && (
+            <Link href="/clients" onClick={closeSidebar} className={`nav-item ${isActive('/clients') ? 'active' : ''}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+              Clients
+            </Link>
+          )}
           <Link href="/analytics" onClick={closeSidebar} className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
             Analytics
+          </Link>
+          <Link href="/automations" onClick={closeSidebar} className={`nav-item ${isActive('/automations') ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+            Automations
           </Link>
 
           {userRole === 'admin' && (
