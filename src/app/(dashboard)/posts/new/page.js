@@ -9,7 +9,9 @@ import { useToast } from '@/components/Toast';
 export default function NewPost() {
   const router = useRouter();
   const addToast = useToast();
+  const [clients, setClients] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
   const [step, setStep] = useState(1);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -17,10 +19,28 @@ export default function NewPost() {
   const [title, setTitle] = useState('');
 
   useEffect(() => {
-    fetch('/api/projects').then(r => r.json()).then(data => {
-      setProjects(Array.isArray(data) ? data : []);
-    }).catch(() => setProjects([]));
+    Promise.all([
+      fetch('/api/clients').then(r => r.json()),
+      fetch('/api/projects').then(r => r.json()),
+    ]).then(([clientsData, projectsData]) => {
+      setClients(Array.isArray(clientsData) ? clientsData : []);
+      setProjects(Array.isArray(projectsData) ? projectsData : []);
+    }).catch(() => {
+      setClients([]);
+      setProjects([]);
+    });
   }, []);
+
+  // Filter projects based on selected client
+  const filteredProjects = selectedClientId
+    ? projects.filter(p => p.client_id === selectedClientId)
+    : projects;
+
+  // When client changes, reset project selection
+  const handleClientChange = (clientId) => {
+    setSelectedClientId(clientId);
+    setForm(f => ({ ...f, project_id: '' }));
+  };
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -103,13 +123,31 @@ export default function NewPost() {
       {step === 1 && (
         <div className="card slide-up">
           <div className="card-body">
-            <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:20}}>Select project & platform</h2>
+            <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:20}}>Select client, project & platform</h2>
+            <div className="form-group">
+              <label className="form-label">Client</label>
+              <select className="form-select" value={selectedClientId} onChange={e => handleClientChange(e.target.value)}>
+                <option value="">Choose a client</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+              </select>
+            </div>
             <div className="form-group">
               <label className="form-label">Project</label>
-              <select className="form-select" value={form.project_id} onChange={e => setForm({...form, project_id: e.target.value})}>
-                <option value="">Choose a project</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.clients?.company_name || 'No client'}</option>)}
+              <select 
+                className="form-select" 
+                value={form.project_id} 
+                onChange={e => setForm({...form, project_id: e.target.value})}
+                disabled={!selectedClientId}
+                style={{ opacity: selectedClientId ? 1 : 0.5 }}
+              >
+                <option value="">{selectedClientId ? 'Choose a project' : 'Select a client first'}</option>
+                {filteredProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
+              {selectedClientId && filteredProjects.length === 0 && (
+                <p style={{fontSize:12, color:'var(--amber)', marginTop:6, fontFamily:'var(--sans)'}}>
+                  This client has no projects yet. Create one from the Clients page first.
+                </p>
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">Platform</label>
