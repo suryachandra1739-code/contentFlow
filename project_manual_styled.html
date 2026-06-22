@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ContentFlow Manual</title>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            line-height: 1.6;
+            margin: 40px auto;
+            max-width: 800px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        h2 {
+            font-size: 22px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h3 {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        hr {
+            border: 0;
+            border-top: 2px solid #000;
+            margin: 40px 0;
+        }
+        .title-page {
+            text-align: center;
+            margin-top: 100px;
+            margin-bottom: 150px;
+        }
+        .title-page h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .title-page p {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        ul {
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-page">
+        <h1>ContentFlow: Client Portal System Manual</h1>
+        <p><strong>Prepared by:</strong> Development Team</p>
+        <p><strong>Date:</strong> May 2026</p>
+        <hr>
+    </div>
+    <hr>
+<h2>title: &quot;ContentFlow: Client Portal System Manual&quot;
+author: &quot;Development Team&quot;
+date: &quot;May 2026&quot;</h2>
+<h1>1. Abstract</h1>
+<p>ContentFlow is a comprehensive content approval and management platform designed to streamline the workflow between agencies and their clients. This document serves as a technical manual and feature guide for the Client Portal. It outlines the system architecture, authentication mechanisms, real-time data synchronization, and provides a detailed breakdown of the available modules and their underlying functionalities.</p>
+<h1>2. Introduction</h1>
+<h2>2.1 Purpose</h2>
+<p>The purpose of the ContentFlow Client Portal is to provide a secure, transparent, and efficient interface for clients to review, approve, and track social media content proposed by their agency. It eliminates the need for email-based approvals and consolidates communication into a single, trackable platform.</p>
+<h2>2.2 Scope</h2>
+<p>This manual covers the features accessible via the Client Portal (<code>/client-portal</code> routes), including the interactive dashboard, the real-time review interface, historical data logs, and the activity auditing system. It also touches upon the underlying technical implementations that power these features.</p>
+<h2>2.3 Technologies Used</h2>
+<ul>
+<li><strong>Frontend Framework:</strong> Next.js (App Router) for server-side rendering and optimized client-side routing.</li>
+<li><strong>Backend &amp; Database:</strong> Supabase (PostgreSQL) for relational data storage and RESTful APIs.</li>
+<li><strong>Authentication:</strong> Supabase Auth for secure user session management.</li>
+<li><strong>Real-time Communication:</strong> Supabase Channels for WebSocket-based real-time updates.</li>
+<li><strong>Styling:</strong> Vanilla CSS with custom CSS variables implementing a volumetric glassmorphic design system.</li>
+</ul>
+<h1>3. System Architecture &amp; Technical Overview</h1>
+<h2>3.1 Authentication and Role-Based Access Control (RBAC)</h2>
+<p>The system employs a strict Role-Based Access Control mechanism. Upon logging in, the user&#39;s session is validated securely via Supabase Auth. The system queries the <code>users</code> table to determine the user&#39;s role (<code>admin</code>, <code>team</code>, or <code>client</code>) and their associated <code>client_id</code>. The Client Portal is isolated and ensures that clients can only access posts and data strictly associated with their specific <code>client_id</code>.</p>
+<h2>3.2 Real-time Data Synchronization</h2>
+<p>To ensure clients see the most up-to-date information without manually refreshing the page, the platform utilizes WebSocket connections. Components like the <code>AutoRefresh</code> module listen to specific Supabase Database channels (e.g., changes to the <code>posts</code> or <code>comments</code> tables). When a team member updates a post status or adds a comment, the payload is broadcasted, and the client&#39;s interface automatically refetches and re-renders the updated data.</p>
+<h2>3.3 Glassmorphic UI &amp; Performance</h2>
+<p>The user interface is built using a custom &quot;volumetric glassmorphism&quot; design system. This relies on CSS properties like <code>backdrop-filter: blur()</code>, <code>rgba</code> background layers, and hardware-accelerated transitions to create a premium, translucent aesthetic while maintaining strict performance optimizations to avoid rendering bottlenecks on lower-end devices.</p>
+<h1>4. Module Description (Feature Guide)</h1>
+<h2>4.1 Overview Dashboard</h2>
+<p><strong>Path:</strong> <code>/client-portal</code>
+The Overview module serves as the primary entry point. </p>
+<ul>
+<li><strong>Technical Implementation:</strong> It performs server-side data fetching to retrieve the client&#39;s profile, calculate aggregate statistics (total, pending, approved, revision counts), and fetch the queue of posts with a <code>status</code> of <code>pending</code>.</li>
+<li><strong>User Experience:</strong> Displays a personalized greeting and a visually distinct grid of metrics. The &quot;Pending Review&quot; queue highlights items requiring immediate action, providing media thumbnails, platform metadata, and a direct link to the Review interface.</li>
+</ul>
+<h2>4.2 Post Review &amp; Approval Workflow</h2>
+<p><strong>Path:</strong> <code>/client-portal/review/[id]</code>
+This is the core module where the approval workflow occurs.</p>
+<ul>
+<li><strong>Interactive Platform Preview:</strong> The system dynamically formats the provided media (<code>media_url</code>) and text (<code>caption</code>) to simulate exactly how it will render on the target social platform (e.g., LinkedIn, Instagram).</li>
+<li><strong>AI-Assisted Optimization Insights:</strong> The system parses post metadata to provide calculated projections for &quot;Expected Reach&quot; and an &quot;Engagement Index&quot;, helping clients make data-driven approval decisions.</li>
+<li><strong>Decision Center (State Machine):</strong> Clients can trigger state transitions on the <code>posts</code> table:<ul>
+<li><strong>Approve:</strong> Transitions the post <code>status</code> to <code>approved</code>.</li>
+<li><strong>Request Changes:</strong> Transitions the post <code>status</code> to <code>revision</code>. This action strictly requires the client to input a text payload (feedback), which is subsequently written to the <code>comments</code> table.</li>
+</ul>
+</li>
+<li><strong>Real-time Feedback Feed:</strong> A chronological feed querying the <code>comments</code> table. It utilizes the WebSocket connection to display new comments from admins or team members instantly.</li>
+</ul>
+<h2>4.3 History Archive</h2>
+<p><strong>Path:</strong> <code>/client-portal/history</code>
+This module provides a comprehensive tabular view of all historical data.</p>
+<ul>
+<li><strong>Functionality:</strong> It queries the entire <code>posts</code> table associated with the <code>client_id</code>.</li>
+<li><strong>Technical Features:</strong> Implements URL-based state management (<code>?filter=...&amp;sort=...</code>) for filtering (by status) and sorting (chronological/reverse-chronological). This allows users to bookmark specific filtered views.</li>
+</ul>
+<h2>4.4 Activity Log &amp; Auditing</h2>
+<p><strong>Path:</strong> <code>/client-portal/activity</code>
+A robust audit trail module designed for transparency and accountability.</p>
+<ul>
+<li><strong>Functionality:</strong> Queries the <code>audit_log</code> table to present a chronological list of all system events related to the client&#39;s account.</li>
+<li><strong>Tracked Events:</strong> Includes payloads for <code>post_created</code>, <code>post_approved</code>, <code>post_revision</code>, <code>post_rejected</code>, and <code>comment_added</code>. Each entry records the timestamp, the user ID of the actor, and contextual metadata.</li>
+</ul>
+<h2>4.5 Notification System</h2>
+<p><strong>Component:</strong> <code>NotificationBell.js</code>
+A global module present in the application header.</p>
+<ul>
+<li><strong>Functionality:</strong> Polls the <code>/api/notifications</code> endpoint to retrieve unread alerts. It acts as a centralized bell icon, visually indicating the presence of new actions requiring the client&#39;s attention, such as newly assigned posts or unread team comments.</li>
+</ul>
+<h1>5. Conclusion</h1>
+<p>The ContentFlow Client Portal is engineered to be both visually stunning and technically robust. By leveraging modern web technologies like Next.js and Supabase, it provides a secure, real-time, and highly efficient workflow that bridges the gap between creative teams and client stakeholders.</p>
+
+
+</body>
+</html>

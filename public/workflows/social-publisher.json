@@ -1,5 +1,5 @@
 {
-  "name": "ContentFlow — Social Publisher",
+  "name": "ContentFlow — Social Publisher (Multi-Client)",
   "nodes": [
     {
       "parameters": {
@@ -112,13 +112,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.facebook.com/v19.0/{{YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID}}/media",
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.body.credentials.instagram.ig_business_account_id }}/media",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             { "name": "image_url", "value": "={{ $json.body.image_url }}" },
             { "name": "caption", "value": "={{ $json.body.caption + '\\n\\n' + $json.body.hashtags }}" },
-            { "name": "access_token", "value": "={{$credentials.facebookGraphApi.accessToken}}" }
+            { "name": "access_token", "value": "={{ $json.body.credentials.instagram.page_access_token }}" }
           ]
         }
       },
@@ -127,17 +127,17 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [750, 50],
-      "notes": "Step 1: Create media container. Step 2 (next node) publishes it."
+      "notes": "Step 1: Create media container using the client's Instagram Business Account ID and Page Access Token from the webhook payload. Step 2 (next node) publishes it."
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v19.0/{{YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID}}/media_publish",
+        "url": "=https://graph.facebook.com/v21.0/{{ $('Webhook Trigger').item.json.body.credentials.instagram.ig_business_account_id }}/media_publish",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             { "name": "creation_id", "value": "={{ $json.id }}" },
-            { "name": "access_token", "value": "={{$credentials.facebookGraphApi.accessToken}}" }
+            { "name": "access_token", "value": "={{ $('Webhook Trigger').item.json.body.credentials.instagram.page_access_token }}" }
           ]
         }
       },
@@ -145,18 +145,19 @@
       "name": "Publish Instagram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1000, 50]
+      "position": [1000, 50],
+      "notes": "Step 2: Publish the media container. References the Webhook Trigger node to get the original credentials since the previous node's output is the container creation response."
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v19.0/{{YOUR_PAGE_ID}}/feed",
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.body.credentials.facebook.page_id }}/feed",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             { "name": "message", "value": "={{ $json.body.caption + '\\n\\n' + $json.body.hashtags }}" },
             { "name": "link", "value": "={{ $json.body.image_url }}" },
-            { "name": "access_token", "value": "={{$credentials.facebookGraphApi.accessToken}}" }
+            { "name": "access_token", "value": "={{ $json.body.credentials.facebook.page_access_token }}" }
           ]
         }
       },
@@ -164,7 +165,8 @@
       "name": "Post to Facebook",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [750, 300]
+      "position": [750, 300],
+      "notes": "Posts to the client's Facebook Page using their Page Access Token from the webhook payload."
     },
     {
       "parameters": {
@@ -214,7 +216,7 @@
       "parameters": {
         "options": {},
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ success: true, message: 'Published to all selected platforms', timestamp: new Date().toISOString() }) }}"
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Published to all selected platforms', client: $('Webhook Trigger').item.json.body.client_name || 'unknown', timestamp: new Date().toISOString() }) }}"
       },
       "id": "respond-success",
       "name": "Respond Success",
@@ -294,6 +296,7 @@
   "tags": [
     { "name": "social-media" },
     { "name": "contentflow" },
-    { "name": "automation" }
+    { "name": "automation" },
+    { "name": "multi-client" }
   ]
 }

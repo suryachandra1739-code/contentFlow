@@ -920,6 +920,15 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   background-color: var(--red);
 }
 
+.badge-published {
+  color: #0d9488;
+  background-color: rgba(13, 148, 136, 0.12);
+}
+
+.badge-published::before {
+  background-color: #0d9488;
+}
+
 /* Platform Badges */
 .platform-badge {
   display: inline-flex;

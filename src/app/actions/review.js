@@ -92,6 +92,45 @@ export async function submitReview(postId, action, comment, token = null) {
     return { error: updateError.message };
   }
 
+  // Auto-publish: When a post is approved, automatically publish to connected social platforms
+  if (newStatus === 'approved') {
+    try {
+      // Use service role client to read social connections (bypasses RLS token masking)
+      const serviceSupabase = process.env.SUPABASE_SERVICE_ROLE_KEY
+        ? createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            { auth: { persistSession: false } }
+          )
+        : supabase;
+
+      const { data: connections } = await serviceSupabase
+        .from('social_connections')
+        .select('platform')
+        .eq('client_id', post.client_id)
+        .eq('token_valid', true);
+
+      if (connections && connections.length > 0) {
+        // Build platforms object based on connected accounts
+        const platforms = {};
+        connections.forEach(c => { platforms[c.platform] = true; });
+
+        // Fire-and-forget: call the publish endpoint — don't await, don't block approval
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        fetch(`${siteUrl}/api/posts/${postId}/publish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ platforms, auto: true }),
+        }).catch((err) => {
+          console.error('Auto-publish fire-and-forget failed:', err.message);
+        });
+      }
+    } catch (autoPublishErr) {
+      // Never block approval on publish errors
+      console.error('Auto-publish setup error (non-blocking):', autoPublishErr.message);
+    }
+  }
+
   // 3. Add comment if provided
   if (comment) {
     await supabase.from('comments').insert({

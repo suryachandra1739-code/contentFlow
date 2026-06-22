@@ -22,7 +22,10 @@ export default function PostDetail() {
   const [deleting, setDeleting] = useState(false);
   const [statusTransition, setStatusTransition] = useState(null);
 
-  // Local editing states
+  // Publish states
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishPlatforms, setPublishPlatforms] = useState({ facebook: true, instagram: true });
   const [editTitle, setEditTitle] = useState('');
   const [editCaption, setEditCaption] = useState('');
   const [editHashtags, setEditHashtags] = useState('');
@@ -30,6 +33,10 @@ export default function PostDetail() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [hasPrefilled, setHasPrefilled] = useState(false);
+
+  // DM Override states
+  const [useCustomDm, setUseCustomDm] = useState(false);
+  const [customDmConfig, setCustomDmConfig] = useState({ keywords: '', message: '', links: '' });
 
   const parseCaption = (rawCaption) => {
     if (!rawCaption) return { title: '', description: '' };
@@ -69,6 +76,27 @@ export default function PostDetail() {
     fetch(`/api/posts/${id}/comments`).then(r => r.json()).then(data => {
       if (Array.isArray(data)) setComments(data);
     });
+
+    // Load DM override config
+    if (typeof window !== 'undefined') {
+      try {
+        const dmKey = `cf-post-dm-${id}`;
+        const stored = JSON.parse(localStorage.getItem(dmKey));
+        if (stored && stored.useCustomDm) {
+          setUseCustomDm(true);
+          setCustomDmConfig(stored.customDmConfig || { keywords: '', message: '', links: '' });
+        }
+      } catch (e) {}
+    }
+  };
+
+  const saveDmOverride = (enabled, config) => {
+    setUseCustomDm(enabled);
+    setCustomDmConfig(config);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`cf-post-dm-${id}`, JSON.stringify({ useCustomDm: enabled, customDmConfig: config }));
+      addToast('DM Bot settings saved', 'success');
+    }
   };
 
   const handleUpload = async (e) => {
@@ -245,6 +273,35 @@ export default function PostDetail() {
     }
   };
 
+  const handlePublish = async () => {
+    setPublishing(true);
+    try {
+      const res = await fetch(`/api/posts/${id}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platforms: publishPlatforms })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      let msg = 'Published successfully!';
+      if (data.results) {
+         const fb = data.results.facebook;
+         const ig = data.results.instagram;
+         if (fb?.error || ig?.error) {
+            msg = `Publish result — FB: ${fb?.error || 'Success'}, IG: ${ig?.error || 'Success'}`;
+         }
+      }
+      addToast(msg, data.success ? 'success' : 'error');
+      setShowPublishModal(false);
+      load();
+    } catch (err) {
+      addToast(err.message || 'Publish failed', 'error');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const addCommentHandler = async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
@@ -309,6 +366,16 @@ export default function PostDetail() {
           </div>
           {userRole !== 'client' && (
             <div className="flex gap-8" style={{flexWrap:'wrap'}}>
+              {post.status === 'approved' && (
+                <button 
+                  className="btn btn-sm" 
+                  style={{background:'var(--accent)',color:'#fff',border:'none',fontWeight:600}}
+                  onClick={() => setShowPublishModal(true)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: 6}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Publish to Social
+                </button>
+              )}
               {post.status === 'draft' && <button className="btn btn-primary btn-sm" onClick={() => updateStatus('pending')}>Send for review</button>}
               <button className="btn btn-secondary btn-sm" onClick={copyReviewLink}>Copy review link</button>
               <button 
@@ -627,6 +694,67 @@ export default function PostDetail() {
             </div>
           )}
 
+          {userRole !== 'client' && post?.platform === 'instagram' && (
+            <div className="card" style={{marginBottom:24}}>
+              <div className="card-body">
+                <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16}}>
+                  <div>
+                    <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',margin:0}}>DM Bot Override</h2>
+                    <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginTop:4}}>Set custom auto-reply logic for this specific post</p>
+                  </div>
+                  <label style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer'}}>
+                    <span style={{fontSize:13, fontWeight:500, color: useCustomDm ? 'var(--text-primary)' : 'var(--text-muted)'}}>Custom</span>
+                    <input type="checkbox" style={{width:16,height:16}} checked={useCustomDm} onChange={e => saveDmOverride(e.target.checked, customDmConfig)} />
+                  </label>
+                </div>
+                
+                {useCustomDm ? (
+                  <div style={{background:'var(--bg-layer)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', padding:16}}>
+                    <div className="form-group" style={{marginBottom:16}}>
+                      <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Trigger Keywords</label>
+                      <input 
+                        className="form-input" 
+                        value={customDmConfig.keywords} 
+                        onChange={e => setCustomDmConfig({...customDmConfig, keywords: e.target.value})} 
+                        onBlur={() => saveDmOverride(useCustomDm, customDmConfig)}
+                        placeholder="dm, guide, free" 
+                        style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13}}
+                      />
+                    </div>
+                    <div className="form-group" style={{marginBottom:16}}>
+                      <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Resources / Links (one per line)</label>
+                      <textarea 
+                        className="form-textarea" 
+                        value={customDmConfig.links} 
+                        onChange={e => setCustomDmConfig({...customDmConfig, links: e.target.value})} 
+                        onBlur={() => saveDmOverride(useCustomDm, customDmConfig)}
+                        placeholder="https://example.com" 
+                        rows={2}
+                        style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13}}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{fontWeight:600, fontSize:12, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-secondary)'}}>Auto-Reply Template</label>
+                      <textarea 
+                        className="form-textarea" 
+                        value={customDmConfig.message} 
+                        onChange={e => setCustomDmConfig({...customDmConfig, message: e.target.value})} 
+                        onBlur={() => saveDmOverride(useCustomDm, customDmConfig)}
+                        placeholder="Hey {name}! Here are your resources: {links}" 
+                        rows={4}
+                        style={{width:'100%', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'8px 12px', fontSize:13}}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{fontSize:13, color:'var(--text-secondary)', padding:'12px 16px', background:'var(--bg-layer)', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)'}}>
+                    Currently inheriting the default DM Bot settings from the <strong>{post.projects?.name}</strong> project.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="card">
             <div className="card-body">
               <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--sans)',marginBottom:16}}>Activity</h2>
@@ -711,6 +839,68 @@ export default function PostDetail() {
                 disabled={deleting}
               >
                 {deleting ? 'Deleting...' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Publish Modal */}
+      {showPublishModal && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:9999,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)'
+        }} onClick={() => !publishing && setShowPublishModal(false)}>
+          <div style={{
+            background:'var(--bg-card)', border:'1px solid var(--border)',
+            borderRadius:'var(--radius)', padding:32, maxWidth:400, width:'90%',
+            boxShadow:'0 20px 60px rgba(0,0,0,0.3)'
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{fontSize:18,fontWeight:700,fontFamily:'var(--sans)',color:'var(--text-primary)',marginBottom:8}}>Publish to Social</h3>
+            <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:20,lineHeight:1.5}}>
+              Select the platforms you want to publish this post to. Make sure {post.clients?.company_name} has connected their accounts.
+            </p>
+            
+            <div style={{display:'flex', flexDirection:'column', gap:12, marginBottom:24}}>
+              <label style={{display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:12, background:'var(--bg-layer)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)'}}>
+                <input 
+                  type="checkbox" 
+                  checked={publishPlatforms.facebook} 
+                  onChange={e => setPublishPlatforms(prev => ({...prev, facebook: e.target.checked}))}
+                  style={{width: 16, height: 16}}
+                />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                <span style={{fontSize:14, fontWeight:500}}>Facebook Page</span>
+              </label>
+              
+              <label style={{display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:12, background:'var(--bg-layer)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)'}}>
+                <input 
+                  type="checkbox" 
+                  checked={publishPlatforms.instagram} 
+                  onChange={e => setPublishPlatforms(prev => ({...prev, instagram: e.target.checked}))}
+                  style={{width: 16, height: 16}}
+                />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="url(#ig-grad)"><defs><linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f09433" /><stop offset="25%" stopColor="#e6683c" /><stop offset="50%" stopColor="#dc2743" /><stop offset="75%" stopColor="#cc2366" /><stop offset="100%" stopColor="#bc1888" /></linearGradient></defs><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                <span style={{fontSize:14, fontWeight:500}}>Instagram Business</span>
+              </label>
+            </div>
+
+            <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                onClick={() => setShowPublishModal(false)}
+                disabled={publishing}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-sm btn-primary" 
+                style={{fontWeight:600,opacity:publishing?0.6:1, display:'flex', alignItems:'center', gap:6}}
+                onClick={handlePublish}
+                disabled={publishing || (!publishPlatforms.facebook && !publishPlatforms.instagram)}
+              >
+                {publishing ? 'Publishing...' : 'Publish Now'}
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 {
-  "name": "ContentFlow — Instagram DM Bot",
+  "name": "ContentFlow — Instagram DM Bot (Multi-Client)",
   "nodes": [
     {
       "parameters": {
@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract comment data from Meta webhook payload\nconst entries = $input.first().json.body.entry || [];\nconst comments = [];\n\nfor (const entry of entries) {\n  const changes = entry.changes || [];\n  for (const change of changes) {\n    if (change.field === 'comments') {\n      const value = change.value;\n      comments.push({\n        commentId: value.id,\n        commentText: value.text,\n        commenterId: value.from?.id,\n        commenterName: value.from?.username || 'Unknown',\n        mediaId: value.media?.id,\n        timestamp: value.created_time\n      });\n    }\n  }\n}\n\nreturn comments.map(c => ({ json: c }));"
+        "jsCode": "// Extract comment data from Meta webhook payload\n// Also looks up the client's access token from the payload if available\nconst entries = $input.first().json.body.entry || [];\nconst comments = [];\n\n// The access_token may be passed in via a separate ContentFlow webhook\n// For direct Meta webhook events, you'll need to look up tokens by IG account ID\nconst credentials = $input.first().json.body.credentials || null;\n\nfor (const entry of entries) {\n  const changes = entry.changes || [];\n  for (const change of changes) {\n    if (change.field === 'comments') {\n      const value = change.value;\n      comments.push({\n        commentId: value.id,\n        commentText: value.text,\n        commenterId: value.from?.id,\n        commenterName: value.from?.username || 'Unknown',\n        mediaId: value.media?.id,\n        timestamp: value.created_time,\n        // Pass credentials through for downstream nodes\n        access_token: credentials?.instagram?.page_access_token || credentials?.facebook?.page_access_token || '',\n        ig_account_id: entry.id\n      });\n    }\n  }\n}\n\nreturn comments.map(c => ({ json: c }));"
       },
       "id": "extract-comments",
       "name": "Extract Comments",
@@ -88,11 +88,11 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v19.0/me/messages",
+        "url": "=https://graph.facebook.com/v21.0/me/messages",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
-            { "name": "access_token", "value": "={{$credentials.facebookGraphApi.accessToken}}" }
+            { "name": "access_token", "value": "={{ $json.access_token }}" }
           ]
         },
         "sendBody": true,
@@ -104,17 +104,17 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1250, 300],
-      "notes": "⚠️ Customize the message template above with your actual links and PDFs. The commenter's name is automatically inserted."
+      "notes": "⚠️ Customize the message template above with your actual links and PDFs. The commenter's name is automatically inserted. Access token is now passed dynamically from the Extract Comments node."
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v19.0/{{ $json.commentId }}/replies",
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.commentId }}/replies",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             { "name": "message", "value": "Sent you a DM! 📩 Check your inbox." },
-            { "name": "access_token", "value": "={{$credentials.facebookGraphApi.accessToken}}" }
+            { "name": "access_token", "value": "={{ $json.access_token }}" }
           ]
         }
       },
@@ -123,7 +123,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1250, 500],
-      "notes": "Optional: Replies to the comment letting them know a DM was sent."
+      "notes": "Optional: Replies to the comment letting them know a DM was sent. Uses dynamic access token from the Extract Comments node."
     },
     {
       "parameters": {
@@ -183,6 +183,7 @@
   "tags": [
     { "name": "instagram" },
     { "name": "dm-automation" },
-    { "name": "contentflow" }
+    { "name": "contentflow" },
+    { "name": "multi-client" }
   ]
 }

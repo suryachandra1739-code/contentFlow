@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ContentFlow Client Manual</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            margin: 60px auto;
+            max-width: 800px;
+            color: #1f2937;
+        }
+        h1 {
+            color: #111827;
+            font-size: 32px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 12px;
+        }
+        h2 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-top: 40px;
+            margin-bottom: 16px;
+        }
+        h3 {
+            color: #374151;
+            font-size: 18px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        p {
+            margin-bottom: 16px;
+        }
+        ul {
+            margin-bottom: 24px;
+            padding-left: 24px;
+        }
+        li {
+            margin-bottom: 12px;
+        }
+        strong {
+            color: #111827;
+            font-weight: 600;
+        }
+        code {
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 40px 0;
+        }
+        .header-logo {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .header-logo h1 {
+            border: none;
+            font-size: 42px;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+        .header-logo p {
+            color: #6b7280;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-logo">
+        <h1>ContentFlow</h1>
+        <p>Client Portal User Guide</p>
+    </div>
+    <h1>ContentFlow Client Portal: User Manual</h1>
+<p>Welcome to the ContentFlow Client Portal! This manual is designed to guide you through all the features available in your dashboard, ensuring a seamless experience for reviewing, approving, and tracking your social media content.</p>
+<hr>
+<h2>1. Overview Dashboard</h2>
+<p>The <strong>Overview</strong> page (<code>/client-portal</code>) is your central hub for managing your content approval workflow.</p>
+<h3>Key Features:</h3>
+<ul>
+<li><strong>Personalized Greeting:</strong> Displays your name and provides a welcoming entry point.</li>
+<li><strong>Performance &amp; Status Statistics:</strong> At a glance, view four key metrics:<ul>
+<li><strong>Total posts submitted:</strong> The lifetime count of all posts submitted to your account.</li>
+<li><strong>Awaiting your review:</strong> The number of posts that currently need your attention and approval.</li>
+<li><strong>Approved by you:</strong> The total number of posts you have successfully approved for publishing.</li>
+<li><strong>Revision requested:</strong> Posts you have sent back to the team for edits.</li>
+</ul>
+</li>
+<li><strong>Pending Review Queue:</strong> A streamlined list of all posts that are awaiting your decision. Each item displays:<ul>
+<li>A media thumbnail (image or video preview).</li>
+<li>The post&#39;s title and a snippet of the caption.</li>
+<li>The target platform (e.g., LinkedIn, Instagram), project name, and submission date.</li>
+<li>A direct <strong>Review</strong> button to jump straight to the approval interface.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>2. Post Review Interface</h2>
+<p>Clicking &quot;Review&quot; on any post takes you to the dedicated <strong>Post Review</strong> page, where you can inspect the content in detail and make decisions.</p>
+<h3>Key Features:</h3>
+<ul>
+<li><strong>Interactive Platform Preview:</strong> See exactly how the post will look once published on the specific target platform (e.g., an Instagram feed or a LinkedIn post format).</li>
+<li><strong>Full Caption Text:</strong> Read the complete caption that will accompany your media.</li>
+<li><strong>Decision Center:</strong> The core area where you take action on a post:<ul>
+<li><strong>Approve Post:</strong> If everything looks perfect, click here to approve the post instantly.</li>
+<li><strong>Request Changes:</strong> If edits are needed, click this button to open a feedback form. You must provide specific details on what needs to be changed before submitting the request.</li>
+</ul>
+</li>
+<li><strong>AI-Assisted Optimization Insights:</strong> Premium metrics to help you understand the potential impact of your post:<ul>
+<li><strong>Expected Reach:</strong> A projected estimate of how many users the post will reach.</li>
+<li><strong>Engagement Index:</strong> A score indicating how well the post aligns with platform best practices.</li>
+<li><strong>Optimization Suggestions:</strong> Actionable recommendations (like adding tags or changing timing) along with the estimated percentage boost they could provide.</li>
+</ul>
+</li>
+<li><strong>Real-time Feedback Feed:</strong> A chronological, real-time chat and log of all comments and requests related to the post. You can see feedback from team members, admins, and your own previous comments, categorized by user roles.</li>
+</ul>
+<hr>
+<h2>3. History Page</h2>
+<p>The <strong>History</strong> tab (<code>/client-portal/history</code>) provides a complete archive of every post associated with your account.</p>
+<h3>Key Features:</h3>
+<ul>
+<li><strong>Comprehensive Table View:</strong> Displays all posts with columns for Media, Caption, Platform, Status, and Date.</li>
+<li><strong>Advanced Filtering:</strong> Easily filter your history by post status:<ul>
+<li><em>All statuses</em></li>
+<li><em>Approved</em></li>
+<li><em>Pending</em></li>
+<li><em>Revision</em></li>
+<li><em>Rejected</em></li>
+</ul>
+</li>
+<li><strong>Sorting Capabilities:</strong> Sort your posts chronologically by &quot;Newest first&quot; or &quot;Oldest first&quot;.</li>
+<li><strong>Quick Access:</strong> Click the &quot;View&quot; button on any historical post to see its original review page, comments, and metrics.</li>
+</ul>
+<hr>
+<h2>4. Activity Log</h2>
+<p>The <strong>Activity</strong> tab (<code>/client-portal/activity</code>) acts as a detailed audit trail for your account.</p>
+<h3>Key Features:</h3>
+<ul>
+<li><strong>Chronological Timeline:</strong> View every single action taken regarding your content, from newest to oldest.</li>
+<li><strong>Tracked Actions:</strong> The system automatically logs:<ul>
+<li>When new posts are submitted for review.</li>
+<li>When posts are approved.</li>
+<li>When revisions are requested (including the specific feedback provided).</li>
+<li>When posts are rejected.</li>
+<li>When new comments are added.</li>
+</ul>
+</li>
+<li><strong>Detailed Context:</strong> Each entry shows exactly <em>who</em> performed the action (e.g., which team member or if it was you), the exact timestamp, and any associated comment text.</li>
+</ul>
+<hr>
+<h2>5. Global Navigation &amp; Notifications</h2>
+<ul>
+<li><strong>Persistent Header:</strong> No matter where you are in the portal, the top header remains accessible.</li>
+<li><strong>Notification Bell:</strong> Located in the top right, the notification bell alerts you to important updates, such as newly submitted posts or replies to your revision requests.</li>
+<li><strong>Account Information:</strong> Your company name and personal name are always visible.</li>
+<li><strong>Log Out:</strong> Securely sign out of your session using the &quot;Log out&quot; button in the header.</li>
+</ul>
+<hr>
+<p><em>If you have any further questions or encounter any issues, please contact your account manager.</em></p>
+
+
+</body>
+</html>
