@@ -397,9 +397,7 @@ export default function ClientsPage() {
                       onClick={() => router.push(`/projects?clientId=${c.id}`)}
                       title="View Projects"
                     >
-                      <div className="avatar" style={{ backgroundImage: avatarGrad, backgroundColor: 'var(--accent)', width: 44, height: 44, fontSize: 18, fontWeight: 700, color: '#ffffff', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                        {c.company_name?.[0]?.toUpperCase()}
-                      </div>
+                      <img src="/default-avatar.jpg" alt={c.company_name} style={{ width: 44, height: 44, borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.2)', objectFit: 'cover' }} />
                       <div>
                         <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{c.company_name}</div>
                         
@@ -638,7 +636,7 @@ export default function ClientsPage() {
                     <div className="modal-body" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
                       
                       <div style={{ padding: '12px 16px', background: 'rgba(15,23,42,0.5)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div className="avatar" style={{ background: 'var(--accent)', width: 34, height: 34, fontSize: 14, fontWeight: 700, color: '#fff', borderRadius: 8 }}>{inviteTarget.company_name?.[0]?.toUpperCase()}</div>
+                        <img src="/default-avatar.jpg" alt={inviteTarget.company_name} style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'cover' }} />
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{inviteTarget.company_name}</div>
                           <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Configure workspace onboarding parameters</div>
