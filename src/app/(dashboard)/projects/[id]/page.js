@@ -177,9 +177,7 @@ export default function ProjectDetail() {
     setPublishing(false);
   };
 
-  if (!project) return <div style={{padding:60,textAlign:'center',color:'var(--text-muted)'}}>Loading...</div>;
-
-  const posts = project.posts || [];
+  const posts = project?.posts || [];
   const filtered = filter === 'all' ? posts : posts.filter(p => p.status === filter);
   const fbConnection = socialConnections.find(c => c.platform === 'facebook');
   const igConnection = socialConnections.find(c => c.platform === 'instagram');
@@ -210,12 +208,12 @@ export default function ProjectDetail() {
         <Link href="/projects" style={{fontSize:13,color:'var(--text-muted)',display:'inline-flex',alignItems:'center',gap:4,marginBottom:8}}>← Back to Projects</Link>
         <div className="flex items-center justify-between flex-wrap gap-16">
           <div className="flex items-center gap-16">
-            <div className="avatar avatar-lg" style={{ background: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? project.clients.avatar_color : 'var(--accent-soft)', color: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? '#ffffff' : 'var(--accent)', fontWeight: 700 }}>
-              {project.clients?.company_name?.[0]?.toUpperCase() || '?'}
+            <div className="avatar avatar-lg" style={{ background: project?.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? project.clients.avatar_color : 'var(--accent-soft)', color: project?.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? '#ffffff' : 'var(--accent)', fontWeight: 700 }}>
+              {project?.clients?.company_name?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
-              <h1>{project.name}</h1>
-              <p>{project.clients?.company_name || 'No client'} · {posts.length} posts</p>
+              <h1>{project ? project.name : 'Loading project...'}</h1>
+              <p>{project ? `${project.clients?.company_name || 'No client'} · ${posts.length} posts` : 'Loading details...'}</p>
             </div>
           </div>
           {/* Social Connections Status */}
@@ -247,8 +245,13 @@ export default function ProjectDetail() {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === 'posts' && (
+      {!project ? (
+        <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
+          <span className="auto-spinner" style={{ marginRight: 8 }} /> Loading project details...
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          {activeTab === 'posts' && (
           <motion.div key="posts" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
             <div className="filter-bar">
               {['all','draft','pending','approved','revision','rejected'].map(s => (
@@ -550,7 +553,8 @@ export default function ProjectDetail() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
+      )}
     </div></PageTransition>
   );
 }

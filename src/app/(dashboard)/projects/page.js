@@ -8,7 +8,19 @@ import { createClientBrowser } from '@/lib/supabase';
 
 export default function ProjectsPage() {
   return (
-    <Suspense fallback={<div className="empty-state">Loading projects...</div>}>
+    <Suspense fallback={
+      <div className="fade-in">
+        <div className="page-header">
+          <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <h1 style={{ margin: 0 }}>Projects</h1>
+              <p style={{ marginTop: 4 }}>Manage your content projects</p>
+            </div>
+          </div>
+        </div>
+        <div className="empty-state">Loading projects...</div>
+      </div>
+    }>
       <ProjectsContent />
     </Suspense>
   );
@@ -96,8 +108,6 @@ function ProjectsContent() {
     router.refresh();
   };
 
-  if (loading) return <div className="empty-state">Loading projects...</div>;
-
   return (
     <PageTransition><div className="fade-in">
       <div className="page-header">
@@ -105,7 +115,7 @@ function ProjectsContent() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <h1 style={{ margin: 0 }}>Projects</h1>
-              {clientIdFilter && clients.length > 0 && (
+              {!loading && clientIdFilter && clients.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--accent-soft)', color: 'var(--accent)', padding: '4px 12px', borderRadius: 99, fontSize: 13, fontWeight: 600 }}>
                   Client: {clients.find(c => c.id === clientIdFilter)?.company_name || 'Filtered'}
                   <button 
@@ -120,62 +130,68 @@ function ProjectsContent() {
             </div>
             <p style={{ marginTop: 4 }}>Manage your content projects</p>
           </div>
-          {userRole !== 'client' && (
+          {!loading && userRole !== 'client' && (
             <button className="btn btn-primary" onClick={() => setShowModal(true)}>New project</button>
           )}
         </div>
       </div>
 
-      <div className="content-grid">
-        {projects.map(project => (
-          <div className="card" key={project.id} style={{position:'relative', overflow:'hidden'}}>
-            <Link href={`/projects/${project.id}`} style={{display:'block', width:'100%', height:'100%', textDecoration:'none', color:'inherit'}}>
-              <div className="card-body">
-                <div className="flex items-center gap-12 mb-16" style={{ paddingRight: 24 }}>
-                  <div 
-                    className="avatar" 
+      {loading ? (
+        <div className="empty-state">Loading projects...</div>
+      ) : (
+        <>
+          <div className="content-grid">
+            {projects.map(project => (
+              <div className="card" key={project.id} style={{position:'relative', overflow:'hidden'}}>
+                <Link href={`/projects/${project.id}`} style={{display:'block', width:'100%', height:'100%', textDecoration:'none', color:'inherit'}}>
+                  <div className="card-body">
+                    <div className="flex items-center gap-12 mb-16" style={{ paddingRight: 24 }}>
+                      <div 
+                        className="avatar" 
+                        style={{
+                          background: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? project.clients.avatar_color : 'var(--accent-soft)',
+                          color: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? '#ffffff' : 'var(--accent)',
+                          fontWeight: 700
+                        }}
+                      >
+                        {project.clients?.company_name?.[0]?.toUpperCase() || '?'}
+                      </div>
+                      <div>
+                        <div style={{fontSize:15,fontWeight:600}}>{project.name}</div>
+                        <div style={{fontSize:13,color:'var(--text-muted)'}}>{project.clients?.company_name || 'No client'}</div>
+                      </div>
+                    </div>
+                    {project.description && <p style={{fontSize:14,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.5}}>{project.description}</p>}
+                    <div style={{paddingTop:16,borderTop:'1px solid var(--border)'}}>
+                      <span style={{fontSize:13,color:'var(--text-muted)', textTransform:'capitalize'}}>{project.status || 'active'}</span>
+                    </div>
+                  </div>
+                </Link>
+                {userRole !== 'client' && (
+                  <button 
+                    className="btn-delete" 
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteTarget(project); }}
+                    title="Delete project"
                     style={{
-                      background: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? project.clients.avatar_color : 'var(--accent-soft)',
-                      color: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? '#ffffff' : 'var(--accent)',
-                      fontWeight: 700
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      zIndex: 10
                     }}
                   >
-                    {project.clients?.company_name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <div>
-                    <div style={{fontSize:15,fontWeight:600}}>{project.name}</div>
-                    <div style={{fontSize:13,color:'var(--text-muted)'}}>{project.clients?.company_name || 'No client'}</div>
-                  </div>
-                </div>
-                {project.description && <p style={{fontSize:14,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.5}}>{project.description}</p>}
-                <div style={{paddingTop:16,borderTop:'1px solid var(--border)'}}>
-                  <span style={{fontSize:13,color:'var(--text-muted)', textTransform:'capitalize'}}>{project.status || 'active'}</span>
-                </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                  </button>
+                )}
               </div>
-            </Link>
-            {userRole !== 'client' && (
-              <button 
-                className="btn-delete" 
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteTarget(project); }}
-                title="Delete project"
-                style={{
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  zIndex: 10
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-              </button>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
 
-      {projects.length === 0 && (
-        <div className="empty-state">
-          No projects yet. Create your first project to start organizing content.
-        </div>
+          {projects.length === 0 && (
+            <div className="empty-state">
+              No projects yet. Create your first project to start organizing content.
+            </div>
+          )}
+        </>
       )}
 
       {showModal && (

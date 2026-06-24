@@ -1,18 +1,11 @@
 import './globals.css';
-import { Outfit, Plus_Jakarta_Sans, Space_Mono, Inter } from 'next/font/google';
+import { Outfit, Space_Mono } from 'next/font/google';
 import { ToastProvider } from '@/components/Toast';
 
 const outfit = Outfit({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   variable: '--font-outfit',
-  display: 'swap',
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-plus-jakarta-sans',
   display: 'swap',
 });
 
@@ -23,13 +16,6 @@ const spaceMono = Space_Mono({
   display: 'swap',
 });
 
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
 export const metadata = {
   title: 'ContentFlow — Client Approval Platform',
   description: 'Streamlined content approval for social media teams. Review, approve, and manage posts for Instagram, Facebook, and YouTube Shorts.',
@@ -37,7 +23,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${plusJakartaSans.variable} ${spaceMono.variable} ${inter.variable}`}>
+    <html lang="en" className={`${outfit.variable} ${spaceMono.variable}`}>
       <head>
         <meta name="color-scheme" content="light dark" />
         <style dangerouslySetInnerHTML={{ __html: `

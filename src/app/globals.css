@@ -71,7 +71,7 @@ textarea {
 
   /* Typography */
   --mono: var(--font-space-mono), monospace;
-  --sans: var(--font-outfit), var(--font-plus-jakarta-sans), var(--font-inter), -apple-system, sans-serif;
+  --sans: var(--font-outfit), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
   /* Theme-specific visual modes */
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -126,7 +126,7 @@ html[data-theme="light"] {
   --border-card-glass: rgba(255, 255, 255, 0.35);
 
   /* Primary Accents (Claude Orange Accent for Light Mode) */
-  --sans: var(--font-outfit), var(--font-plus-jakarta-sans), var(--font-inter), -apple-system, sans-serif;
+  --sans: var(--font-outfit), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --accent: #e05c36;
   --accent-soft: rgba(224, 92, 54, 0.06);
   --accent-glow: rgba(224, 92, 54, 0.08);
@@ -198,7 +198,7 @@ html[data-theme="light"] {
     --border-card-glass: rgba(255, 255, 255, 0.35);
 
     /* Primary Accents (Claude Orange Theme) */
-    --sans: var(--font-outfit), var(--font-plus-jakarta-sans), var(--font-inter), -apple-system, sans-serif;
+    --sans: var(--font-outfit), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --accent: #e05c36;
     --accent-soft: rgba(224, 92, 54, 0.06);
     --accent-glow: rgba(224, 92, 54, 0.08);
@@ -594,7 +594,7 @@ html[data-theme="light"] .card::after {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .posts-filter-bar:focus-within {
@@ -660,8 +660,9 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   border-bottom: 1px solid var(--border);
-  transition: all 0.35s var(--ease);
+  transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
   position: relative;
+  will-change: transform;
 }
 
 .interactive-row:hover {
@@ -687,7 +688,7 @@ html[data-theme="light"] .posts-filter-bar .form-select {
   border: 1px solid var(--border-card-glass);
   border-radius: 20px;
   padding: 24px 28px;
-  transition: all 0.3s var(--ease);
+  transition: border-color 0.35s var(--ease), transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -2374,7 +2375,8 @@ html[data-theme="light"] .post-card-pill:hover {
   -webkit-backdrop-filter: blur(60px) saturate(160%);
   border: 1px solid var(--border-card-glass);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 .card:hover {
@@ -3510,7 +3512,8 @@ html[data-theme="light"] .segmented-btn.active {
   position: relative;
   width: 100%;
   height: auto;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
   display: flex;
   flex-direction: column;
   overflow: hidden;
