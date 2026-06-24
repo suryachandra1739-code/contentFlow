@@ -1,5 +1,13 @@
 import { createClientServer } from '@/lib/supabase-server';
 
+const logDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+});
+
 export default async function AuditLogPage({ searchParams }) {
   const params = await searchParams;
   const supabase = await createClientServer();
@@ -65,7 +73,7 @@ export default async function AuditLogPage({ searchParams }) {
                 {logs?.map(log => (
                   <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '16px 24px', fontSize: 14, color: 'var(--text-muted)', fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
-                      {new Date(log.created_at).toLocaleString()}
+                      {logDateFormatter.format(new Date(log.created_at))}
                     </td>
                     <td style={{ padding: '16px 24px', fontSize: 16, fontWeight: 500, color: 'var(--text-primary)' }}>
                       {log.user_name || 'System / Anonymous'}
@@ -103,7 +111,7 @@ export default async function AuditLogPage({ searchParams }) {
                     </span>
                   </div>
                   <span style={{ fontSize: 13, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
-                    {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    {logDateFormatter.format(new Date(log.created_at))}
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 4 }}>

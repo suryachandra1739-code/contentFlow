@@ -1,5 +1,13 @@
 import { createClientServer } from '@/lib/supabase-server';
 
+const activityDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+});
+
 export default async function ClientPortalActivity() {
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +59,7 @@ export default async function ClientPortalActivity() {
                         <span style={{ fontWeight: 500 }}>{activity.user_name || 'Anonymous'}</span> {details.text.toLowerCase()}
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
-                        {new Date(activity.created_at).toLocaleString()}
+                        {activityDateFormatter.format(new Date(activity.created_at))}
                       </div>
                       {activity.metadata?.comment && (
                         <div style={{ marginTop: 8, padding: '12px', background: 'var(--bg-layer)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic' }}>

@@ -9,6 +9,13 @@ import PlatformPreview from '@/components/PlatformPreview';
 import { useToast } from '@/components/Toast';
 import { createClientBrowser } from '@/lib/supabase';
 
+const timelineDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+});
+
 export default function PostDetail() {
   const { id } = useParams();
   const addToast = useToast();
@@ -796,7 +803,7 @@ export default function PostDetail() {
                         <div className="timeline-dot" style={{width:8,height:8,borderRadius:'50%',background:dotColor,boxShadow:dotColor !== 'var(--text-muted)' ? `0 0 8px ${dotColor}` : 'none',flexShrink:0,flexGrow:0}}></div>
                         <div className="timeline-content" style={{color:'var(--text-primary)', fontWeight:500}}>{label}</div>
                       </div>
-                      <div className="timeline-time" style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:11}}>{new Date(item.created_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+                      <div className="timeline-time" style={{fontFamily:'var(--mono)',color:'var(--text-muted)',fontSize:11}}>{timelineDateFormatter.format(new Date(item.created_at))}</div>
                     </div>
                   );
                 })}
