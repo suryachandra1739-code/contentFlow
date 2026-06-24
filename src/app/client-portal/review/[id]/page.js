@@ -48,7 +48,7 @@ export default async function ClientPortalReviewPage({ params }) {
 
   // Mock calculations for metrics matching the reference style
   const platformName = post.platform || 'social';
-  const reachText = platformName === 'linkedin' ? '12k - 18k' : platformName === 'instagram' ? '8k - 12k' : '5k - 8k';
+  const reachText = platformName === 'linkedin' ? '12k - 18k' : platformName === 'youtube' ? '15k - 25k' : platformName === 'instagram' ? '8k - 12k' : '5k - 8k';
   const engagementText = '92%';
 
   return (

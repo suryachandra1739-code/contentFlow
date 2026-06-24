@@ -15,7 +15,7 @@ export default function NewPost() {
   const [step, setStep] = useState(1);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [form, setForm] = useState({ project_id: '', platform: '', caption: '', hashtags: '', media_url: '', media_type: 'image', media_key: '', media_size: 0, scheduled_date: '', thumbnail_url: 'original' });
+  const [form, setForm] = useState({ project_id: '', platform: [], caption: '', hashtags: '', media_url: '', media_type: 'image', media_key: '', media_size: 0, scheduled_date: '', thumbnail_url: 'original' });
   const [title, setTitle] = useState('');
 
   useEffect(() => {
@@ -100,12 +100,38 @@ export default function NewPost() {
     setUploadProgress(0);
   };
 
+  const allPlatforms = [{v:'instagram',l:'Instagram'},{v:'facebook',l:'Facebook'},{v:'shorts',l:'Shorts'},{v:'linkedin',l:'LinkedIn'},{v:'youtube',l:'YouTube'}];
+  const allSelected = form.platform.length === allPlatforms.length;
+
+  const togglePlatform = (platformValue) => {
+    setForm(f => {
+      const current = f.platform;
+      if (current.includes(platformValue)) {
+        return { ...f, platform: current.filter(p => p !== platformValue) };
+      } else {
+        return { ...f, platform: [...current, platformValue] };
+      }
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setForm(f => ({ ...f, platform: [] }));
+    } else {
+      setForm(f => ({ ...f, platform: allPlatforms.map(p => p.v) }));
+    }
+  };
+
   const handleSubmit = async () => {
     const finalCaption = title ? `Title: ${title}\n\n${form.caption}` : form.caption;
-    const res = await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, caption: finalCaption }) });
-    const post = await res.json();
-    addToast('Post created!', 'success');
-    router.push(`/posts/${post.id}`);
+    // Create a post for each selected platform
+    let lastPost = null;
+    for (const plat of form.platform) {
+      const res = await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, platform: plat, caption: finalCaption }) });
+      lastPost = await res.json();
+    }
+    addToast(`Post created for ${form.platform.length} platform${form.platform.length > 1 ? 's' : ''}!`, 'success');
+    if (lastPost) router.push(`/posts/${lastPost.id}`);
   };
 
   return (
@@ -151,16 +177,36 @@ export default function NewPost() {
             </div>
             <div className="form-group">
               <label className="form-label">Platform</label>
-              <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
-                {[{v:'instagram',l:'Instagram'},{v:'facebook',l:'Facebook'},{v:'shorts',l:'Shorts'}].map(p => (
-                  <button key={p.v} className={`btn ${form.platform === p.v ? 'btn-primary' : 'btn-secondary'}`} style={{padding:'12px 24px',fontSize:14, display:'inline-flex', alignItems:'center', gap:8}} onClick={() => setForm({...form, platform: p.v})}>
+              <div style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+                <button
+                  className={`btn ${allSelected ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{padding:'12px 20px',fontSize:14, display:'inline-flex', alignItems:'center', gap:8, borderStyle: allSelected ? 'solid' : 'dashed'}}
+                  onClick={toggleSelectAll}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    {allSelected ? (
+                      <><rect x="3" y="3" width="18" height="18" rx="3" ry="3"/><polyline points="9 11 12 14 22 4"/></>
+                    ) : (
+                      <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
+                    )}
+                  </svg>
+                  Select All
+                </button>
+                <div style={{width:1,height:28,background:'var(--border)',margin:'0 4px'}} />
+                {allPlatforms.map(p => (
+                  <button key={p.v} className={`btn ${form.platform.includes(p.v) ? 'btn-primary' : 'btn-secondary'}`} style={{padding:'12px 24px',fontSize:14, display:'inline-flex', alignItems:'center', gap:8}} onClick={() => togglePlatform(p.v)}>
                     <PlatformBadge platform={p.v} /> {p.l}
                   </button>
                 ))}
               </div>
+              {form.platform.length > 0 && (
+                <p style={{fontSize:12, color:'var(--text-secondary)', marginTop:8, fontFamily:'var(--sans)'}}>
+                  {form.platform.length} platform{form.platform.length > 1 ? 's' : ''} selected — a post will be created for each
+                </p>
+              )}
             </div>
             <div style={{display:'flex',justifyContent:'flex-end',marginTop:24}}>
-              <button className="btn btn-primary" disabled={!form.project_id || !form.platform} onClick={() => setStep(2)}>Next</button>
+              <button className="btn btn-primary" disabled={!form.project_id || form.platform.length === 0} onClick={() => setStep(2)}>Next</button>
             </div>
           </div>
         </div>
@@ -242,7 +288,7 @@ export default function NewPost() {
           </div>
           <div>
             <h3 style={{fontSize:14,fontWeight:600,fontFamily:'var(--sans)',color:'var(--text-muted)',marginBottom:12}}>Live preview</h3>
-            <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
+            <PlatformPreview platform={form.platform[0] || 'instagram'} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
           </div>
         </div>
       )}
@@ -265,7 +311,7 @@ export default function NewPost() {
           <div>
             <h3 style={{fontSize:14,fontWeight:600,fontFamily:'var(--sans)',color:'var(--text-muted)',marginBottom:12,textAlign:'center'}}>Final preview</h3>
             <div style={{maxWidth:400, margin:'0 auto'}}>
-              <PlatformPreview platform={form.platform} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
+              <PlatformPreview platform={form.platform[0] || 'instagram'} caption={form.caption} hashtags={form.hashtags} mediaUrl={form.media_url} mediaType={form.media_type} aspectRatio={form.thumbnail_url} />
             </div>
           </div>
         </div>

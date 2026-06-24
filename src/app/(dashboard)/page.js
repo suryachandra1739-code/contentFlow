@@ -92,10 +92,21 @@ const getExpiryDetails = (createdAt) => {
   return { label, color: 'var(--text-muted)', bg: 'transparent' };
 };
 
+// Reusable Date formatters for high performance inside loop rendering
+const activityDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const shortDateFormatter = new Intl.DateTimeFormat(undefined);
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deferredRecentActivity, setDeferredRecentActivity] = useState([]);
   const isMobile = useIsMobile();
   const postsTableRef = useRef(null);
 
@@ -163,6 +174,29 @@ export default function Dashboard() {
     fetchDashboardData(authorId);
   }, []);
 
+  useEffect(() => {
+    if (data?.recentActivity) {
+      const deferTask = () => {
+        if (typeof window !== 'undefined' && 'scheduler' in window && window.scheduler.yield) {
+          window.scheduler.yield().then(() => {
+            setDeferredRecentActivity(data.recentActivity);
+          });
+        } else if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          window.requestIdleCallback(() => {
+            setDeferredRecentActivity(data.recentActivity);
+          });
+        } else {
+          setTimeout(() => {
+            setDeferredRecentActivity(data.recentActivity);
+          }, 50);
+        }
+      };
+      deferTask();
+    } else {
+      setDeferredRecentActivity([]);
+    }
+  }, [data]);
+
   const clearAuthorFilter = () => {
     setAuthorFilter('all');
     const url = new URL(window.location.href);
@@ -170,12 +204,6 @@ export default function Dashboard() {
     window.history.pushState({}, '', url);
     fetchDashboardData('all');
   };
-
-  if (loading) return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="empty-state">
-      Loading dashboard…
-    </motion.div>
-  );
 
   const pendingPosts = posts.filter(p => p.status === 'pending');
 
@@ -223,13 +251,17 @@ export default function Dashboard() {
       );
     }
 
-    const gradClass = post.platform === 'instagram'
-      ? 'fallback-instagram'
-      : post.platform === 'facebook'
-        ? 'fallback-facebook'
-        : 'fallback-shorts';
+    const gradClassMap = {
+      instagram: 'fallback-instagram',
+      facebook: 'fallback-facebook',
+      shorts: 'fallback-shorts',
+      linkedin: 'fallback-linkedin',
+      youtube: 'fallback-youtube'
+    };
+    const gradClass = gradClassMap[post.platform] || 'fallback-shorts';
 
-    const platformEmoji = post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬';
+    const emojiMap = { instagram: '📷', facebook: '📘', shorts: '🎬', linkedin: '💼', youtube: '▶️' };
+    const platformEmoji = emojiMap[post.platform] || '📷';
 
     return (
       <div className={`fallback-gradient ${gradClass}`} style={{ width: 80, height: 60, borderRadius: 6, flexShrink: 0, padding: 0, border: '1px solid rgba(0,0,0,0.08)' }}>
@@ -259,68 +291,80 @@ export default function Dashboard() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div
-            variants={cardVariant}
-            whileHover={{ y: -6, scale: 1.012, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
-            whileTap={{ scale: 0.98 }}
-            className="stat-card"
-            style={{ cursor: 'pointer', position: 'relative' }}
-            onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-          >
-            <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
-            <div className="stat-card-value">{data.total}</div>
-            <div className="stat-card-label">Total posts</div>
-          </motion.div>
-          <motion.div
-            variants={cardVariant}
-            whileHover={{ y: -6, scale: 1.012, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
-            whileTap={{ scale: 0.98 }}
-            className="stat-card"
-            style={{ cursor: 'pointer', position: 'relative' }}
-            onClick={() => { setStatusFilter('pending'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-          >
-            <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-            <div className="stat-card-value">{data.byStatus.pending || 0}</div>
-            <div className="stat-card-label">Awaiting review</div>
-          </motion.div>
-          <motion.div
-            variants={cardVariant}
-            whileHover={{ y: -6, scale: 1.012, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
-            whileTap={{ scale: 0.98 }}
-            className="stat-card"
-            style={{ cursor: 'pointer', position: 'relative' }}
-            onClick={() => { setStatusFilter('approved'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-          >
-            <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-            <div className="stat-card-value">{data.byStatus.approved || 0}</div>
-            <div className="stat-card-label">Approved</div>
-          </motion.div>
-          {userRole !== 'client' && (() => {
-            const usedBytes = data.storageUsedBytes || 0;
-            const limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB free tier
-            const pct = Math.min((usedBytes / limitBytes) * 100, 100);
-            const formatSize = (bytes) => {
-              if (bytes < 1024) return `${bytes} B`;
-              if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-              if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-              return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-            };
-            const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
-            return (
-              <div className="stat-card cloud-storage-card">
-                <svg className="cloud-storage-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
-                <div className="stat-card-value cloud-storage-value">{formatSize(usedBytes)}</div>
-                <div className="cloud-storage-bar-container">
-                  <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 2, transition: 'width 0.5s ease' }}></div>
+          {loading || !data ? (
+            <>
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="stat-card skeleton-card" style={{ pointerEvents: 'none' }}>
+                  <div className="skeleton-line skeleton-shimmer title short" style={{ height: '32px', marginBottom: '12px' }}></div>
+                  <div className="skeleton-line skeleton-shimmer medium" style={{ height: '16px' }}></div>
                 </div>
-                <div className="stat-card-label cloud-storage-label-container">
-                  <span className="cloud-storage-title">Cloud storage</span>
-                  <span className="cloud-storage-pct">{pct.toFixed(1)}% of 10 GB</span>
-                </div>
-              </div>
-            );
-          })()}
-          {/* close staggerContainer */}
+              ))}
+            </>
+          ) : (
+            <>
+              <motion.div
+                variants={cardVariant}
+                whileHover={{ y: -6, scale: 1.012, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
+                whileTap={{ scale: 0.98 }}
+                className="stat-card"
+                style={{ cursor: 'pointer', position: 'relative' }}
+                onClick={() => { setStatusFilter('all'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+              >
+                <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
+                <div className="stat-card-value">{data.total}</div>
+                <div className="stat-card-label">Total posts</div>
+              </motion.div>
+              <motion.div
+                variants={cardVariant}
+                whileHover={{ y: -6, scale: 1.012, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
+                whileTap={{ scale: 0.98 }}
+                className="stat-card"
+                style={{ cursor: 'pointer', position: 'relative' }}
+                onClick={() => { setStatusFilter('pending'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+              >
+                <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                <div className="stat-card-value">{data.byStatus.pending || 0}</div>
+                <div className="stat-card-label">Awaiting review</div>
+              </motion.div>
+              <motion.div
+                variants={cardVariant}
+                whileHover={{ y: -6, scale: 1.012, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
+                whileTap={{ scale: 0.98 }}
+                className="stat-card"
+                style={{ cursor: 'pointer', position: 'relative' }}
+                onClick={() => { setStatusFilter('approved'); setCurrentPage(1); postsTableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+              >
+                <svg style={{ position: 'absolute', top: '24px', right: '24px', color: 'var(--text-muted)', opacity: 1 }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                <div className="stat-card-value">{data.byStatus.approved || 0}</div>
+                <div className="stat-card-label">Approved</div>
+              </motion.div>
+              {userRole !== 'client' && (() => {
+                const usedBytes = data.storageUsedBytes || 0;
+                const limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB free tier
+                const pct = Math.min((usedBytes / limitBytes) * 100, 100);
+                const formatSize = (bytes) => {
+                  if (bytes < 1024) return `${bytes} B`;
+                  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+                  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+                  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+                };
+                const barColor = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
+                return (
+                  <div className="stat-card cloud-storage-card">
+                    <svg className="cloud-storage-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
+                    <div className="stat-card-value cloud-storage-value">{formatSize(usedBytes)}</div>
+                    <div className="cloud-storage-bar-container">
+                      <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 2, transition: 'width 0.5s ease' }}></div>
+                    </div>
+                    <div className="stat-card-label cloud-storage-label-container">
+                      <span className="cloud-storage-title">Cloud storage</span>
+                      <span className="cloud-storage-pct">{pct.toFixed(1)}% of 10 GB</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
+          )}
         </motion.div>
       </div>
 
@@ -332,11 +376,27 @@ export default function Dashboard() {
       >
         <motion.div variants={cardVariant} className="card">
           <div className="card-body">
-            <div className="flex items-center justify-between mb-16">
+            <div className="flex items-baseline justify-between mb-20">
               <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)' }}>Pending approvals</h2>
-              <span className="badge badge-pending">{pendingPosts.length}</span>
+              {loading ? (
+                <div className="skeleton-circle skeleton-shimmer" style={{ width: '24px', height: '24px' }}></div>
+              ) : (
+                <span className="badge badge-pending">{pendingPosts.length}</span>
+              )}
             </div>
-            {pendingPosts.length === 0 ? (
+            {loading ? (
+              <div className="segmented-list">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="segmented-list-item" style={{ gap: '16px', pointerEvents: 'none' }}>
+                    <div className="skeleton-rect skeleton-shimmer" style={{ width: '80px', height: '60px' }}></div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div className="skeleton-line skeleton-shimmer medium"></div>
+                      <div className="skeleton-line skeleton-shimmer short"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : pendingPosts.length === 0 ? (
               <div className="empty-state" style={{ padding: '40px 0' }}>No pending posts to review</div>
             ) : (
               <motion.div
@@ -370,81 +430,106 @@ export default function Dashboard() {
           <div className="card-body">
             <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 20 }}>Recent activity</h2>
             <div className="segmented-list">
-              {data.recentActivity?.slice(0, 8).map((item, i) => {
-                const actionLabels = {
-                  post_created: 'Post created',
-                  post_approved: 'Post approved',
-                  post_revision: 'Revision requested',
-                  post_rejected: 'Post rejected',
-                  post_updated: 'Post updated',
-                  post_deleted: 'Post deleted',
-                  post_status_pending: 'Sent for review',
-                  post_status_approved: 'Post approved',
-                  post_status_rejected: 'Post rejected',
-                  post_status_revision: 'Revision requested',
-                  client_created: 'Client created',
-                  client_deleted: 'Client deleted',
-                  project_created: 'Project created',
-                  project_deleted: 'Project deleted',
-                };
-                const dotColors = {
-                  post_created: 'var(--accent)',
-                  post_approved: 'var(--green)',
-                  post_revision: 'var(--amber)',
-                  post_rejected: 'var(--accent)',
-                  post_updated: 'var(--cyan)',
-                  post_status_pending: 'var(--amber)',
-                  post_status_approved: 'var(--green)',
-                  post_status_rejected: 'var(--accent)',
-                  post_status_revision: 'var(--cyan)',
-                  client_created: 'var(--text-muted)',
-                  client_deleted: 'var(--accent)',
-                  project_created: 'var(--text-muted)',
-                  project_deleted: 'var(--accent)',
-                };
-
-                // Build the navigation link based on entity type
-                const getActivityLink = () => {
-                  if (item.entity_type === 'post' && item.entity_id) return `/posts/${item.entity_id}`;
-                  if (item.entity_type === 'client') return `/clients`;
-                  if (item.entity_type === 'project' && item.entity_id) return `/projects/${item.entity_id}`;
-                  return null;
-                };
-                const activityLink = getActivityLink();
-
-                const innerContent = (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColors[item.action] || 'var(--accent)', flexShrink: 0 }}></div>
-                      <div className="truncate" style={{ fontSize: '15px', fontFamily: 'var(--sans)', color: 'var(--text-secondary)' }}>
-                        <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.user_name || 'System'}</strong> <span style={{ opacity: 0.3, margin: '0 12px' }}>/</span> {actionLabels[item.action] || item.action}
+              {loading ? (
+                <>
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="segmented-list-item" style={{ justifyContent: 'space-between', gap: '16px', pointerEvents: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                        <div className="skeleton-circle skeleton-shimmer" style={{ width: '6px', height: '6px' }}></div>
+                        <div className="skeleton-line skeleton-shimmer medium" style={{ flex: 1 }}></div>
                       </div>
+                      <div className="skeleton-line skeleton-shimmer short" style={{ width: '80px' }}></div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginLeft: 'auto' }}>
-                      <div style={{ fontSize: '14px', fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontWeight: 400 }}>
-                        {new Date(item.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                      {activityLink && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>}
-                    </div>
-                  </>
-                );
-
-                if (activityLink) {
-                  return (
-                    <Link href={activityLink} key={item.id || i} className="segmented-list-item" style={{ justifyContent: 'space-between', textDecoration: 'none' }}>
-                      {innerContent}
-                    </Link>
-                  );
-                } else {
-                  return (
-                    <div key={item.id || i} className="segmented-list-item" style={{ justifyContent: 'space-between' }}>
-                      {innerContent}
-                    </div>
-                  );
-                }
-              })}
-              {(!data.recentActivity || data.recentActivity.length === 0) && (
+                  ))}
+                </>
+              ) : !data?.recentActivity || data.recentActivity.length === 0 ? (
                 <div className="empty-state" style={{ padding: '40px 0' }}>No recent activity</div>
+              ) : deferredRecentActivity.length === 0 ? (
+                <>
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="segmented-list-item" style={{ justifyContent: 'space-between', gap: '16px', pointerEvents: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                        <div className="skeleton-circle skeleton-shimmer" style={{ width: '6px', height: '6px' }}></div>
+                        <div className="skeleton-line skeleton-shimmer medium" style={{ flex: 1 }}></div>
+                      </div>
+                      <div className="skeleton-line skeleton-shimmer short" style={{ width: '80px' }}></div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                deferredRecentActivity.slice(0, 8).map((item, i) => {
+                  const actionLabels = {
+                    post_created: 'Post created',
+                    post_approved: 'Post approved',
+                    post_revision: 'Revision requested',
+                    post_rejected: 'Post rejected',
+                    post_updated: 'Post updated',
+                    post_deleted: 'Post deleted',
+                    post_status_pending: 'Sent for review',
+                    post_status_approved: 'Post approved',
+                    post_status_rejected: 'Post rejected',
+                    post_status_revision: 'Revision requested',
+                    client_created: 'Client created',
+                    client_deleted: 'Client deleted',
+                    project_created: 'Project created',
+                    project_deleted: 'Project deleted',
+                  };
+                  const dotColors = {
+                    post_created: 'var(--accent)',
+                    post_approved: 'var(--green)',
+                    post_revision: 'var(--amber)',
+                    post_rejected: 'var(--accent)',
+                    post_updated: 'var(--cyan)',
+                    post_status_pending: 'var(--amber)',
+                    post_status_approved: 'var(--green)',
+                    post_status_rejected: 'var(--accent)',
+                    post_status_revision: 'var(--cyan)',
+                    client_created: 'var(--text-muted)',
+                    client_deleted: 'var(--accent)',
+                    project_created: 'var(--text-muted)',
+                    project_deleted: 'var(--accent)',
+                  };
+
+                  // Build the navigation link based on entity type
+                  const getActivityLink = () => {
+                    if (item.entity_type === 'post' && item.entity_id) return `/posts/${item.entity_id}`;
+                    if (item.entity_type === 'client') return `/clients`;
+                    if (item.entity_type === 'project' && item.entity_id) return `/projects/${item.entity_id}`;
+                    return null;
+                  };
+                  const activityLink = getActivityLink();
+
+                  const innerContent = (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColors[item.action] || 'var(--accent)', flexShrink: 0 }}></div>
+                        <div className="truncate" style={{ fontSize: '15px', fontFamily: 'var(--sans)', color: 'var(--text-secondary)' }}>
+                          <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.user_name || 'System'}</strong> <span style={{ opacity: 0.3, margin: '0 12px' }}>/</span> {actionLabels[item.action] || item.action}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginLeft: 'auto' }}>
+                        <div style={{ fontSize: '14px', fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontWeight: 400 }}>
+                          {activityDateFormatter.format(new Date(item.created_at))}
+                        </div>
+                        {activityLink && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>}
+                      </div>
+                    </>
+                  );
+
+                  if (activityLink) {
+                    return (
+                      <Link href={activityLink} key={item.id || i} className="segmented-list-item" style={{ justifyContent: 'space-between', textDecoration: 'none' }}>
+                        {innerContent}
+                      </Link>
+                    );
+                  } else {
+                    return (
+                      <div key={item.id || i} className="segmented-list-item" style={{ justifyContent: 'space-between' }}>
+                        {innerContent}
+                      </div>
+                    );
+                  }
+                })
               )}
             </div>
           </div>
@@ -573,7 +658,19 @@ export default function Dashboard() {
           {/* Desktop: Table | Mobile: Card List */}
           {isMobile ? (
             <div className="segmented-list">
-              {paginatedPosts.length === 0 ? (
+              {loading ? (
+                <>
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="mobile-post-card" style={{ gap: '16px', pointerEvents: 'none' }}>
+                      <div className="skeleton-rect skeleton-shimmer" style={{ width: '80px', height: '60px' }}></div>
+                      <div className="mobile-post-card-info" style={{ gap: '8px', display: 'flex', flexDirection: 'column' }}>
+                        <div className="skeleton-line skeleton-shimmer medium"></div>
+                        <div className="skeleton-line skeleton-shimmer short"></div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : paginatedPosts.length === 0 ? (
                 <div className="empty-state" style={{ padding: '32px 0' }}>No matching posts found</div>
               ) : (
                 paginatedPosts.map(post => (
@@ -587,7 +684,7 @@ export default function Dashboard() {
                         )
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-layer)', fontSize: 18 }}>
-                          {post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬'}
+                          {({ instagram: '📷', facebook: '📘', shorts: '🎬', linkedin: '💼', youtube: '▶️' })[post.platform] || '📷'}
                         </div>
                       )}
                     </div>
@@ -619,7 +716,19 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedPosts.length === 0 ? (
+                  {loading ? (
+                    [...Array(5)].map((_, i) => (
+                      <tr key={i} style={{ pointerEvents: 'none' }}>
+                        <td><div className="skeleton-rect skeleton-shimmer" style={{ width: '80px', height: '24px' }}></div></td>
+                        <td><div className="skeleton-line skeleton-shimmer medium"></div></td>
+                        <td><div className="skeleton-line skeleton-shimmer short"></div></td>
+                        {userRole !== 'client' && <td><div className="skeleton-line skeleton-shimmer short"></div></td>}
+                        <td><div className="skeleton-rect skeleton-shimmer" style={{ width: '70px', height: '24px' }}></div></td>
+                        <td><div className="skeleton-line skeleton-shimmer short"></div></td>
+                        <td><div className="skeleton-line skeleton-shimmer short" style={{ width: '80px' }}></div></td>
+                      </tr>
+                    ))
+                  ) : paginatedPosts.length === 0 ? (
                     <tr>
                       <td colSpan="7" style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--sans)', color: 'var(--text-muted)' }}>
                         No matching posts found
@@ -662,7 +771,7 @@ export default function Dashboard() {
                             );
                           })()}
                         </td>
-                        <td style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontSize: 13 }}>{new Date(post.updated_at).toLocaleDateString()}</td>
+                        <td style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)', fontSize: 13 }}>{shortDateFormatter.format(new Date(post.updated_at))}</td>
                       </tr>
                     ))
                   )}

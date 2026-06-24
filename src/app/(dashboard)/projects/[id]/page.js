@@ -62,6 +62,14 @@ const getExpiryDetails = (createdAt) => {
   return { label, color: 'var(--text-muted)', bg: 'transparent' };
 };
 
+// Reusable Date formatter for high performance inside loop rendering
+const activityLogDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 export default function ProjectDetail() {
   const { id } = useParams();
   const router = useRouter();
@@ -81,7 +89,7 @@ export default function ProjectDetail() {
   const [dmWebhookUrl, setDmWebhookUrl] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('idle');
   const [dmConnectionStatus, setDmConnectionStatus] = useState('idle');
-  const [platforms, setPlatforms] = useState({ instagram: true, facebook: true, twitter: false, linkedin: false });
+  const [platforms, setPlatforms] = useState({ instagram: true, facebook: true, twitter: false, linkedin: false, youtube: false });
   const [postForm, setPostForm] = useState({ caption: '', hashtags: '', imageUrl: '' });
   const [dmConfig, setDmConfig] = useState({ keywords: 'dm, link, free', message: '', links: '' });
   const [activityLog, setActivityLog] = useState([]);
@@ -271,7 +279,7 @@ export default function ProjectDetail() {
                         )
                       ) : (
                         <div className={`flight-card__image fallback-gradient fallback-${post.platform}`}>
-                          <span className="fallback-icon">{post.platform === 'instagram' ? '📷' : post.platform === 'facebook' ? '📘' : '🎬'}</span>
+                          <span className="fallback-icon">{({ instagram: '📷', facebook: '📘', shorts: '🎬', linkedin: '💼', youtube: '▶️' })[post.platform] || '📷'}</span>
                           <span className="fallback-label">{post.platform}</span>
                         </div>
                       )}
@@ -531,7 +539,7 @@ export default function ProjectDetail() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                           {entry.platforms?.map(p => <span key={p} style={{ fontSize: 11, padding: '2px 6px', borderRadius: 6, background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 500 }}>{p}</span>)}
                           <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
-                            {new Date(entry.time).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {activityLogDateFormatter.format(new Date(entry.time))}
                           </span>
                         </div>
                       </motion.div>

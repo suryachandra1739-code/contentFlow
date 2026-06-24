@@ -66,7 +66,7 @@ export async function POST(request) {
       caption: caption || '',
       hashtags: hashtags || '',
       image_url: imageUrl || '',
-      platforms: platforms || { instagram: true, facebook: true, twitter: false, linkedin: false },
+      platforms: platforms || { instagram: true, facebook: true, twitter: false, linkedin: false, youtube: false },
       // Per-client credentials (null if no clientId or no connections found)
       credentials: credentials,
       client_id: clientId || null,

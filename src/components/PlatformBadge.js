@@ -31,6 +31,18 @@ export default function PlatformBadge({ platform }) {
         <path d="M17.77 10.32c-.77-.44-1.2-.44-1.2-.44l.88-.53A2.85 2.85 0 0 0 16.2 5.3a2.75 2.75 0 0 0-3.69 1l-3.37 5.72s-.41.72-.41.72l-.88.53a2.85 2.85 0 0 0 1.25 4.06c1.3.75 3 .29 3.69-1l3.37-5.72s.41-.72.41-.72l.21-.27z" fill="white" />
         <path d="M10.5 9v6l4.5-3-4.5-3z" fill="#FF0000" />
       </svg>
+    ),
+    linkedin: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+        <rect x="2" y="2" width="20" height="20" rx="3" fill="#0A66C2" />
+        <path d="M8.5 10.5v5M8.5 8v.01M11 15.5v-3c0-1.1.9-2 2-2s2 .9 2 2v3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+    youtube: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+        <rect x="2" y="4.5" width="20" height="15" rx="4" fill="#FF0000" />
+        <path d="M10 9v6l5-3-5-3z" fill="white" />
+      </svg>
     )
   };
 

@@ -528,29 +528,98 @@ export default function ClientsPage() {
         {/* Add Workspace Modal */}
         {showModal && (
           <div className="modal-overlay" onClick={() => setShowModal(false)}>
-            <div className="modal" onClick={e => e.stopPropagation()} style={{ background: 'rgba(30,41,59,0.95)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16 }}>
-              <div className="modal-header">
-                <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em' }}>Add Partner Workspace</h2>
-                <button className="btn-icon" onClick={() => setShowModal(false)} style={{ fontSize: 20, color: 'var(--text-secondary)' }}>✕</button>
-              </div>
-              <form onSubmit={handleCreate}>
-                <div className="modal-body">
-                  <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 600, fontSize: 13 }}>Company name</label>
-                    <input className="form-input" value={form.company_name} onChange={e => setForm({ ...form, company_name: e.target.value })} required placeholder="e.g. Acme Corp" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)' }} />
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ background: 'rgba(15,23,42,0.97)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, maxWidth: 520, overflow: 'hidden' }}>
+              {/* Gradient accent top bar */}
+              <div style={{ height: 3, background: 'linear-gradient(90deg, #4f46e5, #3b82f6, #06b6d4)', borderRadius: '20px 20px 0 0' }} />
+              
+              <div className="modal-header" style={{ padding: '24px 28px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: 'linear-gradient(135deg, #4f46e5, #3b82f6)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 4px 16px rgba(79, 70, 229, 0.3)',
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 600, fontSize: 13 }}>Contact name</label>
-                    <input className="form-input" value={form.contact_name} onChange={e => setForm({ ...form, contact_name: e.target.value })} placeholder="e.g. Alice Smith" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)' }} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 600, fontSize: 13 }}>Email address</label>
-                    <input className="form-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="alice@acme.com" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                  <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', margin: 0, color: 'var(--text-primary)' }}>Add Partner Workspace</h2>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: 1.4 }}>Create a new client workspace for collaboration</p>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} style={{ fontWeight: 600 }}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ fontWeight: 600 }}>Add client</button>
+                <button className="btn-icon" onClick={() => setShowModal(false)} style={{
+                  width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+                  color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s', fontSize: 14
+                }}>✕</button>
+              </div>
+
+              <form onSubmit={handleCreate}>
+                <div className="modal-body" style={{ padding: '24px 28px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    
+                    {/* Company Name Field */}
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: 8 }}>Company Name</label>
+                      <div style={{ position: 'relative' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', pointerEvents: 'none' }}>
+                          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                        <input className="form-input" value={form.company_name} onChange={e => setForm({ ...form, company_name: e.target.value })} required placeholder="e.g. Acme Corp" style={{
+                          background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: 12, padding: '12px 16px 12px 42px', fontSize: 14,
+                          transition: 'all 0.2s', width: '100%'
+                        }} />
+                      </div>
+                    </div>
+                    
+                    {/* Contact Name Field */}
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: 8 }}>Contact Name</label>
+                      <div style={{ position: 'relative' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', pointerEvents: 'none' }}>
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <input className="form-input" value={form.contact_name} onChange={e => setForm({ ...form, contact_name: e.target.value })} placeholder="e.g. Alice Smith" style={{
+                          background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: 12, padding: '12px 16px 12px 42px', fontSize: 14,
+                          transition: 'all 0.2s', width: '100%'
+                        }} />
+                      </div>
+                    </div>
+                    
+                    {/* Email Field */}
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: 8 }}>Email Address</label>
+                      <div style={{ position: 'relative' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', pointerEvents: 'none' }}>
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        <input className="form-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="alice@acme.com" style={{
+                          background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: 12, padding: '12px 16px 12px 42px', fontSize: 14,
+                          transition: 'all 0.2s', width: '100%'
+                        }} />
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="modal-footer" style={{
+                  padding: '16px 28px 20px', borderTop: '1px solid rgba(255,255,255,0.06)',
+                  background: 'rgba(15,23,42,0.4)', display: 'flex', justifyContent: 'flex-end', gap: 12
+                }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} style={{
+                    fontWeight: 600, padding: '10px 24px', borderRadius: 10, fontSize: 14
+                  }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{
+                    fontWeight: 600, padding: '10px 28px', borderRadius: 10, fontSize: 14,
+                    background: 'linear-gradient(135deg, #4f46e5, #3b82f6)',
+                    border: 'none', boxShadow: '0 4px 16px rgba(79, 70, 229, 0.3)'
+                  }}>Add Partner</button>
                 </div>
               </form>
             </div>
