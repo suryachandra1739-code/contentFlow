@@ -79,6 +79,36 @@ export default function RootLayout({ children }) {
               margin-left: calc(var(--sidebar-w) + 32px) !important;
             }
           }
+          .page-header {
+            margin-bottom: 28px;
+            position: relative;
+          }
+          .page-header h1 {
+            font-size: 44px;
+            font-weight: 800;
+            background: var(--h1-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.035em;
+            line-height: 1.05;
+            margin: 0;
+          }
+          .page-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-top: 8px;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+          }
+          @keyframes pageFadeUp {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          .page-transition-enter {
+            animation: pageFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform, opacity;
+            width: 100%;
+          }
         `}} />
       </head>
       <body>
