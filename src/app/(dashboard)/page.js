@@ -117,6 +117,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [renderActivity, setRenderActivity] = useState(false);
   const isMobile = useIsMobile();
   const postsTableRef = useRef(null);
 
@@ -182,6 +183,15 @@ export default function Dashboard() {
     }
     loadUser();
     fetchDashboardData(authorId);
+
+    // Stagger hydration of Recent Activity component to avoid startup thread freezing
+    if (typeof window !== 'undefined') {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => setRenderActivity(true));
+      } else {
+        setTimeout(() => setRenderActivity(true), 200);
+      }
+    }
   }, []);
 
   const clearAuthorFilter = () => {
@@ -416,7 +426,21 @@ export default function Dashboard() {
         <motion.div variants={cardVariant} className="card">
           <div className="card-body">
             <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 20 }}>Recent activity</h2>
-            <RecentActivity recentActivity={data?.recentActivity} loading={loading} />
+            {renderActivity ? (
+              <RecentActivity recentActivity={data?.recentActivity} loading={loading} />
+            ) : (
+              <div className="segmented-list" style={{ pointerEvents: 'none' }}>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="segmented-list-item" style={{ justifyContent: 'space-between', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                      <div className="skeleton-circle skeleton-shimmer" style={{ width: '6px', height: '6px' }}></div>
+                      <div className="skeleton-line skeleton-shimmer medium" style={{ flex: 1 }}></div>
+                    </div>
+                    <div className="skeleton-line skeleton-shimmer short" style={{ width: '80px' }}></div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       </motion.div>
