@@ -26,6 +26,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${outfit.variable} ${spaceMono.variable}`}>
       <head>
         <meta name="color-scheme" content="light dark" />
+        <meta name="google-site-verification" content="googlea102a176fd73c4cc" />
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
             --bg-base: #21201d;
