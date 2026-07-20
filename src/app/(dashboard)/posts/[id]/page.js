@@ -295,11 +295,16 @@ export default function PostDetail() {
       if (data.results) {
          const fb = data.results.facebook;
          const ig = data.results.instagram;
-         if (fb?.error || ig?.error) {
-            msg = `Publish result — FB: ${fb?.error || 'Success'}, IG: ${ig?.error || 'Success'}`;
+         const yt = data.results.youtube;
+         const parts = [];
+         if (fb) parts.push(`FB: ${fb.success ? '✓' : fb.error}`);
+         if (ig) parts.push(`IG: ${ig.success ? '✓' : ig.error}`);
+         if (yt) parts.push(`YouTube: ${yt.success ? '✓' : yt.error}`);
+         if (parts.length > 0) {
+            msg = parts.join(' • ');
          }
       }
-      addToast(msg, data.success ? 'success' : 'error');
+      addToast(msg, Object.values(data.results || {}).some(r => r.success) ? 'success' : 'error');
       setShowPublishModal(false);
       load();
     } catch (err) {
