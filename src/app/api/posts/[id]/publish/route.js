@@ -23,7 +23,7 @@ export async function POST(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const platforms = body.platforms || { facebook: true, instagram: true };
+    const platforms = body.platforms || { facebook: true, instagram: true, youtube: true };
     const isAutoPublish = body.auto === true;
 
     let supabase;
@@ -114,6 +114,20 @@ export async function POST(request, { params }) {
           results.instagram = await publishToInstagram(igConn, post, caption);
         } catch (err) {
           results.instagram = { success: false, error: err.message };
+        }
+      }
+    }
+
+    // 7. Publish to YouTube (Shorts)
+    if (platforms.youtube) {
+      const ytConn = connections.find(c => c.platform === 'youtube');
+      if (!ytConn) {
+        results.youtube = { success: false, error: 'No YouTube Channel connected' };
+      } else {
+        try {
+          results.youtube = await publishToYoutube(ytConn, post, caption, serviceDb);
+        } catch (err) {
+          results.youtube = { success: false, error: err.message };
         }
       }
     }
@@ -293,4 +307,135 @@ async function publishToInstagram(conn, post, caption) {
   }
 
   return { success: true, post_id: publishData.id };
+}
+
+/**
+ * Refreshes Google/YouTube Access Token if expired
+ */
+async function getFreshYoutubeToken(conn, supabase) {
+  const updatedTime = new Date(conn.updated_at).getTime();
+  const now = Date.now();
+  
+  // If token is less than 50 minutes old, reuse it
+  if (now - updatedTime < 50 * 60 * 1000 && conn.page_access_token) {
+    return conn.page_access_token;
+  }
+
+  if (!conn.refresh_token) {
+    throw new Error('YouTube connection has no refresh token. Please reconnect the YouTube account.');
+  }
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: process.env.YOUTUBE_CLIENT_ID,
+      client_secret: process.env.YOUTUBE_CLIENT_SECRET,
+      refresh_token: conn.refresh_token,
+      grant_type: 'refresh_token',
+    }),
+    signal: AbortSignal.timeout(10000),
+  });
+
+  const data = await tokenRes.json();
+  if (data.error) {
+    throw new Error(`Failed to refresh YouTube token: ${data.error_description || data.error}`);
+  }
+
+  const newAccessToken = data.access_token;
+  
+  // Update token in database
+  await supabase
+    .from('social_connections')
+    .update({
+      page_access_token: newAccessToken,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', conn.id);
+
+  return newAccessToken;
+}
+
+/**
+ * Uploads video to YouTube Data API v3 (Shorts format)
+ */
+async function publishToYoutube(conn, post, caption, supabase) {
+  const accessToken = await getFreshYoutubeToken(conn, supabase);
+
+  if (!post.media_url) {
+    throw new Error('YouTube Shorts requires a video to upload');
+  }
+
+  // Define video metadata
+  // YouTube title limit is 100 characters. Append #Shorts to categorize it correctly.
+  const shortTitle = (post.title || post.caption || 'New Short').slice(0, 85) + ' #Shorts';
+  const metadata = {
+    snippet: {
+      title: shortTitle,
+      description: caption,
+      categoryId: '22', // People & Blogs
+    },
+    status: {
+      privacyStatus: 'public',
+      selfDeclaredMadeForKids: false,
+    }
+  };
+
+  // Fetch media from storage (Cloudflare R2)
+  const mediaRes = await fetch(post.media_url);
+  if (!mediaRes.ok) {
+    throw new Error(`Failed to fetch media file from storage: ${mediaRes.statusText}`);
+  }
+  const mediaBuffer = await mediaRes.arrayBuffer();
+
+  const boundary = 'youtube_upload_boundary';
+  
+  // Construct multi-part payload
+  const metadataPart = [
+    `--${boundary}`,
+    'Content-Type: application/json; charset=UTF-8',
+    '',
+    JSON.stringify(metadata),
+    ''
+  ].join('\r\n');
+
+  const mediaHeader = [
+    `--${boundary}`,
+    `Content-Type: ${mediaRes.headers.get('content-type') || 'video/mp4'}`,
+    'Content-Transfer-Encoding: binary',
+    '',
+    ''
+  ].join('\r\n');
+
+  const mediaFooter = `\r\n--${boundary}--`;
+
+  const encoder = new TextEncoder();
+  const part1 = encoder.encode(metadataPart);
+  const part2 = encoder.encode(mediaHeader);
+  const part3 = new Uint8Array(mediaBuffer);
+  const part4 = encoder.encode(mediaFooter);
+
+  const bodyBuffer = new Uint8Array(part1.byteLength + part2.byteLength + part3.byteLength + part4.byteLength);
+  bodyBuffer.set(part1, 0);
+  bodyBuffer.set(part2, part1.byteLength);
+  bodyBuffer.set(part3, part1.byteLength + part2.byteLength);
+  bodyBuffer.set(part4, part1.byteLength + part2.byteLength + part3.byteLength);
+
+  const uploadRes = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`,
+      'Content-Length': bodyBuffer.byteLength.toString(),
+    },
+    body: bodyBuffer,
+    signal: AbortSignal.timeout(60000), // 60s upload timeout
+  });
+
+  const uploadData = await uploadRes.json();
+  if (uploadData.error) {
+    throw new Error(uploadData.error.message || 'YouTube upload failed');
+  }
+
+  return { success: true, post_id: uploadData.id };
 }

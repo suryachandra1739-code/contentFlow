@@ -47,15 +47,15 @@ export default function PlatformBadge({ platform }) {
   };
 
   return (
-    <span 
-      className={`platform-badge platform-${normPlatform}`} 
-      style={{ 
-        padding: '3px', 
-        borderRadius: '6px', 
-        display: 'inline-flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: 'transparent', 
+    <span
+      className={`platform-badge platform-${normPlatform}`}
+      style={{
+        padding: '3px',
+        borderRadius: '6px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'transparent',
         border: 'none',
         verticalAlign: 'middle'
       }}

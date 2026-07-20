@@ -16,7 +16,7 @@ export default function PlatformPreview({ platform, caption, hashtags, mediaUrl,
 
   const hashtagList = hashtags ? hashtags.split(',').map(h => h.trim()) : [];
   const displayCaption = cleanCaption(caption);
-  
+
   // Resolve the aspect ratio for the media container
   const getAspectRatio = () => {
     if (aspectRatio === 'portrait') return '9/16';
@@ -38,28 +38,28 @@ export default function PlatformPreview({ platform, caption, hashtags, mediaUrl,
     if (mediaUrl) {
       if (mediaType === 'video') {
         return (
-          <video 
-            src={mediaUrl} 
-            controls 
+          <video
+            src={mediaUrl}
+            controls
             style={{
               width: '100%',
               height: isAuto ? 'auto' : '100%',
               objectFit: isAuto ? 'contain' : 'cover',
               display: 'block'
-            }} 
+            }}
           />
         );
       }
       return (
-        <img 
-          src={mediaUrl} 
-          alt="Post media" 
+        <img
+          src={mediaUrl}
+          alt="Post media"
           style={{
             width: '100%',
             height: isAuto ? 'auto' : '100%',
             objectFit: isAuto ? 'contain' : 'cover',
             display: 'block'
-          }} 
+          }}
         />
       );
     }

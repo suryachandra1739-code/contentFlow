@@ -35,6 +35,9 @@ export async function GET(request) {
       page_access_token: conn.page_access_token
         ? `${conn.page_access_token.substring(0, 10)}...${conn.page_access_token.slice(-4)}`
         : null,
+      refresh_token: conn.refresh_token
+        ? `${conn.refresh_token.substring(0, 5)}...${conn.refresh_token.slice(-4)}`
+        : null,
     }));
 
     return NextResponse.json(safeData);
@@ -110,23 +113,79 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Connection not found' }, { status: 404 });
     }
 
-    // Call Meta Graph API to verify the token
+    // Call API to verify the token based on platform
     let tokenValid = false;
     let verifyResult = {};
 
-    try {
-      const verifyUrl = `https://graph.facebook.com/v21.0/me?access_token=${connection.page_access_token}`;
-      const verifyRes = await fetch(verifyUrl, { signal: AbortSignal.timeout(10000) });
-      const verifyData = await verifyRes.json();
+    if (connection.platform === 'youtube') {
+      try {
+        let accessToken = connection.page_access_token;
+        
+        const checkChannel = async (token) => {
+          const res = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: AbortSignal.timeout(10000)
+          });
+          return res.json();
+        };
 
-      if (verifyData.id && !verifyData.error) {
-        tokenValid = true;
-        verifyResult = { name: verifyData.name, id: verifyData.id };
-      } else {
-        verifyResult = { error: verifyData.error?.message || 'Token validation failed' };
+        let channelData = await checkChannel(accessToken);
+
+        if (channelData.error && connection.refresh_token) {
+          // Token might be expired, try to refresh it
+          const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: process.env.YOUTUBE_CLIENT_ID,
+              client_secret: process.env.YOUTUBE_CLIENT_SECRET,
+              refresh_token: connection.refresh_token,
+              grant_type: 'refresh_token',
+            }),
+            signal: AbortSignal.timeout(10000)
+          });
+          const refreshData = await tokenRes.json();
+          if (refreshData.access_token) {
+            accessToken = refreshData.access_token;
+            // Update database with refreshed token
+            await supabase
+              .from('social_connections')
+              .update({
+                page_access_token: accessToken,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', connectionId);
+            
+            // Retry fetch
+            channelData = await checkChannel(accessToken);
+          }
+        }
+
+        const channel = channelData.items?.[0];
+        if (channel && !channelData.error) {
+          tokenValid = true;
+          verifyResult = { name: channel.snippet.title, id: channel.id };
+        } else {
+          verifyResult = { error: channelData.error?.message || 'YouTube token validation failed' };
+        }
+      } catch (verifyError) {
+        verifyResult = { error: verifyError.message || 'Network error during verification' };
       }
-    } catch (verifyError) {
-      verifyResult = { error: verifyError.message || 'Network error during verification' };
+    } else {
+      try {
+        const verifyUrl = `https://graph.facebook.com/v21.0/me?access_token=${connection.page_access_token}`;
+        const verifyRes = await fetch(verifyUrl, { signal: AbortSignal.timeout(10000) });
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.id && !verifyData.error) {
+          tokenValid = true;
+          verifyResult = { name: verifyData.name, id: verifyData.id };
+        } else {
+          verifyResult = { error: verifyData.error?.message || 'Token validation failed' };
+        }
+      } catch (verifyError) {
+        verifyResult = { error: verifyError.message || 'Network error during verification' };
+      }
     }
 
     // Update the connection's token health

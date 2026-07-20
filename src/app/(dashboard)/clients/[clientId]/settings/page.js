@@ -64,6 +64,10 @@ export default function ClientSettingsPage() {
     window.location.href = `/api/auth/instagram?clientId=${clientId}`;
   };
 
+  const handleConnectYoutube = () => {
+    window.location.href = `/api/auth/youtube?clientId=${clientId}`;
+  };
+
   const handleVerify = async (connectionId) => {
     setVerifyingId(connectionId);
     try {
@@ -100,7 +104,8 @@ export default function ClientSettingsPage() {
       if (result.error) {
         addToast(result.error, 'error');
       } else {
-        addToast(`${disconnectTarget.platform === 'instagram' ? 'Instagram' : 'Facebook'} disconnected`, 'success');
+        const label = disconnectTarget.platform === 'instagram' ? 'Instagram' : disconnectTarget.platform === 'youtube' ? 'YouTube' : 'Facebook';
+        addToast(`${label} disconnected`, 'success');
         setConnections(prev => prev.filter(c => c.id !== disconnectTarget.id));
       }
     } catch {
@@ -125,6 +130,13 @@ export default function ClientSettingsPage() {
           <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
           <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
           <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+        </svg>
+      );
+    }
+    if (platform === 'youtube') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
         </svg>
       );
     }
@@ -317,6 +329,8 @@ export default function ClientSettingsPage() {
                           width: 44, height: 44, borderRadius: 12,
                           background: conn.platform === 'instagram'
                             ? 'linear-gradient(135deg, #833AB4, #FD1D1D, #F77737)'
+                            : conn.platform === 'youtube'
+                            ? 'linear-gradient(135deg, #FF0000, #b30000)'
                             : 'linear-gradient(135deg, #1877f2, #0d65d9)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
                         }}>
@@ -329,6 +343,8 @@ export default function ClientSettingsPage() {
                         width: 20, height: 20, borderRadius: 6,
                         background: conn.platform === 'instagram'
                           ? 'linear-gradient(135deg, #833AB4, #FD1D1D)'
+                          : conn.platform === 'youtube'
+                          ? '#FF0000'
                           : '#1877f2',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         border: '2px solid var(--bg-layer)', color: '#fff',
@@ -348,7 +364,7 @@ export default function ClientSettingsPage() {
                         </span>
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>
-                        {conn.platform === 'instagram' ? 'Instagram Business' : 'Facebook Page'}
+                        {conn.platform === 'instagram' ? 'Instagram Business' : conn.platform === 'youtube' ? 'YouTube Channel' : 'Facebook Page'}
                         {conn.page_id && <span> · ID: {conn.page_id}</span>}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
@@ -406,15 +422,23 @@ export default function ClientSettingsPage() {
               <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                 No Social Accounts Connected
               </h3>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 380, margin: '0 auto 24px', lineHeight: 1.5 }}>
-                Connect {companyName}&apos;s Facebook Page and Instagram Business account to enable automated post publishing.
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 420, margin: '0 auto 24px', lineHeight: 1.5 }}>
+                Connect {companyName}&apos;s social media channels to enable automated post publishing.
               </p>
-              <button className="connect-cta" onClick={handleConnect}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-                Connect Instagram &amp; Facebook
-              </button>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button className="connect-cta" onClick={handleConnect}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                  </svg>
+                  Connect Meta (IG &amp; FB)
+                </button>
+                <button className="connect-cta" onClick={handleConnectYoutube} style={{ background: 'linear-gradient(135deg, #FF0000, #cc0000)', boxShadow: '0 4px 16px rgba(255, 0, 0, 0.3)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+                  </svg>
+                  Connect YouTube Channel
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -422,21 +446,28 @@ export default function ClientSettingsPage() {
         {/* Connect Another / Reconnect Button (shown when already connected) */}
         {hasConnections && (
           <div className="settings-card" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            gap: 16, flexWrap: 'wrap',
+            display: 'flex', flexDirection: 'column', gap: 16
           }}>
             <div>
-              <h3 style={{ fontSize: 14, fontWeight: 700 }}>Reconnect or Update</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700 }}>Connect or Reconnect Social Channels</h3>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
-                Re-authorize to refresh tokens or connect a different Page
+                Authorize to refresh existing tokens, update permissions, or connect additional platforms
               </p>
             </div>
-            <button className="connect-cta" onClick={handleConnect} style={{ padding: '10px 20px', fontSize: 13 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-              </svg>
-              Re-authorize Meta
-            </button>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button className="connect-cta" onClick={handleConnect} style={{ padding: '10px 20px', fontSize: 13 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                Reconnect Meta (IG &amp; FB)
+              </button>
+              <button className="connect-cta" onClick={handleConnectYoutube} style={{ padding: '10px 20px', fontSize: 13, background: 'linear-gradient(135deg, #FF0000, #cc0000)', boxShadow: '0 4px 12px rgba(255, 0, 0, 0.2)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+                </svg>
+                Connect / Reconnect YouTube
+              </button>
+            </div>
           </div>
         )}
 
