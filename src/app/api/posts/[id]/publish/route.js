@@ -363,7 +363,11 @@ async function publishToYoutube(conn, post, caption, supabase) {
   const accessToken = await getFreshYoutubeToken(conn, supabase);
 
   if (!post.media_url) {
-    throw new Error('YouTube Shorts requires a video to upload');
+    throw new Error('YouTube Shorts requires a video file to upload');
+  }
+
+  if (post.media_type === 'image') {
+    throw new Error('YouTube Shorts requires a video file (.mp4, .mov). Images cannot be posted to YouTube.');
   }
 
   // Define video metadata

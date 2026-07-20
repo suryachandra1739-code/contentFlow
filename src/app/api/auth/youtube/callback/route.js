@@ -122,7 +122,7 @@ export async function GET(request) {
       profile_picture_url: profilePictureUrl,
       token_valid: true,
       last_verified_at: new Date().toISOString(),
-      connected_by: userId,
+      connected_by: userId || null,
       updated_at: new Date().toISOString(),
     };
 
