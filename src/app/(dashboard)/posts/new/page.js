@@ -100,7 +100,12 @@ export default function NewPost() {
     setUploadProgress(0);
   };
 
-  const allPlatforms = [{v:'instagram',l:'Instagram'},{v:'facebook',l:'Facebook'},{v:'shorts',l:'Shorts'},{v:'linkedin',l:'LinkedIn'},{v:'youtube',l:'YouTube'}];
+  const allPlatforms = [
+    { v: 'instagram', l: 'Instagram' },
+    { v: 'facebook', l: 'Facebook' },
+    { v: 'youtube', l: 'YouTube Shorts' },
+    { v: 'linkedin', l: 'LinkedIn' }
+  ];
   const allSelected = form.platform.length === allPlatforms.length;
 
   const togglePlatform = (platformValue) => {
