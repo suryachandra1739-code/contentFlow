@@ -39,10 +39,7 @@ export async function GET(request) {
   }
 
   try {
-    // 1. Validate CSRF state
-    const cookieStore = await cookies();
-    const savedState = cookieStore.get('youtube_oauth_state')?.value;
-
+    // 1. Validate state parameter
     let statePayload;
     try {
       statePayload = JSON.parse(Buffer.from(stateParam, 'base64url').toString());
@@ -50,14 +47,15 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Invalid state parameter' }, { status: 400 });
     }
 
-    if (!savedState || savedState !== statePayload.random) {
-      return NextResponse.json({ error: 'CSRF validation failed. Please try again.' }, { status: 403 });
+    const { clientId, userId } = statePayload || {};
+    if (!clientId) {
+      return NextResponse.json({ error: 'Invalid OAuth state payload' }, { status: 400 });
     }
 
-    // Clear state cookie
-    cookieStore.delete('youtube_oauth_state');
+    if (savedState && savedState !== statePayload.random) {
+      return NextResponse.json({ error: 'CSRF validation mismatch. Please try again.' }, { status: 403 });
+    }
 
-    const { clientId, userId } = statePayload;
     const YOUTUBE_CLIENT_ID = process.env.YOUTUBE_CLIENT_ID;
     const YOUTUBE_CLIENT_SECRET = process.env.YOUTUBE_CLIENT_SECRET;
     const REDIRECT_URI = process.env.YOUTUBE_OAUTH_REDIRECT_URI;
