@@ -10,6 +10,9 @@ export async function middleware(request) {
     path.startsWith('/api/') ||
     path.startsWith('/_next/') ||
     path.startsWith('/auth/') ||
+    path.startsWith('/google') ||
+    path.endsWith('.html') ||
+    path === '/privacy' ||
     path === '/favicon.ico' ||
     path === '/update-password'
   ) {
@@ -118,6 +121,6 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|html)$).*)',
   ],
 };
