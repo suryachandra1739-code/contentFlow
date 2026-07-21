@@ -35,6 +35,8 @@ export default function PostDetail() {
   const [publishResults, setPublishResults] = useState(null); // null | { results, success }
   const [youtubeType, setYoutubeType] = useState('short'); // 'short' | 'video'
   const [publishPlatforms, setPublishPlatforms] = useState({ facebook: true, instagram: true, linkedin: false, youtube: false });
+  const [clientConnections, setClientConnections] = useState([]); // fetched per-client connections
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editCaption, setEditCaption] = useState('');
   const [editHashtags, setEditHashtags] = useState('');
@@ -379,7 +381,27 @@ export default function PostDetail() {
                 <button 
                   className="btn btn-sm" 
                   style={{background:'var(--accent)',color:'#fff',border:'none',fontWeight:600}}
-                  onClick={() => setShowPublishModal(true)}
+                  onClick={async () => {
+                    if (!post.client_id) { addToast('No client attached to this post', 'error'); return; }
+                    setConnectionsLoading(true);
+                    try {
+                      const res = await fetch(`/api/social-connections?clientId=${post.client_id}`);
+                      const data = await res.json();
+                      const conns = Array.isArray(data) ? data : [];
+                      setClientConnections(conns);
+                      // Pre-select only platforms that have a valid connection
+                      const hasFb = conns.some(c => c.platform === 'facebook' && c.token_valid);
+                      const hasIg = conns.some(c => c.platform === 'instagram' && c.token_valid);
+                      const hasYt = conns.some(c => c.platform === 'youtube' && c.token_valid);
+                      setPublishPlatforms({ facebook: hasFb, instagram: hasIg, linkedin: false, youtube: hasYt });
+                    } catch {
+                      addToast('Could not load connected accounts', 'error');
+                      setClientConnections([]);
+                    } finally {
+                      setConnectionsLoading(false);
+                      setShowPublishModal(true);
+                    }
+                  }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: 6}}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   Publish to Social
@@ -979,81 +1001,147 @@ export default function PostDetail() {
               /* ── PHASE 1: Platform selector ── */
               <div>
                 <h3 style={{fontSize:18,fontWeight:700,fontFamily:'var(--sans)',color:'var(--text-primary)',marginBottom:8}}>Publish to Social</h3>
-                <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:20,lineHeight:1.5}}>
-                  Select the platforms you want to publish this post to. Make sure {post.clients?.company_name} has connected their accounts.
+                <p style={{fontSize:13,fontFamily:'var(--sans)',color:'var(--text-secondary)',marginBottom:16,lineHeight:1.5}}>
+                  Select the platforms to publish to. Only connected accounts are available.
                 </p>
 
+                {/* No connections warning */}
+                {clientConnections.length === 0 && (
+                  <div style={{padding:'14px 16px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:'var(--radius-sm)', marginBottom:16, display:'flex', alignItems:'center', gap:10}}>
+                    <span style={{fontSize:18}}>⚠️</span>
+                    <div style={{fontSize:13, fontFamily:'var(--sans)', color:'var(--text-secondary)', lineHeight:1.4}}>
+                      No social accounts connected for <strong>{post.clients?.company_name}</strong>.{' '}
+                      <a href={`/clients/${post.client_id}/settings`} style={{color:'var(--accent)', textDecoration:'none', fontWeight:600}}>
+                        Connect accounts →
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Platform rows — driven by clientConnections data */}
                 <div style={{display:'flex', flexDirection:'column', gap:10, marginBottom:24}}>
-                  {/* Facebook */}
-                  <label style={{display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:12, background:'var(--bg-layer)', border:`1px solid ${publishPlatforms.facebook ? 'var(--accent)' : 'var(--border)'}`, borderRadius:'var(--radius-sm)', transition:'border-color 0.15s'}}>
-                    <input type="checkbox" checked={publishPlatforms.facebook} onChange={e => setPublishPlatforms(prev => ({...prev, facebook: e.target.checked}))} style={{width:16,height:16}} />
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                    <span style={{fontSize:14, fontWeight:500, flex:1}}>Facebook Page</span>
-                  </label>
+                  {[
+                    {
+                      key: 'facebook',
+                      label: 'Facebook Page',
+                      conn: clientConnections.find(c => c.platform === 'facebook'),
+                      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
+                    },
+                    {
+                      key: 'instagram',
+                      label: 'Instagram Business',
+                      conn: clientConnections.find(c => c.platform === 'instagram'),
+                      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="url(#ig-ps)"><defs><linearGradient id="ig-ps" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f09433"/><stop offset="50%" stopColor="#dc2743"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>,
+                    },
+                    {
+                      key: 'youtube',
+                      label: 'YouTube Channel',
+                      conn: clientConnections.find(c => c.platform === 'youtube'),
+                      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>,
+                    },
+                  ].map(({ key, label, conn, icon }) => {
+                    const isConnected = !!conn;
+                    const isValid = conn?.token_valid;
+                    const isChecked = publishPlatforms[key];
+                    const accountName = key === 'instagram'
+                      ? (conn?.ig_username ? `@${conn.ig_username}` : conn?.page_name || null)
+                      : conn?.page_name || null;
 
-                  {/* Instagram */}
-                  <label style={{display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:12, background:'var(--bg-layer)', border:`1px solid ${publishPlatforms.instagram ? 'var(--accent)' : 'var(--border)'}`, borderRadius:'var(--radius-sm)', transition:'border-color 0.15s'}}>
-                    <input type="checkbox" checked={publishPlatforms.instagram} onChange={e => setPublishPlatforms(prev => ({...prev, instagram: e.target.checked}))} style={{width:16,height:16}} />
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="url(#ig-grad2)"><defs><linearGradient id="ig-grad2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f09433"/><stop offset="25%" stopColor="#e6683c"/><stop offset="50%" stopColor="#dc2743"/><stop offset="75%" stopColor="#cc2366"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                    <span style={{fontSize:14, fontWeight:500, flex:1}}>Instagram Business</span>
-                  </label>
+                    return (
+                      <div key={key} style={{display:'flex', flexDirection:'column', gap:0}}>
+                        <label style={{
+                          display:'flex', alignItems:'center', gap:10, padding:12,
+                          background: isConnected ? 'var(--bg-layer)' : 'rgba(0,0,0,0.02)',
+                          border:`1px solid ${isChecked && isValid ? 'var(--accent)' : isConnected && !isValid ? 'rgba(245,158,11,0.4)' : 'var(--border)'}`,
+                          borderRadius: (key === 'youtube' && isChecked && isConnected && isValid && post.media_type !== 'image')
+                            ? 'var(--radius-sm) var(--radius-sm) 0 0' : 'var(--radius-sm)',
+                          borderBottom: (key === 'youtube' && isChecked && isConnected && isValid && post.media_type !== 'image') ? 'none' : undefined,
+                          transition:'all 0.15s',
+                          cursor: isConnected && isValid ? 'pointer' : 'not-allowed',
+                          opacity: isConnected ? 1 : 0.55,
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            disabled={!isConnected || !isValid}
+                            onChange={e => setPublishPlatforms(prev => ({...prev, [key]: e.target.checked}))}
+                            style={{width:16, height:16, flexShrink:0}}
+                          />
+                          {/* Profile picture or platform icon */}
+                          {conn?.profile_picture_url ? (
+                            <img
+                              src={conn.profile_picture_url}
+                              alt={accountName || label}
+                              style={{width:28, height:28, borderRadius:8, objectFit:'cover', border:'1px solid var(--border)', flexShrink:0}}
+                              onError={e => { e.target.style.display='none'; }}
+                            />
+                          ) : (
+                            <div style={{flexShrink:0}}>{icon}</div>
+                          )}
+                          <div style={{flex:1, minWidth:0}}>
+                            <div style={{fontSize:14, fontWeight:600, color:'var(--text-primary)', display:'flex', alignItems:'center', gap:6, flexWrap:'wrap'}}>
+                              {accountName || label}
+                              {isConnected && isValid && (
+                                <span style={{fontSize:10, fontWeight:700, padding:'2px 6px', borderRadius:99, background:'rgba(16,185,129,0.12)', color:'#10b981', letterSpacing:'0.03em'}}>
+                                  CONNECTED
+                                </span>
+                              )}
+                              {isConnected && !isValid && (
+                                <span style={{fontSize:10, fontWeight:700, padding:'2px 6px', borderRadius:99, background:'rgba(245,158,11,0.12)', color:'#f59e0b', letterSpacing:'0.03em'}}>
+                                  TOKEN EXPIRED
+                                </span>
+                              )}
+                              {!isConnected && (
+                                <span style={{fontSize:10, fontWeight:700, padding:'2px 6px', borderRadius:99, background:'rgba(0,0,0,0.06)', color:'var(--text-muted)', letterSpacing:'0.03em'}}>
+                                  NOT CONNECTED
+                                </span>
+                              )}
+                            </div>
+                            {isConnected && (
+                              <div style={{fontSize:11, color:'var(--text-muted)', marginTop:1}}>{label}</div>
+                            )}
+                            {key === 'youtube' && isConnected && isValid && post.media_type === 'image' && (
+                              <div style={{fontSize:11, color:'var(--text-muted)', marginTop:1}}>Images post as Community Posts (requires 500+ subs)</div>
+                            )}
+                            {isConnected && !isValid && (
+                              <a href={`/clients/${post.client_id}/settings`} style={{fontSize:11, color:'var(--accent)', textDecoration:'none', marginTop:1, display:'block'}}>
+                                Re-connect in settings →
+                              </a>
+                            )}
+                          </div>
+                        </label>
 
-                  {/* LinkedIn */}
-                  <label style={{display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:12, background:'var(--bg-layer)', border:`1px solid ${publishPlatforms.linkedin ? 'var(--accent)' : 'var(--border)'}`, borderRadius:'var(--radius-sm)', transition:'border-color 0.15s'}}>
-                    <input type="checkbox" checked={publishPlatforms.linkedin} onChange={e => setPublishPlatforms(prev => ({...prev, linkedin: e.target.checked}))} style={{width:16,height:16}} />
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                    <span style={{fontSize:14, fontWeight:500, flex:1}}>LinkedIn Page</span>
-                  </label>
-
-                  {/* YouTube — with sub-option */}
-                  <div style={{display:'flex', flexDirection:'column', gap:0}}>
-                    <label style={{display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:12, background:'var(--bg-layer)', border:`1px solid ${publishPlatforms.youtube ? 'var(--accent)' : 'var(--border)'}`, borderRadius: publishPlatforms.youtube ? 'var(--radius-sm) var(--radius-sm) 0 0' : 'var(--radius-sm)', transition:'all 0.15s', borderBottom: publishPlatforms.youtube ? 'none' : undefined}}>
-                      <input type="checkbox" checked={publishPlatforms.youtube} onChange={e => setPublishPlatforms(prev => ({...prev, youtube: e.target.checked}))} style={{width:16,height:16}} />
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                      <div style={{flex:1}}>
-                        <span style={{fontSize:14, fontWeight:500}}>YouTube Channel</span>
-                        {post.media_type === 'image' && (
-                          <span style={{display:'block', fontSize:11, color:'var(--text-muted)', marginTop:2}}>Images post as Community Posts (requires 500+ subscribers)</span>
+                        {/* YouTube Short / Regular sub-option */}
+                        {key === 'youtube' && isChecked && isConnected && isValid && post.media_type !== 'image' && (
+                          <div style={{padding:'10px 14px', background:'rgba(255,0,0,0.04)', border:'1px solid var(--accent)', borderTop:'none', borderRadius:'0 0 var(--radius-sm) var(--radius-sm)', display:'flex', gap:8}}>
+                            {[
+                              { type:'short', label:'▶ Short (≤60s)' },
+                              { type:'video', label:'🎬 Regular Video' },
+                            ].map(opt => (
+                              <button
+                                key={opt.type}
+                                type="button"
+                                onClick={() => setYoutubeType(opt.type)}
+                                style={{
+                                  flex:1, padding:'7px 10px', fontSize:12, fontWeight:600, borderRadius:'var(--radius-sm)',
+                                  border:`1px solid ${youtubeType === opt.type ? '#FF0000' : 'var(--border)'}`,
+                                  background: youtubeType === opt.type ? 'rgba(255,0,0,0.1)' : 'var(--bg-card)',
+                                  color: youtubeType === opt.type ? '#FF0000' : 'var(--text-secondary)',
+                                  cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center', gap:5
+                                }}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
                         )}
                       </div>
-                    </label>
-
-                    {/* YouTube sub-option: Short vs Regular Video */}
-                    {publishPlatforms.youtube && post.media_type !== 'image' && (
-                      <div style={{padding:'10px 14px', background:'rgba(255,0,0,0.04)', border:'1px solid var(--accent)', borderTop:'none', borderRadius:'0 0 var(--radius-sm) var(--radius-sm)', display:'flex', gap:8}}>
-                        <button
-                          type="button"
-                          onClick={() => setYoutubeType('short')}
-                          style={{
-                            flex:1, padding:'7px 10px', fontSize:12, fontWeight:600, borderRadius:'var(--radius-sm)',
-                            border:`1px solid ${youtubeType === 'short' ? '#FF0000' : 'var(--border)'}`,
-                            background: youtubeType === 'short' ? 'rgba(255,0,0,0.1)' : 'var(--bg-card)',
-                            color: youtubeType === 'short' ? '#FF0000' : 'var(--text-secondary)',
-                            cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center', gap:5
-                          }}
-                        >
-                          <span>▶</span> Short (≤60s)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setYoutubeType('video')}
-                          style={{
-                            flex:1, padding:'7px 10px', fontSize:12, fontWeight:600, borderRadius:'var(--radius-sm)',
-                            border:`1px solid ${youtubeType === 'video' ? '#FF0000' : 'var(--border)'}`,
-                            background: youtubeType === 'video' ? 'rgba(255,0,0,0.1)' : 'var(--bg-card)',
-                            color: youtubeType === 'video' ? '#FF0000' : 'var(--text-secondary)',
-                            cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center', gap:5
-                          }}
-                        >
-                          <span>🎬</span> Regular Video
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
 
                 <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
-                  <button className="btn btn-secondary btn-sm" onClick={() => setShowPublishModal(false)} disabled={publishing}>Cancel</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => setShowPublishModal(false)}>Cancel</button>
                   <button
                     className="btn btn-sm btn-primary"
                     style={{fontWeight:600, display:'flex', alignItems:'center', gap:6}}
@@ -1073,4 +1161,6 @@ export default function PostDetail() {
   </PageTransition>
   );
 }
+
+
 

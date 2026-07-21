@@ -52,6 +52,10 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Invalid OAuth state payload' }, { status: 400 });
     }
 
+    // Read CSRF cookie before validating
+    const cookieStore = await cookies();
+    const savedState = cookieStore.get('youtube_oauth_state')?.value;
+
     if (savedState && savedState !== statePayload.random) {
       return NextResponse.json({ error: 'CSRF validation mismatch. Please try again.' }, { status: 403 });
     }
