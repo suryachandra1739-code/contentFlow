@@ -25,6 +25,8 @@ export async function POST(request, { params }) {
     const body = await request.json();
     const platforms = body.platforms || { facebook: true, instagram: true, youtube: true };
     const isAutoPublish = body.auto === true;
+    // youtubeType: 'short' (default, appends #Shorts) | 'video' (regular upload)
+    const youtubeType = body.youtubeType || 'short';
 
     let supabase;
     let userName = 'Auto-Publish System';
@@ -118,15 +120,16 @@ export async function POST(request, { params }) {
       }
     }
 
-    // 7. Publish to YouTube (Shorts)
+    // 7. Publish to YouTube (Shorts or regular video, or Community Post for images)
     if (platforms.youtube) {
       const ytConn = connections.find(c => c.platform === 'youtube');
       if (!ytConn) {
         results.youtube = { success: false, error: 'No YouTube Channel connected' };
       } else {
         try {
-          results.youtube = await publishToYoutube(ytConn, post, caption, serviceDb);
+          results.youtube = await publishToYoutube(ytConn, post, caption, serviceDb, youtubeType);
         } catch (err) {
+          console.error('[YouTube] Publish error:', err);
           results.youtube = { success: false, error: err.message };
         }
       }
@@ -357,89 +360,166 @@ async function getFreshYoutubeToken(conn, supabase) {
 }
 
 /**
- * Uploads video to YouTube Data API v3 (Shorts format)
+ * Dispatch YouTube publish — routes to video upload or community post based on media type.
+ * @param {string} youtubeType  'short' | 'video'
  */
-async function publishToYoutube(conn, post, caption, supabase) {
+async function publishToYoutube(conn, post, caption, supabase, youtubeType = 'short') {
   const accessToken = await getFreshYoutubeToken(conn, supabase);
 
   if (!post.media_url) {
-    throw new Error('YouTube Shorts requires a video file to upload');
+    throw new Error('YouTube requires a media file. Please attach an image or video.');
   }
 
+  // Images go via Community Posts; videos go via Data API upload
   if (post.media_type === 'image') {
-    throw new Error('YouTube Shorts requires a video file (.mp4, .mov). Images cannot be posted to YouTube.');
+    return publishYoutubeCommunityPost(accessToken, post, caption);
   }
 
-  // Define video metadata
-  // YouTube title limit is 100 characters. Append #Shorts to categorize it correctly.
-  const shortTitle = (post.title || post.caption || 'New Short').slice(0, 85) + ' #Shorts';
+  return uploadYoutubeVideo(accessToken, post, caption, youtubeType);
+}
+
+/**
+ * Posts an image as a YouTube Community Post.
+ * Requires the channel to have ≥500 subscribers.
+ */
+async function publishYoutubeCommunityPost(accessToken, post, caption) {
+  const body = {
+    snippet: {
+      type: 'imagePost',
+      text: caption,
+      imageUrl: post.media_url,
+    },
+  };
+
+  const res = await fetch(
+    'https://www.googleapis.com/youtube/v3/posts?part=snippet',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    }
+  );
+
+  const data = await res.json();
+  console.log('[YouTube Community Post] Response:', JSON.stringify(data));
+
+  if (data.error) {
+    // 403 means channel not eligible (needs 500+ subscribers)
+    if (res.status === 403) {
+      throw new Error(
+        'YouTube Community Posts require 500+ subscribers. Your channel is not yet eligible, or this feature is not enabled. ' +
+        'You can still post videos — images cannot be uploaded as stand-alone YouTube videos.'
+      );
+    }
+    throw new Error(data.error.message || 'YouTube Community Post failed');
+  }
+
+  return { success: true, post_id: data.id, type: 'community_post' };
+}
+
+/**
+ * Uploads a video to YouTube Data API v3.
+ * Uses multipart/related upload with correct CRLF framing.
+ * @param {string} youtubeType  'short' (adds #Shorts) | 'video' (regular)
+ */
+async function uploadYoutubeVideo(accessToken, post, caption, youtubeType) {
+  // Build title — YouTube title limit is 100 chars
+  const baseTitle = (post.title || post.caption || 'New Video').slice(0, youtubeType === 'short' ? 91 : 99);
+  const videoTitle = youtubeType === 'short' ? `${baseTitle} #Shorts` : baseTitle;
+
   const metadata = {
     snippet: {
-      title: shortTitle,
-      description: caption,
+      title: videoTitle,
+      description: caption || '',
       categoryId: '22', // People & Blogs
     },
     status: {
       privacyStatus: 'public',
       selfDeclaredMadeForKids: false,
-    }
+    },
   };
 
   // Fetch media from storage (Cloudflare R2)
-  const mediaRes = await fetch(post.media_url);
+  const mediaRes = await fetch(post.media_url, { signal: AbortSignal.timeout(120000) });
   if (!mediaRes.ok) {
-    throw new Error(`Failed to fetch media file from storage: ${mediaRes.statusText}`);
+    throw new Error(`Failed to fetch video from storage: ${mediaRes.status} ${mediaRes.statusText}`);
   }
   const mediaBuffer = await mediaRes.arrayBuffer();
+  const contentType = mediaRes.headers.get('content-type') || 'video/mp4';
 
-  const boundary = 'youtube_upload_boundary';
-  
-  // Construct multi-part payload
-  const metadataPart = [
-    `--${boundary}`,
-    'Content-Type: application/json; charset=UTF-8',
-    '',
-    JSON.stringify(metadata),
-    ''
-  ].join('\r\n');
+  // ── Build multipart/related body with correct CRLF framing ─────────────────
+  // RFC 2046 requires CRLF before and after each boundary, and a blank line
+  // (CRLF CRLF) between headers and body within each part.
+  const BOUNDARY = 'yt_cf_boundary_' + Date.now();
+  const CRLF = '\r\n';
 
-  const mediaHeader = [
-    `--${boundary}`,
-    `Content-Type: ${mediaRes.headers.get('content-type') || 'video/mp4'}`,
-    'Content-Transfer-Encoding: binary',
-    '',
-    ''
-  ].join('\r\n');
+  const metadataJson = JSON.stringify(metadata);
 
-  const mediaFooter = `\r\n--${boundary}--`;
+  // Part 1: JSON metadata
+  const metaPart =
+    '--' + BOUNDARY + CRLF +
+    'Content-Type: application/json; charset=UTF-8' + CRLF +
+    CRLF +
+    metadataJson + CRLF;
+
+  // Part 2 header (binary data follows immediately after)
+  const mediaPart =
+    '--' + BOUNDARY + CRLF +
+    'Content-Type: ' + contentType + CRLF +
+    'Content-Transfer-Encoding: binary' + CRLF +
+    CRLF;
+
+  // Closing boundary
+  const closingBoundary = CRLF + '--' + BOUNDARY + '--';
 
   const encoder = new TextEncoder();
-  const part1 = encoder.encode(metadataPart);
-  const part2 = encoder.encode(mediaHeader);
-  const part3 = new Uint8Array(mediaBuffer);
-  const part4 = encoder.encode(mediaFooter);
+  const p1 = encoder.encode(metaPart);
+  const p2 = encoder.encode(mediaPart);
+  const p3 = new Uint8Array(mediaBuffer);  // raw video bytes
+  const p4 = encoder.encode(closingBoundary);
 
-  const bodyBuffer = new Uint8Array(part1.byteLength + part2.byteLength + part3.byteLength + part4.byteLength);
-  bodyBuffer.set(part1, 0);
-  bodyBuffer.set(part2, part1.byteLength);
-  bodyBuffer.set(part3, part1.byteLength + part2.byteLength);
-  bodyBuffer.set(part4, part1.byteLength + part2.byteLength + part3.byteLength);
+  const totalLength = p1.byteLength + p2.byteLength + p3.byteLength + p4.byteLength;
+  const bodyBuffer = new Uint8Array(totalLength);
+  let offset = 0;
+  bodyBuffer.set(p1, offset); offset += p1.byteLength;
+  bodyBuffer.set(p2, offset); offset += p2.byteLength;
+  bodyBuffer.set(p3, offset); offset += p3.byteLength;
+  bodyBuffer.set(p4, offset);
 
-  const uploadRes = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': `multipart/related; boundary=${boundary}`,
-      'Content-Length': bodyBuffer.byteLength.toString(),
-    },
-    body: bodyBuffer,
-    signal: AbortSignal.timeout(60000), // 60s upload timeout
-  });
+  console.log(`[YouTube Upload] Uploading ${(totalLength / 1024 / 1024).toFixed(1)} MB as ${youtubeType}...`);
+
+  // Use a generous 5-minute timeout for large video uploads
+  const uploadRes = await fetch(
+    'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': `multipart/related; boundary="${BOUNDARY}"`,
+        'Content-Length': totalLength.toString(),
+      },
+      body: bodyBuffer,
+      signal: AbortSignal.timeout(300000), // 5-minute timeout
+    }
+  );
 
   const uploadData = await uploadRes.json();
+  console.log('[YouTube Upload] Response:', JSON.stringify(uploadData).slice(0, 500));
+
   if (uploadData.error) {
-    throw new Error(uploadData.error.message || 'YouTube upload failed');
+    const detail = uploadData.error.errors?.[0]?.reason || uploadData.error.message || 'YouTube upload failed';
+    throw new Error(`YouTube upload failed: ${detail}`);
   }
 
-  return { success: true, post_id: uploadData.id };
+  const videoId = uploadData.id;
+  return {
+    success: true,
+    post_id: videoId,
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    type: youtubeType === 'short' ? 'short' : 'video',
+  };
 }

@@ -4476,3 +4476,15 @@ html[data-theme="light"] .skeleton-shimmer {
 .skeleton-line.long {
   width: 90%;
 }
+
+/* Publish modal spinner & success animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounceIn {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  80%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
