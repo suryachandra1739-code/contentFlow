@@ -508,7 +508,7 @@ export default function Dashboard() {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 2, position: 'relative' }}>
-                  {['all', 'pending', 'approved', 'draft', 'rejected'].map(status => {
+                  {['all', 'pending', 'approved', 'published', 'draft', 'rejected'].map(status => {
                     const isSelected = statusFilter === status;
                     return (
                       <button

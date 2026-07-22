@@ -817,6 +817,16 @@ export default function PostDetail() {
                   } else if (item.action === 'post_rejected') {
                     label = `Rejected by ${actor}`;
                     dotColor = 'var(--red)';
+                  } else if (item.action === 'post_published') {
+                    const platforms = item.metadata?.published_to;
+                    const platformStr = Array.isArray(platforms) && platforms.length > 0
+                      ? platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')
+                      : 'social media';
+                    label = `Published to ${platformStr} by ${actor}`;
+                    dotColor = 'var(--green)';
+                  } else if (item.action === 'post_publish_failed') {
+                    label = `Publish failed by ${actor}`;
+                    dotColor = 'var(--red)';
                   } else if (item.action === 'comment_added') {
                     label = `Comment added by ${actor}`;
                   }

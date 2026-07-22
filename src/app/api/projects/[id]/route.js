@@ -52,6 +52,53 @@ export async function GET(request, { params }) {
   }
 }
 
+/**
+ * PATCH /api/projects/[id]
+ * Saves DM Bot config (keywords, message, links) into the project's dm_config JSONB column.
+ * Only team/admin can call this — clients cannot modify project settings.
+ */
+export async function PATCH(request, { params }) {
+  try {
+    const { id } = await params;
+    const supabase = await createClientServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    const role = profile?.role || 'team';
+    if (role === 'client') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const allowedFields = ['dm_config', 'name', 'description', 'status'];
+    const update = {};
+    for (const key of allowedFields) {
+      if (body[key] !== undefined) update[key] = body[key];
+    }
+
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update(update)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request, { params }) {
   try {
     const { id } = await params;

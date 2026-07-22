@@ -34,6 +34,16 @@ function saveConfig(cfg, projectId) {
   localStorage.setItem(key, JSON.stringify(cfg));
 }
 
+// DM config is saved to Supabase so the server-side webhook can read it
+async function saveDmConfigToSupabase(projectId, dmConfig) {
+  const res = await fetch(`/api/projects/${projectId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dm_config: dmConfig }),
+  });
+  return res.ok;
+}
+
 const parsePostCaption = (caption) => {
   if (!caption) return { title: 'Untitled', description: '' };
   if (caption.startsWith('Title: ')) {
@@ -107,6 +117,8 @@ export default function ProjectDetail() {
     
     fetch(`/api/projects/${id}`).then(r => r.json()).then(async data => {
       setProject(data);
+      // Load DM config from Supabase project row (server-readable)
+      if (data?.dm_config) setDmConfig(data.dm_config);
       if (data && data.client_id) {
         setLoadingConnections(true);
         try {
@@ -118,18 +130,20 @@ export default function ProjectDetail() {
       }
     });
 
-    // Load config
+    // Load automation config from localStorage (for social publisher webhook)
     const cfg = getConfig(id);
     setWebhookUrl(cfg.webhookUrl || '');
     setDmWebhookUrl(cfg.dmWebhookUrl || '');
     if (cfg.platforms) setPlatforms(cfg.platforms);
-    if (cfg.dmConfig) setDmConfig(cfg.dmConfig);
     setActivityLog(cfg.activityLog || []);
   }, [id]);
 
-  const saveAll = () => {
-    saveConfig({ webhookUrl, dmWebhookUrl, platforms, dmConfig, activityLog }, id);
-    addToast('Automation configuration saved for this project', 'success');
+  const saveAll = async () => {
+    // Save social publisher config to localStorage
+    saveConfig({ webhookUrl, dmWebhookUrl, platforms, activityLog }, id);
+    // Save DM Bot config to Supabase so the webhook handler can read it
+    const ok = await saveDmConfigToSupabase(id, dmConfig);
+    addToast(ok ? 'DM Bot config saved!' : 'Save failed — check your connection', ok ? 'success' : 'error');
   };
 
   const testConnection = async (url, setter) => {
@@ -420,21 +434,27 @@ export default function ProjectDetail() {
         {/* ─── INSTAGRAM DM BOT TAB ─── */}
         {activeTab === 'dmbot' && (
           <motion.div key="dmbot" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+
+            {/* Webhook URL to paste into Meta */}
             <div className="card" style={{ marginBottom: 20 }}>
               <div className="card-body">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <h2 style={{ fontSize: 15, fontWeight: 600, fontFamily: 'var(--sans)' }}>DM Bot Webhook URL</h2>
-                  <div className="auto-status-pill" style={{ '--dot-color': statusDot(dmConnectionStatus).bg }}>
-                    <span className="auto-status-dot" />
-                    <span>{statusDot(dmConnectionStatus).label}</span>
-                  </div>
-                </div>
+                <h2 style={{ fontSize: 15, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 4 }}>Your Webhook URL</h2>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>Copy this URL and paste it into the Meta Developer Console as your webhook Callback URL.</p>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <input className="form-input" placeholder="https://your-n8n.example.com/webhook/instagram-webhook" value={dmWebhookUrl} onChange={e => setDmWebhookUrl(e.target.value)} style={{ flex: 1 }} />
-                  <button className="btn btn-secondary" onClick={() => testConnection(dmWebhookUrl, setDmConnectionStatus)} style={{ whiteSpace: 'nowrap', fontSize: 13 }}>
-                    {dmConnectionStatus === 'testing' ? 'Testing...' : 'Test'}
-                  </button>
+                  <input
+                    className="form-input"
+                    readOnly
+                    value={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-app.vercel.app'}/api/instagram/webhook`}
+                    style={{ flex: 1, color: 'var(--text-secondary)', fontFamily: 'var(--mono)', fontSize: 12 }}
+                  />
+                  <button className="btn btn-secondary" style={{ whiteSpace: 'nowrap', fontSize: 13 }} onClick={() => {
+                    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/api/instagram/webhook`);
+                    addToast('Webhook URL copied!', 'success');
+                  }}>Copy</button>
                 </div>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+                  Verify Token: <code style={{ fontFamily: 'var(--mono)', background: 'var(--bg-hover)', padding: '1px 6px', borderRadius: 4 }}>contentflow-ig-webhook-2024</code>
+                </p>
               </div>
             </div>
 
@@ -443,7 +463,7 @@ export default function ProjectDetail() {
               <div>
                 <strong style={{ fontSize: 13 }}>How it works</strong>
                 <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, lineHeight: 1.5 }}>
-                  When someone comments a keyword (like &quot;dm&quot;) on an Instagram post in this project, n8n detects it via Meta Webhooks and auto-sends them a DM. Individual posts can also override these settings.
+                  When someone comments a keyword (like &quot;dm&quot;) on an Instagram post, Meta sends an event to your webhook URL above. ContentFlow automatically sends them a DM — no extra server needed.
                 </p>
               </div>
             </div>
@@ -488,26 +508,23 @@ export default function ProjectDetail() {
 
             <div className="card" style={{ marginTop: 20 }}>
               <div className="card-body">
-                <h3 style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 12 }}>⚠️ Meta API Requirements</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 12 }}>📋 Setup Checklist</h3>
                 <div className="auto-requirements-grid">
                   {[
-                    { icon: '✅', text: 'Instagram Business or Creator account' },
+                    { icon: '✅', text: 'Instagram Business or Creator account connected (done in Social Connections)' },
                     { icon: '✅', text: 'Linked to a Facebook Page' },
-                    { icon: '✅', text: 'Meta Developer App created' },
-                    { icon: '⏳', text: 'instagram_manage_messages permission (needs App Review — ~20 days)' },
-                    { icon: '✅', text: 'HTTPS domain for webhook (Cloudflare Tunnel works)' },
+                    { icon: '1️⃣', text: 'Create a Meta Developer App at developers.facebook.com → Business type' },
+                    { icon: '2️⃣', text: 'Add products: Instagram Graph API + Webhooks' },
+                    { icon: '3️⃣', text: 'Under Webhooks → Instagram: set Callback URL to your webhook URL above' },
+                    { icon: '4️⃣', text: 'Set Verify Token to: contentflow-ig-webhook-2024' },
+                    { icon: '5️⃣', text: 'Subscribe to fields: comments, messages, messaging_postbacks' },
+                    { icon: '⏳', text: 'Request App Review for: instagram_manage_messages, instagram_manage_comments (~20 days). Test with up to 25 users while waiting.' },
                   ].map((req, i) => (
                     <div key={i} className="auto-requirement-item">
                       <span>{req.icon}</span>
                       <span style={{ fontSize: 13 }}>{req.text}</span>
                     </div>
                   ))}
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                  <a href="/workflows/instagram-dm-bot.json" download className="btn btn-secondary" style={{ fontSize: 13, padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download Workflow
-                  </a>
                 </div>
               </div>
             </div>

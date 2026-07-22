@@ -422,8 +422,9 @@ async function publishYoutubeCommunityPost(accessToken, post, caption) {
 }
 
 /**
- * Uploads a video to YouTube Data API v3.
- * Uses multipart/related upload with correct CRLF framing.
+ * Uploads a video to YouTube using the Resumable Upload API (recommended for all video sizes).
+ * Single-shot multipart uploads can be auto-removed by YouTube's integrity systems; the
+ * resumable protocol is fully recognised by YouTube's pipeline and avoids this issue.
  * @param {string} youtubeType  'short' (adds #Shorts) | 'video' (regular)
  */
 async function uploadYoutubeVideo(accessToken, post, caption, youtubeType) {
@@ -450,65 +451,54 @@ async function uploadYoutubeVideo(accessToken, post, caption, youtubeType) {
   }
   const mediaBuffer = await mediaRes.arrayBuffer();
   const contentType = mediaRes.headers.get('content-type') || 'video/mp4';
+  const contentLength = mediaBuffer.byteLength;
 
-  // ── Build multipart/related body with correct CRLF framing ─────────────────
-  // RFC 2046 requires CRLF before and after each boundary, and a blank line
-  // (CRLF CRLF) between headers and body within each part.
-  const BOUNDARY = 'yt_cf_boundary_' + Date.now();
-  const CRLF = '\r\n';
+  console.log(`[YouTube Resumable] Initiating upload for ${(contentLength / 1024 / 1024).toFixed(1)} MB as ${youtubeType}...`);
 
-  const metadataJson = JSON.stringify(metadata);
-
-  // Part 1: JSON metadata
-  const metaPart =
-    '--' + BOUNDARY + CRLF +
-    'Content-Type: application/json; charset=UTF-8' + CRLF +
-    CRLF +
-    metadataJson + CRLF;
-
-  // Part 2 header (binary data follows immediately after)
-  const mediaPart =
-    '--' + BOUNDARY + CRLF +
-    'Content-Type: ' + contentType + CRLF +
-    'Content-Transfer-Encoding: binary' + CRLF +
-    CRLF;
-
-  // Closing boundary
-  const closingBoundary = CRLF + '--' + BOUNDARY + '--';
-
-  const encoder = new TextEncoder();
-  const p1 = encoder.encode(metaPart);
-  const p2 = encoder.encode(mediaPart);
-  const p3 = new Uint8Array(mediaBuffer);  // raw video bytes
-  const p4 = encoder.encode(closingBoundary);
-
-  const totalLength = p1.byteLength + p2.byteLength + p3.byteLength + p4.byteLength;
-  const bodyBuffer = new Uint8Array(totalLength);
-  let offset = 0;
-  bodyBuffer.set(p1, offset); offset += p1.byteLength;
-  bodyBuffer.set(p2, offset); offset += p2.byteLength;
-  bodyBuffer.set(p3, offset); offset += p3.byteLength;
-  bodyBuffer.set(p4, offset);
-
-  console.log(`[YouTube Upload] Uploading ${(totalLength / 1024 / 1024).toFixed(1)} MB as ${youtubeType}...`);
-
-  // Use a generous 5-minute timeout for large video uploads
-  const uploadRes = await fetch(
-    'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status',
+  // ── Step 1: Initiate the resumable upload session ────────────────────────────
+  // POST with JSON metadata to get a session URI (Location header)
+  const initRes = await fetch(
+    'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
     {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': `multipart/related; boundary="${BOUNDARY}"`,
-        'Content-Length': totalLength.toString(),
+        'Content-Type': 'application/json; charset=UTF-8',
+        'X-Upload-Content-Type': contentType,
+        'X-Upload-Content-Length': contentLength.toString(),
       },
-      body: bodyBuffer,
-      signal: AbortSignal.timeout(300000), // 5-minute timeout
+      body: JSON.stringify(metadata),
+      signal: AbortSignal.timeout(30000),
     }
   );
 
+  if (!initRes.ok) {
+    const errText = await initRes.text().catch(() => initRes.statusText);
+    throw new Error(`YouTube resumable init failed (${initRes.status}): ${errText}`);
+  }
+
+  const uploadUri = initRes.headers.get('location');
+  if (!uploadUri) {
+    throw new Error('YouTube did not return a resumable upload URI');
+  }
+
+  console.log(`[YouTube Resumable] Session URI obtained. Uploading ${(contentLength / 1024 / 1024).toFixed(1)} MB...`);
+
+  // ── Step 2: Upload the video bytes to the session URI ───────────────────────
+  // Use a generous 8-minute timeout for large video uploads
+  const uploadRes = await fetch(uploadUri, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': contentType,
+      'Content-Length': contentLength.toString(),
+    },
+    body: mediaBuffer,
+    signal: AbortSignal.timeout(480000), // 8-minute timeout
+  });
+
   const uploadData = await uploadRes.json();
-  console.log('[YouTube Upload] Response:', JSON.stringify(uploadData).slice(0, 500));
+  console.log('[YouTube Resumable] Response:', JSON.stringify(uploadData).slice(0, 500));
 
   if (uploadData.error) {
     const detail = uploadData.error.errors?.[0]?.reason || uploadData.error.message || 'YouTube upload failed';
