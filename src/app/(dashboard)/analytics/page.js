@@ -1,86 +1,98 @@
 'use client';
-import PageTransition from '@/components/PageTransition';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { FileStack, Percent, Hourglass, Flame } from 'lucide-react';
+import { StatCard, PageHeader, PLATFORM_META } from '@/components/bits';
+
+const STATUS_COLORS = {
+  draft: 'hsl(var(--st-draft))',
+  pending: 'hsl(var(--st-pending))',
+  approved: 'hsl(var(--st-approved))',
+  published: 'hsl(var(--st-published))',
+  revision: 'hsl(var(--st-revision))',
+  rejected: 'hsl(var(--st-rejected))',
+};
+
+function HBar({ label, value, max, color, delay }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-20 sm:w-24 text-xs text-right shrink-0 capitalize" style={{ color: 'hsl(var(--muted-foreground))' }}>{label}</span>
+      <div className="flex-1 h-7 rounded-lg overflow-hidden" style={{ background: 'hsl(var(--surface-1))' }}>
+        <motion.div
+          className="h-full rounded-lg"
+          style={{ background: `linear-gradient(90deg, ${color}cc, ${color})` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${(value / max) * 100}%` }}
+          transition={{ duration: 0.9, delay, ease: [0.22, 0.9, 0.3, 1] }}
+        />
+      </div>
+      <span className="cf-mono text-xs w-8 shrink-0" style={{ color: 'hsl(var(--faint-foreground))' }}>{value}</span>
+    </div>
+  );
+}
 
 export default function AnalyticsPage() {
   const [data, setData] = useState(null);
   useEffect(() => { fetch('/api/analytics').then(r => r.json()).then(setData); }, []);
 
-  if (!data) return <div className="fade-in empty-state">Loading analytics...</div>;
+  if (!data) {
+    return (
+      <div>
+        <PageHeader title="Analytics" sub="Loading insights..." />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger mb-6">
+          {[...Array(4)].map((_, i) => <div key={i} className="cf-card p-5"><div className="cf-skeleton h-7 w-16 mb-3" /><div className="cf-skeleton h-4 w-24" /></div>)}
+        </div>
+      </div>
+    );
+  }
 
-  const statusColors = { draft: '#888888', pending: 'var(--amber)', approved: 'var(--green)', revision: 'var(--cyan)', rejected: 'var(--red)' };
   const maxStatus = Math.max(...Object.values(data.byStatus || {}), 1);
   const maxPlatform = Math.max(...Object.values(data.byPlatform || {}), 1);
+  const needAttention = (data.byStatus?.revision || 0) + (data.byStatus?.rejected || 0);
 
   return (
-    <PageTransition><div className="fade-in">
-      <div className="page-header">
-        <h1>Analytics</h1>
-        <p>Insights and data across your content workflow.</p>
+    <div>
+      <PageHeader title="Analytics" sub="Approval velocity and workload across every workspace." />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger mb-6">
+        <StatCard icon={FileStack} label="Total posts" value={String(data.total)} tone="246 90% 68%" />
+        <StatCard icon={Percent} label="Approval rate" value={`${data.approvalRate}%`} tone="160 84% 45%" />
+        <StatCard icon={Hourglass} label="Awaiting review" value={String(data.byStatus?.pending || 0)} tone="38 96% 60%" />
+        <StatCard icon={Flame} label="Need attention" value={String(needAttention)} sub="revision + rejected" tone="0 84% 64%" />
       </div>
 
-      <div className="stats-grid">
-        <Link href="/" className="stat-card slide-up stagger-1" style={{display:'block',textDecoration:'none'}}>
-          <div className="stat-card-value">{data.total}</div>
-          <div className="stat-card-label">Total posts</div>
-        </Link>
-        <Link href="/" className="stat-card slide-up stagger-2" style={{display:'block',textDecoration:'none'}}>
-          <div className="stat-card-value">{data.approvalRate}%</div>
-          <div className="stat-card-label">Approval rate</div>
-        </Link>
-        <Link href="/" className="stat-card slide-up stagger-3" style={{display:'block',textDecoration:'none'}}>
-          <div className="stat-card-value">{data.byStatus?.pending || 0}</div>
-          <div className="stat-card-label">Awaiting review</div>
-        </Link>
-        <Link href="/" className="stat-card slide-up stagger-4" style={{display:'block',textDecoration:'none'}}>
-          <div className="stat-card-value">{(data.byStatus?.revision || 0) + (data.byStatus?.rejected || 0)}</div>
-          <div className="stat-card-label">Need attention</div>
-        </Link>
-      </div>
-
-      <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-        <div className="card">
-          <div className="card-body">
-            <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 24 }}>By status</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {Object.entries(data.byStatus || {}).map(([status, count]) => (
-                <div key={status}>
-                  <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, fontFamily: 'var(--sans)', fontWeight: 500, textTransform: 'capitalize', color: 'var(--text-secondary)' }}>{status}</span>
-                    <span style={{ fontSize: 14, fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--text-primary)' }}>{count}</span>
-                  </div>
-                  <div style={{ height: 6, background: 'var(--bg-layer)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(count / maxStatus) * 100}%`, background: statusColors[status] || 'var(--text-secondary)', transition: 'width 0.8s ease' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <section className="cf-card p-5 anim-fade-up">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-semibold text-[15px]">Posts by status</h2>
+            <span className="cf-mono text-[10px]" style={{ color: 'hsl(var(--faint-foreground))' }}>ALL TIME</span>
           </div>
-        </div>
-
-        <div className="card">
-          <div className="card-body">
-            <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--sans)', marginBottom: 24 }}>By platform</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {Object.entries(data.byPlatform || {}).map(([platform, count]) => (
-                <div key={platform}>
-                  <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, fontFamily: 'var(--sans)', fontWeight: 500, textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
-                      {platform}
-                    </span>
-                    <span style={{ fontSize: 14, fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--text-primary)' }}>{count}</span>
-                  </div>
-                  <div style={{ height: 6, background: 'var(--bg-layer)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(count / maxPlatform) * 100}%`, background: 'var(--accent)', transition: 'width 0.8s ease' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="space-y-3.5">
+            {Object.entries(data.byStatus || {}).map(([status, count], i) => (
+              <HBar key={status} label={status} value={count} max={maxStatus} color={STATUS_COLORS[status] || 'hsl(var(--muted-foreground))'} delay={i * 0.08} />
+            ))}
           </div>
-        </div>
+        </section>
+
+        <section className="cf-card p-5 anim-fade-up" style={{ animationDelay: '.08s' }}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-semibold text-[15px]">Posts by platform</h2>
+            <span className="cf-mono text-[10px]" style={{ color: 'hsl(var(--faint-foreground))' }}>ALL TIME</span>
+          </div>
+          <div className="space-y-3.5">
+            {Object.entries(data.byPlatform || {}).map(([platform, count], i) => (
+              <HBar
+                key={platform}
+                label={platform}
+                value={count}
+                max={maxPlatform}
+                color={PLATFORM_META[platform]?.color || 'hsl(var(--primary))'}
+                delay={i * 0.08}
+              />
+            ))}
+          </div>
+        </section>
       </div>
     </div>
-  </PageTransition>
   );
 }
