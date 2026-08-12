@@ -43,3 +43,8 @@ next-env.d.ts
 .antigravity/
 .CFUserTextEncoding
 *.log
+
+# Backups and temp files
+*.backup
+*-for-kimi.txt
+

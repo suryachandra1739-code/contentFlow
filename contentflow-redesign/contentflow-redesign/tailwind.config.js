@@ -1,11 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: [
-    './src/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -67,8 +63,8 @@ module.exports = {
         "glow-primary": "var(--glow-primary)",
       },
       fontFamily: {
-        sans: ["var(--font-outfit)", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["var(--font-space-mono)", "ui-monospace", "monospace"],
+        sans: ["Outfit", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ['"Space Mono"', "ui-monospace", "monospace"],
       },
       keyframes: {
         "accordion-down": {

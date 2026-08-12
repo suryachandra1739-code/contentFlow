@@ -1,31 +1,12 @@
-'use client';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X, Camera, Globe, Video, Briefcase,
-  Moon, Sun,
-} from 'lucide-react';
-import { useTheme } from '@/lib/theme';
+import { type ReactNode } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Instagram, Facebook, Youtube, Linkedin, type LucideIcon } from 'lucide-react'
+import { STATUS_META, PLATFORM_META, type PostStatus, type Platform } from '@/lib/data'
+import { useTheme } from '@/lib/theme'
+import { Moon, Sun } from 'lucide-react'
 
-/* ── Platform & Status metadata ── */
-export const PLATFORM_META = {
-  instagram: { label: 'Instagram', color: '#E1306C' },
-  facebook: { label: 'Facebook', color: '#1877F2' },
-  youtube: { label: 'YouTube', color: '#FF0033' },
-  shorts: { label: 'YouTube Shorts', color: '#FF0033' },
-  linkedin: { label: 'LinkedIn', color: '#0A66C2' },
-};
-
-export const STATUS_META = {
-  draft: { label: 'Draft', var: '--st-draft' },
-  pending: { label: 'Pending', var: '--st-pending' },
-  approved: { label: 'Approved', var: '--st-approved' },
-  published: { label: 'Published', var: '--st-published' },
-  revision: { label: 'Revision', var: '--st-revision' },
-  rejected: { label: 'Rejected', var: '--st-rejected' },
-};
-
-/* ── Logo ── */
-export function Logo({ size = 30 }) {
+/* ---------------- Logo ---------------- */
+export function Logo({ size = 30 }: { size?: number }) {
   return (
     <div
       className="grid place-items-center rounded-[9px] shrink-0"
@@ -39,12 +20,12 @@ export function Logo({ size = 30 }) {
         <path d="M4 17V7l8 5 8-5v10l-8-5-8 5z" fill="white" fillOpacity="0.95" />
       </svg>
     </div>
-  );
+  )
 }
 
-/* ── Gradient avatar (hash-seeded) ── */
-export function GradAvatar({ name, hue, size = 40 }) {
-  const initials = name ? name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase() : '?';
+/* ---------------- Gradient avatar (hash-seeded) ---------------- */
+export function GradAvatar({ name, hue, size = 40 }: { name: string; hue: number; size?: number }) {
+  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
   return (
     <div
       className="grid place-items-center rounded-xl font-semibold text-white shrink-0"
@@ -55,32 +36,30 @@ export function GradAvatar({ name, hue, size = 40 }) {
     >
       {initials}
     </div>
-  );
+  )
 }
 
-/* ── Platform icons & badges ── */
-const PLATFORM_ICONS = {
-  instagram: Camera, facebook: Globe, youtube: Video, shorts: Video, linkedin: Briefcase,
-};
-
-export function PlatformIcon({ platform, size = 14 }) {
-  const Icon = PLATFORM_ICONS[platform] || Instagram;
-  const meta = PLATFORM_META[platform] || PLATFORM_META.instagram;
-  return <Icon size={size} style={{ color: meta.color }} />;
+/* ---------------- Platform badge ---------------- */
+const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
+  instagram: Instagram, facebook: Facebook, youtube: Youtube, linkedin: Linkedin,
 }
 
-export function PlatformBadge({ platform, label = false }) {
-  const meta = PLATFORM_META[platform] || PLATFORM_META.instagram;
+export function PlatformIcon({ platform, size = 14 }: { platform: Platform; size?: number }) {
+  const Icon = PLATFORM_ICONS[platform]
+  return <Icon size={size} style={{ color: PLATFORM_META[platform].color }} />
+}
+
+export function PlatformBadge({ platform, label = false }: { platform: Platform; label?: boolean }) {
+  const meta = PLATFORM_META[platform]
   return (
     <span className="cf-badge" style={{ color: meta.color, background: `${meta.color}14`, borderColor: `${meta.color}30` }}>
       <PlatformIcon platform={platform} size={12} />
       {label && meta.label}
     </span>
-  );
+  )
 }
 
-export function PlatformStack({ platforms }) {
-  if (!platforms || !Array.isArray(platforms)) return null;
+export function PlatformStack({ platforms }: { platforms: Platform[] }) {
   return (
     <div className="flex -space-x-1">
       {platforms.map((p) => (
@@ -92,18 +71,18 @@ export function PlatformStack({ platforms }) {
             background: 'hsl(var(--surface-3))',
             borderColor: 'hsl(var(--border))',
           }}
-          title={PLATFORM_META[p]?.label || p}
+          title={PLATFORM_META[p].label}
         >
           <PlatformIcon platform={p} size={11} />
         </span>
       ))}
     </div>
-  );
+  )
 }
 
-/* ── Status badge ── */
-export function StatusBadge({ status, pulse = false }) {
-  const meta = STATUS_META[status] || STATUS_META.draft;
+/* ---------------- Status badge ---------------- */
+export function StatusBadge({ status, pulse = false }: { status: PostStatus; pulse?: boolean }) {
+  const meta = STATUS_META[status]
   return (
     <span
       className="cf-badge"
@@ -116,11 +95,13 @@ export function StatusBadge({ status, pulse = false }) {
       <span className="dot" style={pulse ? { animation: 'cf-pulse-dot 1.8s ease-in-out infinite' } : undefined} />
       {meta.label}
     </span>
-  );
+  )
 }
 
-/* ── Stat card ── */
-export function StatCard({ icon: Icon, label, value, sub, tone, progress }) {
+/* ---------------- Stat card ---------------- */
+export function StatCard({
+  icon: Icon, label, value, sub, tone, progress,
+}: { icon: LucideIcon; label: string; value: string; sub?: string; tone: string; progress?: number }) {
   return (
     <div className="cf-card cf-card-hover p-4 sm:p-5 anim-fade-up">
       <div className="flex items-start justify-between">
@@ -139,17 +120,19 @@ export function StatCard({ icon: Icon, label, value, sub, tone, progress }) {
         <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: 'hsl(var(--surface-3))' }}>
           <div
             className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--cyan)))' }}
+            style={{ width: `${progress}%`, background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--cyan)))` }}
           />
         </div>
       )}
       {sub && <div className="mt-2 text-[11px]" style={{ color: 'hsl(var(--faint-foreground))' }}>{sub}</div>}
     </div>
-  );
+  )
 }
 
-/* ── Modal ── */
-export function Modal({ open, onClose, children, width = 520 }) {
+/* ---------------- Modal ---------------- */
+export function Modal({
+  open, onClose, children, width = 520,
+}: { open: boolean; onClose: () => void; children: ReactNode; width?: number }) {
   return (
     <AnimatePresence>
       {open && (
@@ -183,11 +166,11 @@ export function Modal({ open, onClose, children, width = 520 }) {
         </motion.div>
       )}
     </AnimatePresence>
-  );
+  )
 }
 
-/* ── Empty state ── */
-export function EmptyState({ icon: Icon, title, body, action }) {
+/* ---------------- Empty state ---------------- */
+export function EmptyState({ icon: Icon, title, body, action }: { icon: LucideIcon; title: string; body: string; action?: ReactNode }) {
   return (
     <div className="cf-card grid place-items-center text-center px-6 py-14 anim-fade-in">
       <div
@@ -200,13 +183,13 @@ export function EmptyState({ icon: Icon, title, body, action }) {
       <div className="mt-1 text-[13px] max-w-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{body}</div>
       {action && <div className="mt-5">{action}</div>}
     </div>
-  );
+  )
 }
 
-/* ── Theme toggle (animated switch) ── */
+/* ---------------- Theme toggle (animated switch) ---------------- */
 export function ThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const dark = theme === 'dark';
+  const { theme, toggle } = useTheme()
+  const dark = theme === 'dark'
   return (
     <button
       onClick={toggle}
@@ -227,11 +210,13 @@ export function ThemeToggle() {
         {dark ? <Moon size={10} /> : <Sun size={10} />}
       </motion.span>
     </button>
-  );
+  )
 }
 
-/* ── Segmented tabs with sliding pill ── */
-export function SegTabs({ options, value, onChange }) {
+/* ---------------- Segmented tabs with sliding pill ---------------- */
+export function SegTabs({
+  options, value, onChange,
+}: { options: { id: string; label: string; count?: number }[]; value: string; onChange: (id: string) => void }) {
   return (
     <div
       className="inline-flex items-center gap-0.5 p-0.5 rounded-[10px] overflow-x-auto scrollbar-thin max-w-full"
@@ -254,11 +239,11 @@ export function SegTabs({ options, value, onChange }) {
         </button>
       ))}
     </div>
-  );
+  )
 }
 
-/* ── Page header ── */
-export function PageHeader({ title, sub, actions }) {
+/* ---------------- Page header ---------------- */
+export function PageHeader({ title, sub, actions }: { title: string; sub?: string; actions?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
       <div>
@@ -267,5 +252,5 @@ export function PageHeader({ title, sub, actions }) {
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
-  );
+  )
 }

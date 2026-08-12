@@ -1,0 +1,126 @@
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse } from 'next/server';
+
+export async function middleware(request) {
+  const path = request.nextUrl.pathname;
+
+  // Always allow public routes — no auth check at all
+  if (
+    path.startsWith('/review/') ||
+    path.startsWith('/api/') ||
+    path.startsWith('/_next/') ||
+    path.startsWith('/auth/') ||
+    path.startsWith('/google') ||
+    path.endsWith('.html') ||
+    path === '/privacy' ||
+    path === '/favicon.ico' ||
+    path === '/update-password'
+  ) {
+    return NextResponse.next();
+  }
+
+  // If Supabase env vars are missing, skip auth entirely (dev mode)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next();
+  }
+
+  try {
+    let supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // No user and not on login page → redirect to login
+    if (!user && path !== '/login') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+
+    // User exists and on login page → redirect to home
+    if (user && path === '/login') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    // Redirection of deprecated client-portal routes to unified dashboard
+    if (path.startsWith('/client-portal')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    if (!user) {
+      return supabaseResponse;
+    }
+
+    // User exists — try to get role from metadata first to avoid db query
+    let role = user.user_metadata?.role;
+
+    if (!role) {
+      try {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile?.role) role = profile.role;
+      } catch {
+        role = 'team';
+      }
+    }
+
+    // Client trying to access team/admin specific routes
+    if (role === 'client') {
+      if (
+        path.startsWith('/clients') ||
+        path.startsWith('/posts/new') ||
+        path.startsWith('/analytics') ||
+        path.startsWith('/admin') ||
+        path.startsWith('/automations')
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/';
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // Non-admin trying to access admin routes
+    if (path.startsWith('/admin') && role !== 'admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    return supabaseResponse;
+  } catch (error) {
+    // If anything crashes (bad env vars, network error), let the request through
+    console.error('Middleware error:', error.message);
+    return NextResponse.next();
+  }
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|html)$).*)',
+  ],
+};

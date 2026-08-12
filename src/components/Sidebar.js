@@ -2,302 +2,266 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-  LayoutDashboard, FolderKanban, SquarePen, Users, BarChart3, Share2,
-  ScrollText, Bell, Plus, Menu, LogOut, Check, MessageSquare, UploadCloud, Search,
-} from 'lucide-react';
 import { createClientBrowser } from '@/lib/supabase';
-import { Logo, ThemeToggle } from '@/components/bits';
+import NotificationBell from './NotificationBell';
 
-function NotificationBell() {
-  const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const supabase = createClientBrowser();
-
-  useEffect(() => {
-    async function fetchNotifications() {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('read', false)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (data) setNotifications(data);
-    }
-    fetchNotifications();
-  }, []);
-
-  const iconMap = { approved: Check, comment: MessageSquare, published: UploadCloud };
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="relative grid place-items-center rounded-[10px] transition-colors hover:bg-[hsl(var(--surface-3))]"
-        style={{ width: 34, height: 34, color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(var(--border))' }}
-        aria-label="Notifications"
-      >
-        <Bell size={15} />
-        {notifications.length > 0 && (
-          <span
-            className="absolute -top-1 -right-1 grid place-items-center rounded-full cf-mono text-[9px] font-bold text-white"
-            style={{ width: 15, height: 15, background: 'hsl(var(--primary))', boxShadow: '0 0 0 2px hsl(var(--sidebar-background))' }}
-          >
-            {notifications.length}
-          </span>
-        )}
-      </button>
-      <AnimatePresence>
-        {open && (
-          <>
-            <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, y: -6, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.98 }}
-              transition={{ duration: 0.16 }}
-              className="absolute right-0 top-11 z-40 w-[300px] cf-glass rounded-xl shadow-pop overflow-hidden"
-            >
-              <div className="px-3.5 py-2.5 text-xs font-semibold flex items-center justify-between" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-                Notifications
-                <span className="cf-mono text-[10px] font-normal" style={{ color: 'hsl(var(--faint-foreground))' }}>{notifications.length} unread</span>
-              </div>
-              {notifications.length === 0 ? (
-                <div className="px-3.5 py-6 text-center text-xs" style={{ color: 'hsl(var(--faint-foreground))' }}>No new notifications</div>
-              ) : (
-                notifications.map((n) => {
-                  const Icon = iconMap[n.type] || Check;
-                  return (
-                    <div key={n.id} className="flex gap-2.5 px-3.5 py-2.5 transition-colors hover:bg-[hsl(var(--surface-3)/0.5)]">
-                      <span className="grid place-items-center rounded-lg shrink-0" style={{ width: 26, height: 26, color: 'hsl(var(--primary))', background: 'hsl(var(--primary) / .12)' }}>
-                        <Icon size={12} />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="text-xs leading-snug">{n.message || 'Notification'}</div>
-                        <div className="cf-mono text-[10px] mt-0.5" style={{ color: 'hsl(var(--faint-foreground))' }}>
-                          {n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function SidebarBody({ userRole, userName, onNavigate, onSignOut }) {
-  const pathname = usePathname();
-
-  const NAV = [
-    {
-      section: 'Main',
-      items: [
-        { href: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-        { href: '/projects', label: 'Projects', icon: FolderKanban },
-        ...(userRole !== 'client' ? [{ href: '/posts/new', label: 'New Post', icon: SquarePen }] : []),
-      ],
-    },
-    {
-      section: 'Manage',
-      items: [
-        ...(userRole !== 'client' ? [{ href: '/clients', label: 'Clients', icon: Users }] : []),
-        { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-        ...(userRole !== 'client' ? [{ href: '/clients', label: 'Social Accounts', icon: Share2 }] : []),
-      ],
-    },
-    ...(userRole === 'admin' ? [{
-      section: 'Admin',
-      items: [
-        { href: '/admin/team', label: 'Team', icon: Users },
-        { href: '/admin/audit-log', label: 'Audit Log', icon: ScrollText },
-      ],
-    }] : []),
-  ];
-
-  const isActive = (item) => {
-    if (item.exact) return pathname === item.href;
-    return pathname === item.href || pathname.startsWith(item.href + '/');
-  };
-
-  const initials = userName ? userName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase() : 'CF';
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2.5 px-4 pt-5 pb-4">
-        <Logo />
-        <div className="min-w-0 flex-1">
-          <div className="font-bold text-[15px] leading-tight tracking-tight">ContentFlow</div>
-          <div className="text-[10px] font-medium" style={{ color: 'hsl(var(--faint-foreground))' }}>Approval Platform</div>
-        </div>
-        <NotificationBell />
-      </div>
-
-      <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-3 space-y-5">
-        {NAV.map((group) => (
-          <div key={group.section}>
-            <div className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: 'hsl(var(--faint-foreground))' }}>
-              {group.section}
-            </div>
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <Link
-                  key={item.href + item.label}
-                  href={item.href}
-                  onClick={onNavigate}
-                  className={`cf-navitem ${isActive(item) ? 'active' : ''}`}
-                >
-                  <item.icon size={15} />
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      <div className="px-3 py-3 space-y-2" style={{ borderTop: '1px solid hsl(var(--sidebar-border))' }}>
-        <div className="flex items-center justify-between px-2">
-          <span className="text-xs font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Theme</span>
-          <ThemeToggle />
-        </div>
-        <div className="flex items-center gap-2.5 rounded-[10px] px-2 py-2" style={{ background: 'hsl(var(--surface-3) / .5)' }}>
-          <div className="grid place-items-center rounded-full text-[11px] font-bold text-white shrink-0" style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#8b5cf6,#06b6d4)' }}>{initials}</div>
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold truncate">{userName || 'User'}</div>
-            <div className="text-[10px]" style={{ color: 'hsl(var(--faint-foreground))' }}>{userRole === 'admin' ? 'Agency Admin' : userRole === 'client' ? 'Client' : 'Team Member'}</div>
-          </div>
-          <button className="cf-btn-ghost cf-btn cf-btn-sm !px-1.5" title="Sign out" onClick={onSignOut}><LogOut size={13} /></button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const MOBILE_TABS = [
-  { href: '/', label: 'Home', icon: LayoutDashboard, exact: true },
-  { href: '/clients', label: 'Clients', icon: Users },
-  { href: '/analytics', label: 'Stats', icon: BarChart3 },
-];
+import ClaudeLogo from './ClaudeLogo';
 
 export default function Sidebar({ onOpenNewPost }) {
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [userRole, setUserRole] = useState('team');
-  const [userName, setUserName] = useState('');
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
+  const [userRole, setUserRole] = useState('team');
   const supabase = createClientBrowser();
 
   useEffect(() => {
-    async function loadUser() {
+    const savedTheme = localStorage.getItem('contentflow-theme') || 'light';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.body.classList.toggle('light', savedTheme === 'light');
+
+    async function getRole() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('role, name')
+          .select('role')
           .eq('id', user.id)
           .single();
-        if (profile) {
-          setUserRole(profile.role || 'team');
-          setUserName(profile.name || user.email || '');
+        if (profile?.role) {
+          setUserRole(profile.role);
         }
       }
     }
-    loadUser();
+    getRole();
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('contentflow-theme', nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.body.classList.toggle('light', nextTheme === 'light');
+  };
+
+  const isActive = (path) => pathname === path || (path !== '/' && pathname.startsWith(path));
+
+  const closeSidebar = () => setIsOpen(false);
+
+  // Derive page title from pathname for the mobile header
+  const getPageTitle = () => {
+    if (pathname === '/') return 'Dashboard';
+    if (pathname.startsWith('/projects')) return 'Projects';
+    if (pathname.startsWith('/posts/new')) return 'New Post';
+    if (pathname.startsWith('/posts')) return 'Post';
+    if (pathname.startsWith('/clients')) return 'Clients';
+    if (pathname.startsWith('/analytics')) return 'Analytics';
+    if (pathname.startsWith('/admin/team')) return 'Team';
+    if (pathname.startsWith('/admin/audit-log')) return 'Audit Log';
+    if (pathname.startsWith('/automations/setup')) return 'Setup Guide';
+    if (pathname.startsWith('/automations')) return 'Automations';
+    return 'ContentFlow';
   };
 
   return (
     <>
-      {/* Desktop floating sidebar */}
-      <aside
-        className="hidden lg:flex fixed z-40 flex-col rounded-2xl cf-glass"
-        style={{ top: 16, left: 16, bottom: 16, width: 240 }}
-      >
-        <SidebarBody userRole={userRole} userName={userName} onSignOut={handleSignOut} />
-      </aside>
-
-      {/* Mobile top bar */}
-      <div className="lg:hidden sticky top-0 z-30 cf-glass flex items-center gap-2.5 px-4 py-3" style={{ borderRadius: 0 }}>
-        <Logo size={26} />
-        <span className="font-bold text-[15px] tracking-tight flex-1">ContentFlow</span>
-        <button className="grid place-items-center rounded-lg" style={{ width: 32, height: 32, border: '1px solid hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }} aria-label="Search">
-          <Search size={14} />
-        </button>
-        <NotificationBell />
+      {/* Mobile Header Bar — full-width frosted bar with logo + title + notification bell */}
+      <div className="mobile-toggle-btn">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <ClaudeLogo size={28} />
+          <span className="mobile-header-title" style={{ fontWeight: 700, letterSpacing: '-0.2px' }}>ContentFlow</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
+          <NotificationBell role="team" />
+        </div>
       </div>
 
-      {/* Mobile bottom nav — floating pill */}
-      <div className="lg:hidden fixed bottom-4 inset-x-4 z-40 flex items-center gap-1">
-        <nav className="cf-glass rounded-2xl shadow-pop flex items-center flex-1 px-1.5 py-1.5">
-          {MOBILE_TABS.filter(t => !(t.href === '/clients' && userRole === 'client')).map((t) => {
-            const active = t.exact ? pathname === t.href : pathname.startsWith(t.href);
-            return (
-              <Link
-                key={t.href}
-                href={t.href}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl text-[10px] font-medium transition-colors ${active ? '' : 'opacity-60'}`}
-                style={{
-                  color: active ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                  background: active ? 'hsl(var(--primary) / 0.12)' : 'transparent',
-                }}
-              >
-                <t.icon size={17} />
-                {t.label}
-              </Link>
-            );
-          })}
-          <button
-            onClick={() => setMoreOpen(true)}
-            className="flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl text-[10px] font-medium opacity-60"
-            style={{ color: 'hsl(var(--muted-foreground))' }}
-          >
-            <Menu size={17} />
-            More
+      {/* Glassmorphic Mobile Backdrop Overlay */}
+      {isOpen && <div className="sidebar-backdrop" onClick={closeSidebar} />}
+
+      {/* Floating Bottom Nav Bar for Mobile */}
+      <div className="mobile-bottom-nav">
+        <div className="mobile-bottom-nav-pill">
+          <Link href="/" className={`mobile-bottom-nav-item ${pathname === '/' ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+              <rect x="3" y="3" width="7" height="9" rx="1" />
+              <rect x="14" y="3" width="7" height="5" rx="1" />
+              <rect x="14" y="12" width="7" height="9" rx="1" />
+              <rect x="3" y="16" width="7" height="5" rx="1" />
+            </svg>
+            <span>Overview</span>
+          </Link>
+          
+          <Link href="/projects" className={`mobile-bottom-nav-item ${pathname.startsWith('/projects') ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <span>Projects</span>
+          </Link>
+
+          {userRole !== 'client' && (
+            <Link href="/clients" className={`mobile-bottom-nav-item ${pathname.startsWith('/clients') ? 'active' : ''}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+              <span>Clients</span>
+            </Link>
+          )}
+
+          <button onClick={() => setIsOpen(true)} className={`mobile-bottom-nav-item ${isOpen ? 'active' : ''}`} style={{ background: 'none', border: 'none', color: 'inherit', padding: 0 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon">
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="19" cy="12" r="1.5" />
+              <circle cx="5" cy="12" r="1.5" />
+            </svg>
+            <span>More</span>
           </button>
-        </nav>
-        {/* FAB */}
+        </div>
+
         {userRole !== 'client' && (
-          <Link
-            href="/posts/new"
-            className="grid place-items-center rounded-2xl text-white shrink-0 transition-transform active:scale-95"
-            style={{
-              width: 52, height: 52,
-              background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--cyan)))',
-              boxShadow: '0 8px 24px -6px hsl(var(--primary) / 0.6)',
+          <Link 
+            href="/posts/new" 
+            className="mobile-bottom-fab"
+            onClick={(e) => {
+              if (onOpenNewPost && window.innerWidth <= 768) {
+                e.preventDefault();
+                onOpenNewPost();
+              }
             }}
-            aria-label="New post"
           >
-            <Plus size={22} />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
           </Link>
         )}
       </div>
 
-      {/* Mobile "More" slide-out */}
-      <AnimatePresence>
-        {moreOpen && (
-          <motion.div className="fixed inset-0 z-50 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <div className="absolute inset-0" style={{ background: 'hsl(240 30% 2% / .55)', backdropFilter: 'blur(4px)' }} onClick={() => setMoreOpen(false)} />
-            <motion.div
-              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-              className="absolute left-0 top-0 bottom-0 w-[280px] cf-glass"
-              style={{ borderRadius: 0 }}
-            >
-              <SidebarBody userRole={userRole} userName={userName} onNavigate={() => setMoreOpen(false)} onSignOut={handleSignOut} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`} id="sidebar">
+        {/* Close button — positioned top-right inside sidebar, separate from logo */}
+        <button
+          className="sidebar-close-btn"
+          onClick={closeSidebar}
+          aria-label="Close navigation menu"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <ClaudeLogo size={36} />
+            <div>
+              <h1>ContentFlow</h1>
+              <span>Approval Platform</span>
+            </div>
+          </div>
+          <div className="hide-on-mobile">
+            <NotificationBell role="team" />
+          </div>
+        </div>
+        <nav className="sidebar-nav">
+          <div className="sidebar-section">Main</div>
+          <Link href="/" onClick={closeSidebar} className={`nav-item ${isActive('/') && pathname === '/' ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+            Dashboard
+          </Link>
+          <Link href="/projects" onClick={closeSidebar} className={`nav-item ${isActive('/projects') ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
+            Projects
+          </Link>
+          {userRole !== 'client' && (
+            <Link href="/posts/new" onClick={closeSidebar} className={`nav-item ${isActive('/posts/new') ? 'active' : ''}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+              New Post
+            </Link>
+          )}
+
+          <div className="sidebar-section">Manage</div>
+          {userRole !== 'client' && (
+            <Link href="/clients" onClick={closeSidebar} className={`nav-item ${isActive('/clients') ? 'active' : ''}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+              Clients
+            </Link>
+          )}
+          <Link href="/analytics" onClick={closeSidebar} className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+            Analytics
+          </Link>
+          {userRole !== 'client' && (
+            <Link href="/clients" onClick={closeSidebar} className="nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/></svg>
+              Social Accounts
+            </Link>
+          )}
+
+
+          {userRole === 'admin' && (
+            <>
+              <div className="sidebar-section">Admin</div>
+              <Link href="/admin/team" onClick={closeSidebar} className={`nav-item ${isActive('/admin/team') ? 'active' : ''}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></svg>
+                Team
+              </Link>
+              <Link href="/admin/audit-log" onClick={closeSidebar} className={`nav-item ${isActive('/admin/audit-log') ? 'active' : ''}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+                Audit Log
+              </Link>
+            </>
+          )}
+
+          <div
+            className="nav-item"
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            onClick={toggleTheme}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+              <span>Dark Mode</span>
+            </div>
+            <div style={{
+              width: 32,
+              height: 18,
+              borderRadius: 99,
+              background: theme === 'dark' ? 'var(--accent)' : 'rgba(120, 120, 128, 0.32)',
+              position: 'relative',
+              transition: 'background 0.2s',
+              flexShrink: 0
+            }}>
+              <div style={{
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute',
+                top: 3,
+                left: theme === 'dark' ? 17 : 3,
+                transition: 'left 0.2s',
+              }} />
+            </div>
+          </div>
+
+          <div
+            className="nav-item"
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, marginTop: 12, color: 'var(--text-muted)' }}
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push('/login');
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            <span>Sign Out</span>
+          </div>
+        </nav>
+      </aside>
     </>
   );
 }

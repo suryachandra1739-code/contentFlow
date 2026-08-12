@@ -1,21 +1,24 @@
 'use client';
+import PageTransition from '@/components/PageTransition';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
-import { motion } from 'framer-motion';
-import { Plus, Trash2, FolderKanban, ArrowRight, AlertTriangle, X } from 'lucide-react';
-import { PageHeader, Modal, GradAvatar, EmptyState } from '@/components/bits';
 import { createClientBrowser } from '@/lib/supabase';
 
 export default function ProjectsPage() {
   return (
     <Suspense fallback={
-      <div>
-        <PageHeader title="Projects" sub="Loading projects..." />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger">
-          {[...Array(6)].map((_, i) => <div key={i} className="cf-skeleton h-48 w-full rounded-2xl" />)}
+      <div className="fade-in">
+        <div className="page-header">
+          <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <h1 style={{ margin: 0 }}>Projects</h1>
+              <p style={{ marginTop: 4 }}>Manage your content projects</p>
+            </div>
+          </div>
         </div>
+        <div className="empty-state">Loading projects...</div>
       </div>
     }>
       <ProjectsContent />
@@ -83,7 +86,7 @@ function ProjectsContent() {
     setShowModal(false);
     setForm({ client_id: clientIdFilter || '', name: '', description: '' });
     if (!result.error) {
-      setProjects(prev => [result, ...prev]);
+      setProjects(prev => [result, ...prev]); // instantly update UI
       addToast('Project created', 'success');
       router.refresh();
     } else {
@@ -94,133 +97,157 @@ function ProjectsContent() {
   const handleConfirmDelete = async (id) => {
     const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
     const result = await res.json();
-    if (result.error) { addToast(result.error, 'error'); setDeleteTarget(null); return; }
+    if (result.error) {
+      addToast(result.error, 'error');
+      setDeleteTarget(null);
+      return;
+    }
     addToast('Project deleted', 'success');
     setProjects(prev => prev.filter(p => p.id !== id));
     setDeleteTarget(null);
     router.refresh();
   };
 
-  const filteredClient = clientIdFilter && clients.find(c => c.id === clientIdFilter);
-
   return (
-    <div>
-      <PageHeader
-        title="Projects"
-        sub="Manage your content projects"
-        actions={
-          <div className="flex items-center gap-2">
-            {clientIdFilter && filteredClient && (
-              <div className="cf-badge" style={{ color: 'hsl(var(--primary))', background: 'hsl(var(--primary) / .12)', borderColor: 'hsl(var(--primary) / .3)' }}>
-                Client: {filteredClient.company_name}
-                <button onClick={() => router.push('/projects')} className="ml-1 hover:opacity-70">✕</button>
-              </div>
-            )}
-            {!loading && userRole !== 'client' && (
-              <button className="cf-btn cf-btn-primary" onClick={() => setShowModal(true)}>
-                <Plus size={15} /> New project
-              </button>
-            )}
+    <PageTransition><div className="fade-in">
+      <div className="page-header">
+        <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0 }}>Projects</h1>
+              {!loading && clientIdFilter && clients.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--accent-soft)', color: 'var(--accent)', padding: '4px 12px', borderRadius: 99, fontSize: 13, fontWeight: 600 }}>
+                  Client: {clients.find(c => c.id === clientIdFilter)?.company_name || 'Filtered'}
+                  <button 
+                    onClick={() => router.push('/projects')} 
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '0 2px', fontSize: 14, fontWeight: 700 }}
+                    title="Clear filter"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+            <p style={{ marginTop: 4 }}>Manage your content projects</p>
           </div>
-        }
-      />
+          {!loading && userRole !== 'client' && (
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>New project</button>
+          )}
+        </div>
+      </div>
 
       {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger">
-          {[...Array(6)].map((_, i) => <div key={i} className="cf-skeleton h-48 w-full rounded-2xl" />)}
-        </div>
-      ) : projects.length === 0 ? (
-        <EmptyState
-          icon={FolderKanban}
-          title="No projects yet"
-          body="Create your first project to start organizing content."
-          action={userRole !== 'client' && <button className="cf-btn cf-btn-primary" onClick={() => setShowModal(true)}><Plus size={14} /> New project</button>}
-        />
+        <div className="empty-state">Loading projects...</div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger">
-          {projects.map(project => {
-            const hash = project.clients?.company_name?.split('').reduce((a, c) => a + c.charCodeAt(0), 0) || 0;
-            const hue = (hash * 37) % 360;
-
-            return (
-              <motion.div key={project.id} whileHover={{ y: -3 }} className="cf-card cf-card-hover relative anim-fade-up overflow-hidden">
-                <Link href={`/projects/${project.id}`} className="block p-5" style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <GradAvatar name={project.clients?.company_name} hue={hue} size={36} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[15px] font-semibold truncate">{project.name}</div>
-                      <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{project.clients?.company_name || 'No client'}</div>
+        <>
+          <div className="content-grid">
+            {projects.map(project => (
+              <div className="card" key={project.id} style={{position:'relative', overflow:'hidden'}}>
+                <Link href={`/projects/${project.id}`} style={{display:'block', width:'100%', height:'100%', textDecoration:'none', color:'inherit'}}>
+                  <div className="card-body">
+                    <div className="flex items-center gap-12 mb-16" style={{ paddingRight: 24 }}>
+                      <div 
+                        className="avatar" 
+                        style={{
+                          background: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? project.clients.avatar_color : 'var(--accent-soft)',
+                          color: project.clients?.avatar_color && project.clients.avatar_color !== '#161616' ? '#ffffff' : 'var(--accent)',
+                          fontWeight: 700
+                        }}
+                      >
+                        {project.clients?.company_name?.[0]?.toUpperCase() || '?'}
+                      </div>
+                      <div>
+                        <div style={{fontSize:15,fontWeight:600}}>{project.name}</div>
+                        <div style={{fontSize:13,color:'var(--text-muted)'}}>{project.clients?.company_name || 'No client'}</div>
+                      </div>
                     </div>
-                  </div>
-                  {project.description && (
-                    <p className="text-[13px] line-clamp-2 mb-4" style={{ color: 'hsl(var(--muted-foreground))' }}>{project.description}</p>
-                  )}
-                  <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid hsl(var(--border))' }}>
-                    <span className="cf-badge capitalize" style={{ color: 'hsl(var(--st-approved))', background: 'hsl(var(--st-approved) / .12)', borderColor: 'hsl(var(--st-approved) / .3)' }}>
-                      {project.status || 'active'}
-                    </span>
-                    <ArrowRight size={14} style={{ color: 'hsl(var(--faint-foreground))' }} />
+                    {project.description && <p style={{fontSize:14,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.5}}>{project.description}</p>}
+                    <div style={{paddingTop:16,borderTop:'1px solid var(--border)'}}>
+                      <span style={{fontSize:13,color:'var(--text-muted)', textTransform:'capitalize'}}>{project.status || 'active'}</span>
+                    </div>
                   </div>
                 </Link>
                 {userRole !== 'client' && (
-                  <button
-                    className="absolute top-3 right-3 cf-btn cf-btn-ghost cf-btn-sm !px-1.5"
+                  <button 
+                    className="btn-delete" 
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteTarget(project); }}
                     title="Delete project"
+                    style={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      zIndex: 10
+                    }}
                   >
-                    <Trash2 size={13} />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                   </button>
                 )}
-              </motion.div>
-            );
-          })}
+              </div>
+            ))}
+          </div>
+
+          {projects.length === 0 && (
+            <div className="empty-state">
+              No projects yet. Create your first project to start organizing content.
+            </div>
+          )}
+        </>
+      )}
+
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>New project</h2>
+              <button className="btn-icon" onClick={() => setShowModal(false)} style={{fontSize:20,color:'var(--text-muted)'}}>✕</button>
+            </div>
+            <form onSubmit={handleCreate}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Client</label>
+                  <select className="form-select" value={form.client_id} onChange={e => setForm({...form, client_id: e.target.value})} required>
+                    <option value="">Select a client</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.company_name} — {c.contact_name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Project name</label>
+                  <input className="form-input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Summer Campaign" required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea className="form-textarea" value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Brief description..." rows={3} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Create project</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* New Project Modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)}>
-        <div className="p-6">
-          <h2 className="cf-display text-lg mb-4">New project</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block" style={{ color: 'hsl(var(--faint-foreground))' }}>Client</label>
-              <select className="cf-input" value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })} required>
-                <option value="">Select a client</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.company_name} — {c.contact_name}</option>)}
-              </select>
+      {deleteTarget && (
+        <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+            <div className="modal-header">
+              <h2>Confirm Deletion</h2>
+              <button className="btn-icon" onClick={() => setDeleteTarget(null)} style={{ fontSize: 20, color: 'var(--text-muted)' }}>✕</button>
             </div>
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block" style={{ color: 'hsl(var(--faint-foreground))' }}>Project name</label>
-              <input className="cf-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Summer Campaign" required />
+            <div className="modal-body" style={{ padding: '20px 24px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+                Are you sure you want to delete <strong>{deleteTarget.name}</strong>? This action cannot be undone.
+              </p>
             </div>
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block" style={{ color: 'hsl(var(--faint-foreground))' }}>Description</label>
-              <textarea className="cf-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description..." rows={3} />
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
+              <button type="button" className="btn btn-danger" onClick={() => handleConfirmDelete(deleteTarget.id)}>Delete</button>
             </div>
-            <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid hsl(var(--border))' }}>
-              <button type="button" className="cf-btn cf-btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-              <button type="submit" className="cf-btn cf-btn-primary">Create project</button>
-            </div>
-          </form>
-        </div>
-      </Modal>
-
-      {/* Delete Confirmation */}
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} width={400}>
-        <div className="p-6 text-center">
-          <div className="mx-auto grid place-items-center rounded-2xl mb-4" style={{ width: 52, height: 52, background: 'hsl(var(--destructive) / .12)', color: 'hsl(var(--destructive))', border: '1px solid hsl(var(--destructive) / .3)' }}>
-            <AlertTriangle size={22} />
-          </div>
-          <h2 className="cf-display text-lg">Confirm Deletion</h2>
-          <p className="text-[13px] mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This action cannot be undone.
-          </p>
-          <div className="flex gap-2 mt-5 justify-center">
-            <button className="cf-btn cf-btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
-            <button className="cf-btn cf-btn-danger" onClick={() => handleConfirmDelete(deleteTarget.id)}>Delete</button>
           </div>
         </div>
-      </Modal>
+      )}
     </div>
+  </PageTransition>
   );
 }

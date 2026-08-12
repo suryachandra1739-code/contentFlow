@@ -3,49 +3,8 @@ import { useState, Suspense } from 'react';
 import { createClientBrowser } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
-import { Logo } from '@/components/bits';
 
-/* Animated aurora-sky backdrop */
-function Sky() {
-  return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden>
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, hsl(240 20% 6%), hsl(250 25% 8%) 55%, hsl(240 15% 5%))' }} />
-      {[
-        { c: '246 90% 68%', size: 560, x: '12%', y: '18%', d: '26s', delay: '0s' },
-        { c: '187 92% 55%', size: 440, x: '72%', y: '58%', d: '32s', delay: '-8s' },
-        { c: '280 85% 60%', size: 380, x: '55%', y: '8%', d: '38s', delay: '-16s' },
-      ].map((b, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            width: b.size, height: b.size, left: b.x, top: b.y,
-            background: `radial-gradient(circle, hsl(${b.c} / 0.22), transparent 65%)`,
-            filter: 'blur(40px)',
-            animation: `cf-drift ${b.d} ease-in-out infinite`,
-            animationDelay: b.delay,
-          }}
-        />
-      ))}
-      {/* star field */}
-      {Array.from({ length: 40 }).map((_, i) => (
-        <span
-          key={i}
-          className="absolute rounded-full bg-white"
-          style={{
-            width: i % 3 === 0 ? 2 : 1, height: i % 3 === 0 ? 2 : 1,
-            left: `${(i * 37) % 100}%`, top: `${(i * 53) % 100}%`,
-            opacity: 0.12 + (i % 5) * 0.08,
-          }}
-        />
-      ))}
-      {/* horizon glow */}
-      <div className="absolute inset-x-0 bottom-0 h-64" style={{ background: 'linear-gradient(0deg, hsl(246 90% 68% / .10), transparent)' }} />
-    </div>
-  );
-}
+import ClaudeLogo from '@/components/ClaudeLogo';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -105,94 +64,94 @@ function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-screen grid place-items-center p-4 overflow-hidden">
-      <Sky />
+    <div className="login-split-container">
+      {/* Sky Clouds Background (Login Page Only) */}
+      <div className="sky-cloud sky-cloud-1"></div>
+      <div className="sky-cloud sky-cloud-2"></div>
+      <div className="sky-cloud sky-cloud-3"></div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 0.9, 0.3, 1] }}
-        className="relative w-full max-w-[400px]"
-      >
-        <div className="flex flex-col items-center mb-7">
-          <Logo size={46} />
-          <h1 className="cf-display text-[26px] mt-4">Welcome back</h1>
-          <p className="text-[13px] mt-1" style={{ color: 'hsl(240 6% 62%)' }}>
-            Sign in to your ContentFlow workspace
-          </p>
+      {/* Stacked Pills Form Container */}
+      <form onSubmit={handleLogin} className="showcase-pills-stack" style={{ width: '100%', padding: '0 20px', boxSizing: 'border-box' }}>
+
+        {/* Mockup Header Info */}
+        <div style={{ textAlign: 'center', marginBottom: '16px', zIndex: 10 }}>
+          <ClaudeLogo size={44} circleColor="rgba(218, 119, 86, 0.15)" iconColor="#da7756" style={{ margin: '0 auto 12px', border: '1px solid rgba(218, 119, 86, 0.3)', backdropFilter: 'blur(8px)' }} />
+          <h1 style={{ fontSize: 24, fontWeight: 600, color: '#1e3a6c', margin: '0 0 4px 0', fontFamily: 'var(--sans)' }}>Sign in to workspace</h1>
+          <p style={{ color: 'rgba(30, 58, 108, 0.75)', fontSize: 13, margin: 0, fontWeight: 500 }}>Welcome back to ContentFlow</p>
         </div>
 
         {redirectMessage && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-            className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 mb-4 text-xs font-medium"
-            style={{ background: 'hsl(38 96% 60% / .12)', border: '1px solid hsl(38 96% 60% / .3)', color: 'hsl(38 96% 70%)' }}
-          >
-            <AlertCircle size={14} className="shrink-0" /> {redirectMessage}
-          </motion.div>
+          <div style={{ zIndex: 10, padding: '10px 20px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '100px', fontSize: 12, color: '#b45309', fontWeight: 600, textAlign: 'center', maxWidth: '320px', backdropFilter: 'blur(8px)' }}>
+            {redirectMessage}
+          </div>
         )}
 
-        <div className="cf-glass rounded-2xl p-6 shadow-pop">
-          <form onSubmit={handleLogin} className="space-y-3.5">
-            <div className="relative">
-              <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'hsl(240 5% 50%)' }} />
-              <input
-                type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@agency.com"
-                className="cf-input !h-12 !rounded-full !pl-11"
-                style={{ background: 'hsl(240 10% 8% / .7)' }}
-              />
-            </div>
-            <div className="relative">
-              <Lock size={15} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'hsl(240 5% 50%)' }} />
-              <input
-                type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="cf-input !h-12 !rounded-full !pl-11 !pr-11"
-                style={{ background: 'hsl(240 10% 8% / .7)' }}
-              />
-              <button
-                type="button" onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: 'hsl(240 5% 50%)' }}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between pt-0.5">
-              <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: 'hsl(240 6% 62%)' }}>
-                <input type="checkbox" className="accent-[hsl(246_90%_68%)]" defaultChecked /> Remember me
-              </label>
-              <button
-                type="button"
-                className="text-xs font-medium transition-colors hover:brightness-125"
-                style={{ color: 'hsl(246 90% 72%)' }}
-                onClick={handleResetPassword}
-                disabled={resetLoading}
-              >
-                {resetLoading ? 'Sending...' : 'Forgot password?'}
-              </button>
-            </div>
-
-            <button type="submit" className="cf-btn cf-btn-primary cf-btn-lg w-full !rounded-full mt-1" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'} {!loading && <ArrowRight size={15} />}
-            </button>
-          </form>
-
-          <div className="mt-5 text-center text-xs" style={{ color: 'hsl(240 5% 48%)' }}>
-            Client with an invite?{' '}
-            <button onClick={() => router.push('/client-portal')} className="font-medium hover:brightness-125" style={{ color: 'hsl(187 92% 60%)' }}>
-              Open client portal →
-            </button>
-          </div>
+        {/* Row 1: Email Input */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center' }}>
+          <input
+            type="email"
+            className="pill-glassmorphic-input"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            placeholder="Email Address"
+            style={{ width: '100%', maxWidth: '100%' }}
+          />
         </div>
 
-        <p className="cf-mono text-center text-[10px] mt-6" style={{ color: 'hsl(240 5% 40%)' }}>
-          CONTENTFLOW · SECURE SSO &amp; MFA READY
-        </p>
-      </motion.div>
+        {/* Row 2: Password Input & Show/Hide Toggle */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', gap: '12px' }}>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            className="pill-solid-white-input"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            placeholder="Password"
+            style={{ flex: 1, letterSpacing: showPassword ? 'normal' : '0.12em', paddingRight: '20px', minWidth: 0, width: 'auto' }}
+          />
+          <button
+            type="button"
+            className="pill-floating-icon"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            style={{ border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}
+          >
+            {showPassword ? (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1e3a6c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1e3a6c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Row 3: Submit Button */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center' }}>
+          <button type="submit" className="pill-native-backend-btn" disabled={loading} style={{ width: '100%', maxWidth: '100%' }}>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </div>
+
+        {/* Row 4: Forgot Password Button */}
+        <div className="pill-row" style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', marginTop: '4px' }}>
+          <button
+            type="button"
+            className="pill-glassmorphic-btn"
+            onClick={handleResetPassword}
+            disabled={resetLoading}
+            style={{ padding: '12px 24px', fontSize: '14px', background: 'transparent', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.3)' }}
+          >
+            {resetLoading ? 'Sending...' : 'Forgot password?'}
+          </button>
+        </div>
+
+      </form>
     </div>
   );
 }
@@ -200,8 +159,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen grid place-items-center bg-background">
-        <div style={{ color: 'hsl(var(--muted-foreground))' }}>Loading...</div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
+        <div style={{ color: 'var(--text-muted)' }}>Loading...</div>
       </div>
     }>
       <LoginForm />
